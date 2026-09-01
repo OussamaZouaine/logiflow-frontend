@@ -1,0 +1,43 @@
+<div class="flex min-h-dvh flex-col bg-canvas text-ink">
+  <header class="border-b border-line bg-surface">
+    <div class="mx-auto flex max-w-5xl flex-col gap-3 px-6 py-3">
+      <div class="flex items-center justify-between gap-4">
+        <a
+          class="font-display text-xl font-medium tracking-tight text-ink"
+          routerLink="/"
+        >
+          LogiFlow
+        </a>
+        <div class="flex items-center gap-4">
+          <p class="hidden text-right sm:block">
+            <span class="block font-mono text-xs text-ink">{{ login() }}</span>
+            <span class="block text-[0.7rem] text-muted">{{ roleName() }}</span>
+          </p>
+          <button
+            (click)="signOut()"
+            class="pressable pressable-border border border-line px-3 py-1.5 text-xs font-medium tracking-wide text-ink"
+            type="button"
+          >
+            Déconnexion
+          </button>
+        </div>
+      </div>
+      @if (navItems().length > 0) {
+      <nav aria-label="Modules" class="-mx-1 flex gap-1 overflow-x-auto">
+        @for (item of navItems(); track item.id) {
+        <a
+          [routerLink]="'/' + item.path"
+          class="pressable shrink-0 px-2 py-1 text-xs tracking-wide text-muted"
+          routerLinkActive="text-ink"
+        >
+          {{ item.label }}
+        </a>
+        }
+      </nav>
+      }
+    </div>
+  </header>
+  <main class="mx-auto w-full max-w-5xl flex-1 px-6 py-8">
+    <router-outlet />
+  </main>
+</div>

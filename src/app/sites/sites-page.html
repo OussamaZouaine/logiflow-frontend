@@ -1,0 +1,75 @@
+<div class="flex flex-col gap-6">
+  <div class="flex items-end justify-between gap-4">
+    <div>
+      <p
+        class="text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase"
+      >
+        Référentiel
+      </p>
+      <h1
+        class="font-display mt-1 text-3xl font-medium tracking-tight text-ink"
+      >
+        Sites
+      </h1>
+      <p class="mt-1 text-sm text-muted">
+        Données live depuis l'API LogiFlow
+        <code class="font-mono text-ink">/api/v1/sites</code>
+      </p>
+    </div>
+    @if (sites.hasValue()) {
+    <p class="font-mono text-sm tabular-nums text-muted">
+      {{ sites.value().totalElements }}
+      site(s)
+    </p>
+    }
+  </div>
+
+  @if (sites.isLoading()) {
+  <p class="text-sm text-muted" role="status">Chargement des sites…</p>
+  } @else if (sites.error()) {
+  <div
+    class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
+    role="alert"
+  >
+    <p>{{ errorMessage() }}</p>
+    <button
+      (click)="sites.reload()"
+      class="pressable mt-2 font-medium text-ink underline underline-offset-2"
+      type="button"
+    >
+      Réessayer
+    </button>
+  </div>
+  } @else if (sites.hasValue() && sites.value().content.length === 0) {
+  <p class="text-sm text-muted">Aucun site en base.</p>
+  } @else if (sites.hasValue()) {
+  <div class="overflow-x-auto border border-line bg-surface">
+    <table class="w-full min-w-[36rem] text-left text-sm">
+      <thead
+        class="border-b border-line text-[0.7rem] font-medium tracking-[0.12em] text-muted uppercase"
+      >
+        <tr>
+          <th class="px-4 py-3 font-medium" scope="col">Code</th>
+          <th class="px-4 py-3 font-medium" scope="col">Libellé</th>
+          <th class="px-4 py-3 font-medium" scope="col">Adresse</th>
+          <th class="px-4 py-3 font-medium" scope="col">Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (site of sites.value().content; track site.id) {
+        <tr class="border-b border-line last:border-0">
+          <td class="px-4 py-3 font-mono text-xs text-pine">
+            {{ site.code }}
+          </td>
+          <td class="px-4 py-3 font-medium text-ink">{{ site.libelle }}</td>
+          <td class="px-4 py-3 text-muted">{{ site.adresse ?? "—" }}</td>
+          <td class="px-4 py-3 text-ink">
+            {{ site.actif ? "Actif" : "Inactif" }}
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+</div>

@@ -1,0 +1,67 @@
+:host {
+  display: block;
+}
+
+.field {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.65rem 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: var(--color-ink);
+  outline: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  transition: border-color 150ms ease;
+}
+
+@media (min-width: 640px) {
+  .field {
+    font-size: 0.875rem;
+  }
+}
+
+.field:focus {
+  border-color: var(--color-pine);
+}
+
+.sign-in-copy,
+.sign-in-panel {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 220ms var(--ease-out-strong),
+    transform 220ms var(--ease-out-strong);
+}
+
+.sign-in-panel {
+  transition-delay: 50ms;
+}
+
+@starting-style {
+  .sign-in-copy,
+  .sign-in-panel {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.auth-error {
+  opacity: 1;
+  transition: opacity 180ms var(--ease-out-strong);
+}
+
+@starting-style {
+  .auth-error {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sign-in-copy,
+  .sign-in-panel,
+  .auth-error {
+    transform: none;
+    transition: none;
+  }
+}

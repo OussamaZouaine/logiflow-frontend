@@ -1,0 +1,48 @@
+<div class="flex flex-col gap-8">
+  <div>
+    <p class="text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase">
+      Vacation
+    </p>
+    <h1
+      class="font-display mt-1 text-balance text-3xl font-medium tracking-tight text-ink"
+    >
+      Tableau de bord
+    </h1>
+    <p class="mt-1 max-w-lg text-pretty text-sm text-muted">
+      @if (login()) {
+      <span class="font-mono text-ink">{{ login() }}</span>
+      — {{ roleName() }}. Les modules de ce rôle. } @else { Les modules de la
+      vacation. }
+    </p>
+  </div>
+
+  <ul class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+    @for (destination of destinations(); track destination.id) {
+    <li>
+      <a
+        [routerLink]="'/' + destination.path"
+        class="pressable pressable-border flex min-h-28 flex-col border border-line bg-surface px-4 py-4"
+      >
+        <p
+          class="text-[0.7rem] font-medium tracking-[0.14em] text-muted uppercase"
+        >
+          {{ destination.section }}
+        </p>
+        <p
+          class="font-display mt-1 text-xl font-medium tracking-tight text-ink"
+        >
+          {{ destination.label }}
+        </p>
+        <p class="mt-1 flex-1 text-sm text-muted">{{ destination.blurb }}</p>
+        <p
+          [class.text-muted]="!destination.live"
+          [class.text-pine]="destination.live"
+          class="mt-3 font-mono text-[0.7rem] tracking-wide"
+        >
+          {{ destination.live ? "Ouvert" : "À brancher" }}
+        </p>
+      </a>
+    </li>
+    }
+  </ul>
+</div>

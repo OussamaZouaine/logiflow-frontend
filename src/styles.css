@@ -1,1 +1,57 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap");
 @import "tailwindcss";
+
+@theme {
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --color-canvas: #f7f7f5;
+  --color-surface: #ffffff;
+  --color-ink: #171717;
+  --color-muted: #737373;
+  --color-line: #e5e5e5;
+  --color-pine: #215544;
+  --color-brake: #b42318;
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  min-height: 100dvh;
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background: var(--color-canvas);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-pine);
+  outline-offset: 2px;
+}
+
+.pressable {
+  transition: transform 160ms var(--ease-out-strong);
+}
+
+.pressable:active {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pressable-border:hover {
+    border-color: var(--color-pine);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pressable {
+    transition: none;
+  }
+
+  .pressable:active {
+    transform: none;
+  }
+}
