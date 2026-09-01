@@ -12,40 +12,75 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  CI: true
+
 jobs:
-  build-and-test:
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Récupérer le code
-        uses: actions/checkout@v4
-
-      - name: Configurer pnpm
-        uses: pnpm/action-setup@v4
+        uses: actions/checkout@v5
         with:
-          version: 11.17.0
+          persist-credentials: false
 
-      - name: Configurer Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24.20.0"
-          cache: pnpm
-
-      - name: Installer les dépendances
-        run: pnpm install --frozen-lockfile
+      - name: Installer
+        uses: ./.github/actions/setup
 
       - name: Vérifier le lint et le formatage (Ultracite)
         run: pnpm check
 
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Installer
+        uses: ./.github/actions/setup
+
       - name: Exécuter les tests unitaires (Vitest)
         run: pnpm exec ng test --watch=false
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Installer
+        uses: ./.github/actions/setup
 
       - name: Construire (production)
         run: pnpm build
 
       - name: Publier le build
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist/
-          if-no-files-found: ignore
+          if-no-files-found: error
+          retention-days: 7
+
+  ci:
+    name: CI
+    needs: [lint, test, build]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Vérifier que tous les jobs ont réussi
+        run: |
+          test "${{ needs.lint.result }}" = success
+          test "${{ needs.test.result }}" = success
+          test "${{ needs.build.result }}" = success
