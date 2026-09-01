@@ -5,12 +5,12 @@ import {
 } from "@angular/common/http/testing";
 import { TestBed } from "@angular/core/testing";
 import { provideRouter } from "@angular/router";
-import { SitesPage } from "./sites-page";
+import { VehiculesPage } from "./vehicules-page";
 
-describe("SitesPage", () => {
+describe("VehiculesPage", () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [SitesPage],
+      imports: [VehiculesPage],
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
@@ -19,22 +19,24 @@ describe("SitesPage", () => {
     }).compileComponents();
   });
 
-  it("renders sites returned by the API", async () => {
-    const fixture = TestBed.createComponent(SitesPage);
+  it("renders vehicules returned by the API", async () => {
+    const fixture = TestBed.createComponent(VehiculesPage);
     fixture.detectChanges();
 
     const http = TestBed.inject(HttpTestingController);
-    const request = http.expectOne((req) => req.url === "/api/v1/sites");
+    const request = http.expectOne((req) => req.url === "/api/v1/vehicules");
     request.flush({
       content: [
         {
-          actif: true,
-          adresse: "10 rue de la Logistique, 75018 Paris",
-          clientId: "11111111-1111-1111-1111-111111111111",
-          code: "SITE-DEMO-PARIS",
-          id: "22222222-2222-2222-2222-222222222222",
-          libelle: "Entrepôt Paris Nord",
-          localisation: { latitude: 48.8566, longitude: 2.3522 },
+          chargeUtileKg: 9000,
+          documents: [],
+          heuresMoteur: 12,
+          id: "33333333-3333-3333-3333-333333333333",
+          immatriculation: "AB-123-CD",
+          kilometrage: 40_000,
+          ptacKg: 19_000,
+          statut: "DISPONIBLE",
+          type: "TRACTEUR",
         },
       ],
       pageNumber: 0,
@@ -47,18 +49,18 @@ describe("SitesPage", () => {
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain("Entrepôt Paris Nord");
-    expect(compiled.textContent).toContain("SITE-DEMO-PARIS");
+    expect(compiled.textContent).toContain("AB-123-CD");
+    expect(compiled.textContent).toContain("Tracteur");
     http.verify();
   });
 
   it("shows an error when the backend is unreachable", async () => {
-    const fixture = TestBed.createComponent(SitesPage);
+    const fixture = TestBed.createComponent(VehiculesPage);
     fixture.detectChanges();
 
     const http = TestBed.inject(HttpTestingController);
     http
-      .expectOne((req) => req.url === "/api/v1/sites")
+      .expectOne((req) => req.url === "/api/v1/vehicules")
       .error(new ProgressEvent("error"));
 
     await fixture.whenStable();

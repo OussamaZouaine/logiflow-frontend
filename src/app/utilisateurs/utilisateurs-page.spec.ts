@@ -5,12 +5,12 @@ import {
 } from "@angular/common/http/testing";
 import { TestBed } from "@angular/core/testing";
 import { provideRouter } from "@angular/router";
-import { SitesPage } from "./sites-page";
+import { UtilisateursPage } from "./utilisateurs-page";
 
-describe("SitesPage", () => {
+describe("UtilisateursPage", () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [SitesPage],
+      imports: [UtilisateursPage],
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
@@ -19,46 +19,45 @@ describe("SitesPage", () => {
     }).compileComponents();
   });
 
-  it("renders sites returned by the API", async () => {
-    const fixture = TestBed.createComponent(SitesPage);
+  it("renders utilisateurs returned by the API", async () => {
+    const fixture = TestBed.createComponent(UtilisateursPage);
     fixture.detectChanges();
 
     const http = TestBed.inject(HttpTestingController);
-    const request = http.expectOne((req) => req.url === "/api/v1/sites");
-    request.flush({
-      content: [
-        {
-          actif: true,
-          adresse: "10 rue de la Logistique, 75018 Paris",
-          clientId: "11111111-1111-1111-1111-111111111111",
-          code: "SITE-DEMO-PARIS",
-          id: "22222222-2222-2222-2222-222222222222",
-          libelle: "Entrepôt Paris Nord",
-          localisation: { latitude: 48.8566, longitude: 2.3522 },
-        },
-      ],
-      pageNumber: 0,
-      pageSize: 20,
-      totalElements: 1,
-      totalPages: 1,
-    });
+    http
+      .expectOne((req) => req.url === "/api/v1/utilisateurs")
+      .flush({
+        content: [
+          {
+            actif: true,
+            email: "jean.it@logiflow.tms",
+            id: "99999999-9999-9999-9999-999999999999",
+            login: "jean.it",
+            roles: ["EXPLOITANT"],
+          },
+        ],
+        pageNumber: 0,
+        pageSize: 20,
+        totalElements: 1,
+        totalPages: 1,
+      });
 
     await fixture.whenStable();
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain("Entrepôt Paris Nord");
-    expect(compiled.textContent).toContain("SITE-DEMO-PARIS");
+    expect(compiled.textContent).toContain("jean.it");
+    expect(compiled.textContent).toContain("Exploitant");
     http.verify();
   });
 
   it("shows an error when the backend is unreachable", async () => {
-    const fixture = TestBed.createComponent(SitesPage);
+    const fixture = TestBed.createComponent(UtilisateursPage);
     fixture.detectChanges();
 
     const http = TestBed.inject(HttpTestingController);
     http
-      .expectOne((req) => req.url === "/api/v1/sites")
+      .expectOne((req) => req.url === "/api/v1/utilisateurs")
       .error(new ProgressEvent("error"));
 
     await fixture.whenStable();

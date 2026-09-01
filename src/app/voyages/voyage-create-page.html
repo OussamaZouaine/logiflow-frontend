@@ -1,0 +1,226 @@
+<div class="flex max-w-lg flex-col gap-6">
+  <div>
+    <p class="text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase">
+      Planning
+    </p>
+    <h1 class="font-display mt-1 text-3xl font-medium tracking-tight text-ink">
+      Nouveau voyage
+    </h1>
+    <p class="mt-1 text-sm text-muted">
+      Conformité bloquante : véhicule disponible, documents valides, chauffeur
+      disponible, solde de conduite suffisant.
+    </p>
+  </div>
+
+  @if (vehicules.isLoading() || dossiers.isLoading() || chauffeurs.isLoading())
+  {
+  <p class="text-sm text-muted" role="status">Chargement des ressources…</p>
+  } @else if (lookupsError()) {
+  <div
+    class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
+    role="alert"
+  >
+    <p>{{ lookupsError() }}</p>
+  </div>
+  } @else if (lookupsReady()) {
+  <form (submit)="onSubmit($event)" class="flex flex-col gap-5">
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="typeVoyage">
+          Type
+        </label>
+        <select
+          [formField]="createForm.typeVoyage"
+          class="field"
+          id="typeVoyage"
+        >
+          @for (type of types; track type) {
+          <option [value]="type">{{ typeVoyageLabel(type) }}</option>
+          }
+        </select>
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="portee">
+          Portée
+        </label>
+        <select [formField]="createForm.portee" class="field" id="portee">
+          @for (portee of portees; track portee) {
+          <option [value]="portee">{{ porteeLabel(portee) }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="departPrevu">
+          Départ prévu
+        </label>
+        <input
+          [formField]="createForm.departPrevu"
+          class="field"
+          id="departPrevu"
+          type="datetime-local"
+        >
+        @if ( createForm.departPrevu().touched() &&
+        createForm.departPrevu().invalid() ) {
+        <p class="text-xs text-brake" role="alert">
+          {{ firstFieldError(createForm.departPrevu().errors()) }}
+        </p>
+        }
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="arriveePrevue">
+          Arrivée prévue
+        </label>
+        <input
+          [formField]="createForm.arriveePrevue"
+          class="field"
+          id="arriveePrevue"
+          type="datetime-local"
+        >
+        @if ( createForm.arriveePrevue().touched() &&
+        createForm.arriveePrevue().invalid() ) {
+        <p class="text-xs text-brake" role="alert">
+          {{ firstFieldError(createForm.arriveePrevue().errors()) }}
+        </p>
+        }
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-medium text-muted" for="vehiculeId">
+        Véhicule
+      </label>
+      <select [formField]="createForm.vehiculeId" class="field" id="vehiculeId">
+        <option value="">Choisir un véhicule…</option>
+        @for (vehicule of vehiculeOptions(); track vehicule.id) {
+        <option [value]="vehicule.id">
+          {{ vehicule.immatriculation }}
+          — {{ vehicule.statut }}
+        </option>
+        }
+      </select>
+      @if ( createForm.vehiculeId().touched() &&
+      createForm.vehiculeId().invalid() ) {
+      <p class="text-xs text-brake" role="alert">
+        {{ firstFieldError(createForm.vehiculeId().errors()) }}
+      </p>
+      } @if (vehiculeOptions().length === 0) {
+      <p class="text-xs text-muted">
+        Aucun véhicule.
+        <a
+          class="text-pine underline-offset-2 hover:underline"
+          routerLink="/vehicules/nouveau"
+        >
+          En créer un
+        </a>
+      </p>
+      }
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-medium text-muted" for="dossierId">
+        Dossier
+      </label>
+      <select [formField]="createForm.dossierId" class="field" id="dossierId">
+        <option value="">Choisir un dossier…</option>
+        @for (dossier of dossierOptions(); track dossier.id) {
+        <option [value]="dossier.id">
+          {{ dossier.reference }}
+          — {{ dossier.statut }}
+        </option>
+        }
+      </select>
+      @if (createForm.dossierId().touched() && createForm.dossierId().invalid())
+      {
+      <p class="text-xs text-brake" role="alert">
+        {{ firstFieldError(createForm.dossierId().errors()) }}
+      </p>
+      } @if (dossierOptions().length === 0) {
+      <p class="text-xs text-muted">
+        Aucun dossier de transport en base. Un voyage en rattache au moins un.
+      </p>
+      }
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-medium text-muted" for="chauffeurId">
+        Chauffeur titulaire
+      </label>
+      <select
+        [formField]="createForm.chauffeurId"
+        class="field"
+        id="chauffeurId"
+      >
+        <option value="">Choisir un chauffeur…</option>
+        @for (chauffeur of chauffeurOptions(); track chauffeur.id) {
+        <option [value]="chauffeur.id">
+          {{ chauffeur.matricule }}
+          — {{ chauffeur.nomComplet }}
+        </option>
+        }
+      </select>
+      @if ( createForm.chauffeurId().touched() &&
+      createForm.chauffeurId().invalid() ) {
+      <p class="text-xs text-brake" role="alert">
+        {{ firstFieldError(createForm.chauffeurId().errors()) }}
+      </p>
+      } @if (chauffeurOptions().length === 0) {
+      <p class="text-xs text-muted">Aucun chauffeur en base.</p>
+      }
+    </div>
+
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="distanceTotaleKm">
+          Distance (km)
+        </label>
+        <input
+          [formField]="createForm.distanceTotaleKm"
+          class="field"
+          id="distanceTotaleKm"
+          step="1"
+          type="number"
+        >
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="dureeConduiteMin">
+          Conduite (min)
+        </label>
+        <input
+          [formField]="createForm.dureeConduiteMin"
+          class="field"
+          id="dureeConduiteMin"
+          step="1"
+          type="number"
+        >
+      </div>
+    </div>
+
+    @if (formError()) {
+    <p
+      class="border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
+      role="alert"
+    >
+      {{ formError() }}
+    </p>
+    }
+
+    <div class="flex flex-wrap gap-3">
+      <button
+        class="pressable min-h-11 bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
+        type="submit"
+      >
+        Enregistrer
+      </button>
+      <a
+        class="pressable pressable-border inline-flex min-h-11 items-center border border-line px-4 py-2.5 text-sm font-medium text-ink"
+        routerLink="/voyages"
+      >
+        Annuler
+      </a>
+    </div>
+  </form>
+  }
+</div>

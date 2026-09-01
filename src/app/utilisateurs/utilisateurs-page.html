@@ -4,34 +4,31 @@
       <p
         class="text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase"
       >
-        Référentiel
+        IAM
       </p>
       <h1
         class="font-display mt-1 text-3xl font-medium tracking-tight text-ink"
       >
-        Sites
+        Utilisateurs
       </h1>
-      <p class="mt-1 text-sm text-muted">
-        Quais de chargement et de déchargement.
-      </p>
+      <p class="mt-1 text-sm text-muted">Provisioning des comptes.</p>
     </div>
-    <!-- biome-ignore lint/a11y/useValidAnchor: <it's an angular router link> -->
     <a
       class="pressable min-h-11 bg-pine px-4 py-2.5 text-center text-sm font-medium tracking-wide text-surface"
-      routerLink="/sites/nouveau"
+      routerLink="/utilisateurs/nouveau"
     >
-      Nouveau site
+      Nouvel utilisateur
     </a>
   </div>
 
   <form (submit)="applySearch($event)" class="flex gap-2">
-    <label class="sr-only" for="site-search">Rechercher</label>
+    <label class="sr-only" for="utilisateur-search">Rechercher</label>
     <input
       (input)="onSearchInput($event)"
       [value]="searchDraft()"
       class="field min-w-0 flex-1"
-      id="site-search"
-      placeholder="Code ou libellé…"
+      id="utilisateur-search"
+      placeholder="Login ou email…"
       type="search"
     >
     <button
@@ -42,63 +39,66 @@
     </button>
   </form>
 
-  @if (sites.isLoading()) {
-  <p class="text-sm text-muted" role="status">Chargement des sites…</p>
-  } @else if (sites.error()) {
+  @if (utilisateurs.isLoading()) {
+  <p class="text-sm text-muted" role="status">Chargement des utilisateurs…</p>
+  } @else if (utilisateurs.error()) {
   <div
     class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
     role="alert"
   >
     <p>{{ errorMessage() }}</p>
     <button
-      (click)="sites.reload()"
+      (click)="utilisateurs.reload()"
       class="pressable mt-2 font-medium text-ink underline underline-offset-2"
       type="button"
     >
       Réessayer
     </button>
   </div>
-  } @else if (sites.hasValue() && sites.value().content.length === 0) {
-  <p class="text-sm text-muted">Aucun site en base.</p>
-  } @else if (sites.hasValue()) {
+  } @else if (utilisateurs.hasValue() && utilisateurs.value().content.length ===
+  0) {
+  <p class="text-sm text-muted">Aucun utilisateur en base.</p>
+  } @else if (utilisateurs.hasValue()) {
   <div class="overflow-x-auto border border-line bg-surface">
     <table class="w-full min-w-xl text-left text-sm">
       <thead
         class="border-b border-line text-[0.7rem] font-medium tracking-[0.12em] text-muted uppercase"
       >
         <tr>
-          <th class="px-4 py-3 font-medium" scope="col">Code</th>
-          <th class="px-4 py-3 font-medium" scope="col">Libellé</th>
-          <th class="px-4 py-3 font-medium" scope="col">Adresse</th>
+          <th class="px-4 py-3 font-medium" scope="col">Login</th>
+          <th class="px-4 py-3 font-medium" scope="col">Email</th>
+          <th class="px-4 py-3 font-medium" scope="col">Rôles</th>
           <th class="px-4 py-3 font-medium" scope="col">Statut</th>
         </tr>
       </thead>
       <tbody>
-        @for (site of sites.value().content; track site.id) {
+        @for (utilisateur of utilisateurs.value().content; track utilisateur.id)
+        {
         <tr class="border-b border-line last:border-0">
           <td class="px-4 py-3">
-            <!-- biome-ignore lint/a11y/useValidAnchor: <it's an angular router link> -->
             <a
-              [routerLink]="['/sites', site.id]"
+              [routerLink]="['/utilisateurs', utilisateur.id]"
               class="font-mono text-xs text-pine underline-offset-2 hover:underline"
             >
-              {{ site.code }}
+              {{ utilisateur.login }}
             </a>
           </td>
-          <td class="px-4 py-3 font-medium text-ink">{{ site.libelle }}</td>
-          <td class="px-4 py-3 text-muted">{{ site.adresse ?? "—" }}</td>
+          <td class="px-4 py-3 text-ink">{{ utilisateur.email }}</td>
+          <td class="px-4 py-3 text-muted">
+            {{ formatRoles(utilisateur.roles) }}
+          </td>
           <td class="px-4 py-3 text-ink">
-            {{ site.actif ? "Actif" : "Inactif" }}
+            {{ utilisateur.actif ? "Actif" : "Inactif" }}
           </td>
         </tr>
         }
       </tbody>
     </table>
   </div>
-  @if (sites.value().totalElements) {
+  @if (utilisateurs.value().totalElements) {
   <p class="font-mono text-sm tabular-nums text-muted">
-    {{ sites.value().totalElements }}
-    site(s)
+    {{ utilisateurs.value().totalElements }}
+    utilisateur(s)
   </p>
   } }
 </div>

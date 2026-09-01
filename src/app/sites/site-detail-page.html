@@ -1,0 +1,170 @@
+<div class="flex flex-col gap-8">
+  <div>
+    <a
+      class="text-xs font-medium tracking-wide text-muted underline-offset-2 hover:text-ink hover:underline"
+      routerLink="/sites"
+    >
+      ← Sites
+    </a>
+    @if (site.isLoading()) {
+    <p class="mt-4 text-sm text-muted" role="status">Chargement…</p>
+    } @else if (site.error()) {
+    <div
+      class="mt-4 border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
+      role="alert"
+    >
+      <p>{{ loadError() }}</p>
+      <button
+        (click)="site.reload()"
+        class="pressable mt-2 font-medium text-ink underline underline-offset-2"
+        type="button"
+      >
+        Réessayer
+      </button>
+    </div>
+    } @else if (site.hasValue()) {
+    <p
+      class="mt-4 text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase"
+    >
+      Référentiel
+    </p>
+    <h1
+      class="font-display mt-1 font-mono text-3xl font-medium tracking-tight text-ink"
+    >
+      {{ site.value().code }}
+    </h1>
+    <p class="mt-1 text-sm text-muted">
+      {{ site.value().actif ? "Actif" : "Inactif" }}
+    </p>
+    }
+  </div>
+
+  @if (site.hasValue()) {
+  <form
+    (submit)="onSubmit($event)"
+    class="flex max-w-lg flex-col gap-5 border border-line bg-surface p-5"
+  >
+    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+      Fiche
+    </h2>
+    <p class="text-sm text-muted">Le code n'est pas modifiable.</p>
+
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-medium text-muted" for="libelle">
+        Libellé
+      </label>
+      <input
+        [formField]="editForm.libelle"
+        class="field"
+        id="libelle"
+        type="text"
+      >
+      @if (editForm.libelle().touched() && editForm.libelle().invalid()) {
+      <p class="text-xs text-brake" role="alert">
+        {{ firstFieldError(editForm.libelle().errors()) }}
+      </p>
+      }
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-medium text-muted" for="adresse">
+        Adresse
+      </label>
+      <input
+        [formField]="editForm.adresse"
+        class="field"
+        id="adresse"
+        type="text"
+      >
+    </div>
+
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="latitude">
+          Latitude
+        </label>
+        <input
+          [formField]="editForm.latitude"
+          class="field"
+          id="latitude"
+          step="0.0001"
+          type="number"
+        >
+        @if (editForm.latitude().touched() && editForm.latitude().invalid()) {
+        <p class="text-xs text-brake" role="alert">
+          {{ firstFieldError(editForm.latitude().errors()) }}
+        </p>
+        }
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="longitude">
+          Longitude
+        </label>
+        <input
+          [formField]="editForm.longitude"
+          class="field"
+          id="longitude"
+          step="0.0001"
+          type="number"
+        >
+        @if (editForm.longitude().touched() && editForm.longitude().invalid()) {
+        <p class="text-xs text-brake" role="alert">
+          {{ firstFieldError(editForm.longitude().errors()) }}
+        </p>
+        }
+      </div>
+    </div>
+
+    <label class="flex items-center gap-2 text-sm text-ink">
+      <input
+        (change)="onPoidsLourd($event)"
+        [checked]="draft().interditPoidsLourd"
+        class="size-4 accent-pine"
+        type="checkbox"
+      >
+      Interdit aux poids lourds
+    </label>
+
+    @if (formError()) {
+    <p
+      class="border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
+      role="alert"
+    >
+      {{ formError() }}
+    </p>
+    }
+
+    <button
+      class="pressable min-h-11 w-fit bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
+      type="submit"
+    >
+      Enregistrer
+    </button>
+  </form>
+
+  @if (site.value().actif) {
+  <section class="max-w-lg border border-line bg-surface p-5">
+    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+      Désactivation
+    </h2>
+    <p class="mt-1 text-sm text-muted">
+      Le site reste en base, marqué inactif. Pas de suppression physique.
+    </p>
+    @if (deactivateError()) {
+    <p
+      class="mt-4 border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
+      role="alert"
+    >
+      {{ deactivateError() }}
+    </p>
+    }
+    <button
+      (click)="desactiver()"
+      class="pressable pressable-border mt-4 min-h-11 border border-brake/40 px-4 py-2.5 text-sm font-medium text-brake"
+      type="button"
+    >
+      Désactiver
+    </button>
+  </section>
+  } }
+</div>

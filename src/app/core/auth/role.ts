@@ -16,6 +16,12 @@ export const SITES_ALLOWED_ROLES: readonly Role[] = [
   "COMMERCIAL",
 ];
 
+export const VOYAGES_PLAN_ROLES: readonly Role[] = [
+  "ADMINISTRATEUR",
+  "RESPONSABLE_EXPLOITATION",
+  "EXPLOITANT",
+];
+
 export function isRole(value: unknown): value is Role {
   return (
     typeof value === "string" && (ROLES as readonly string[]).includes(value)

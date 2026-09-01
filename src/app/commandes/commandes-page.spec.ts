@@ -5,12 +5,12 @@ import {
 } from "@angular/common/http/testing";
 import { TestBed } from "@angular/core/testing";
 import { provideRouter } from "@angular/router";
-import { SitesPage } from "./sites-page";
+import { CommandesPage } from "./commandes-page";
 
-describe("SitesPage", () => {
+describe("CommandesPage", () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [SitesPage],
+      imports: [CommandesPage],
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
@@ -19,46 +19,46 @@ describe("SitesPage", () => {
     }).compileComponents();
   });
 
-  it("renders sites returned by the API", async () => {
-    const fixture = TestBed.createComponent(SitesPage);
+  it("renders commandes returned by the API", async () => {
+    const fixture = TestBed.createComponent(CommandesPage);
     fixture.detectChanges();
 
     const http = TestBed.inject(HttpTestingController);
-    const request = http.expectOne((req) => req.url === "/api/v1/sites");
-    request.flush({
-      content: [
-        {
-          actif: true,
-          adresse: "10 rue de la Logistique, 75018 Paris",
-          clientId: "11111111-1111-1111-1111-111111111111",
-          code: "SITE-DEMO-PARIS",
-          id: "22222222-2222-2222-2222-222222222222",
-          libelle: "Entrepôt Paris Nord",
-          localisation: { latitude: 48.8566, longitude: 2.3522 },
-        },
-      ],
-      pageNumber: 0,
-      pageSize: 20,
-      totalElements: 1,
-      totalPages: 1,
-    });
+    http
+      .expectOne((req) => req.url === "/api/v1/commandes")
+      .flush({
+        content: [
+          {
+            clientId: "11111111-1111-1111-1111-111111111111",
+            dateSouhaitee: "2026-09-10",
+            id: "77777777-7777-7777-7777-777777777777",
+            prixNegocie: { devise: "EUR", montant: 2000 },
+            reference: "CMD-2026-000001",
+            statut: "RECUE",
+          },
+        ],
+        pageNumber: 0,
+        pageSize: 20,
+        totalElements: 1,
+        totalPages: 1,
+      });
 
     await fixture.whenStable();
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain("Entrepôt Paris Nord");
-    expect(compiled.textContent).toContain("SITE-DEMO-PARIS");
+    expect(compiled.textContent).toContain("CMD-2026-000001");
+    expect(compiled.textContent).toContain("Reçue");
     http.verify();
   });
 
   it("shows an error when the backend is unreachable", async () => {
-    const fixture = TestBed.createComponent(SitesPage);
+    const fixture = TestBed.createComponent(CommandesPage);
     fixture.detectChanges();
 
     const http = TestBed.inject(HttpTestingController);
     http
-      .expectOne((req) => req.url === "/api/v1/sites")
+      .expectOne((req) => req.url === "/api/v1/commandes")
       .error(new ProgressEvent("error"));
 
     await fixture.whenStable();

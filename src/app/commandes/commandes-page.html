@@ -1,0 +1,88 @@
+<div class="flex flex-col gap-6">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <p
+        class="text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase"
+      >
+        Commercial
+      </p>
+      <h1
+        class="font-display mt-1 text-3xl font-medium tracking-tight text-ink"
+      >
+        Commandes
+      </h1>
+      <p class="mt-1 text-sm text-muted">
+        Demandes clients à transporter. Confirmation puis dossier.
+      </p>
+    </div>
+    <a
+      class="pressable min-h-11 bg-pine px-4 py-2.5 text-center text-sm font-medium tracking-wide text-surface"
+      routerLink="/commandes/nouveau"
+    >
+      Nouvelle commande
+    </a>
+  </div>
+
+  @if (commandes.isLoading()) {
+  <p class="text-sm text-muted" role="status">Chargement des commandes…</p>
+  } @else if (commandes.error()) {
+  <div
+    class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
+    role="alert"
+  >
+    <p>{{ errorMessage() }}</p>
+    <button
+      (click)="commandes.reload()"
+      class="pressable mt-2 font-medium text-ink underline underline-offset-2"
+      type="button"
+    >
+      Réessayer
+    </button>
+  </div>
+  } @else if (commandes.hasValue() && commandes.value().content.length === 0) {
+  <p class="text-sm text-muted">Aucune commande en base.</p>
+  } @else if (commandes.hasValue()) {
+  <div class="overflow-x-auto border border-line bg-surface">
+    <table class="w-full min-w-xl text-left text-sm">
+      <thead
+        class="border-b border-line text-[0.7rem] font-medium tracking-[0.12em] text-muted uppercase"
+      >
+        <tr>
+          <th class="px-4 py-3 font-medium" scope="col">Référence</th>
+          <th class="px-4 py-3 font-medium" scope="col">Date souhaitée</th>
+          <th class="px-4 py-3 font-medium" scope="col">Prix</th>
+          <th class="px-4 py-3 font-medium" scope="col">Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (commande of commandes.value().content; track commande.id) {
+        <tr class="border-b border-line last:border-0">
+          <td class="px-4 py-3">
+            <a
+              [routerLink]="['/commandes', commande.id]"
+              class="font-mono text-xs text-pine underline-offset-2 hover:underline"
+            >
+              {{ commande.reference }}
+            </a>
+          </td>
+          <td class="px-4 py-3 font-mono tabular-nums text-muted">
+            {{ formatDate(commande.dateSouhaitee) }}
+          </td>
+          <td class="px-4 py-3 font-mono tabular-nums text-ink">
+            {{ formatMoney(commande.prixNegocie) }}
+          </td>
+          <td class="px-4 py-3 text-ink">
+            {{ statutCommandeLabel(commande.statut) }}
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (commandes.value().totalElements) {
+  <p class="font-mono text-sm tabular-nums text-muted">
+    {{ commandes.value().totalElements }}
+    commande(s)
+  </p>
+  } }
+</div>

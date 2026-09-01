@@ -4,30 +4,33 @@ import { RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
-import type { Site } from "./site";
+import { formatRoles, type Utilisateur } from "./utilisateur";
 
-const SITES_PAGE_SIZE = 20;
+const UTILISATEURS_PAGE_SIZE = 20;
 
 @Component({
   imports: [RouterLink],
-  selector: "app-sites-page",
-  templateUrl: "./sites-page.html",
+  selector: "app-utilisateurs-page",
+  templateUrl: "./utilisateurs-page.html",
 })
-export class SitesPage {
+export class UtilisateursPage {
+  protected readonly formatRoles = formatRoles;
   protected readonly searchDraft = signal("");
   protected readonly search = signal("");
 
-  protected readonly sites = httpResource<PageResponse<Site>>(() => ({
-    params: {
-      page: 0,
-      q: this.search().trim(),
-      size: SITES_PAGE_SIZE,
-    },
-    url: `${environment.apiBaseUrl}/sites`,
-  }));
+  protected readonly utilisateurs = httpResource<PageResponse<Utilisateur>>(
+    () => ({
+      params: {
+        page: 0,
+        q: this.search().trim(),
+        size: UTILISATEURS_PAGE_SIZE,
+      },
+      url: `${environment.apiBaseUrl}/utilisateurs`,
+    })
+  );
 
   protected readonly errorMessage = computed(() =>
-    httpErrorMessage(this.sites.error())
+    httpErrorMessage(this.utilisateurs.error())
   );
 
   protected onSearchInput(event: Event): void {

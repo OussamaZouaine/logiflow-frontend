@@ -1,0 +1,114 @@
+<div class="flex max-w-lg flex-col gap-6">
+  <div>
+    <p class="text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase">
+      Atelier
+    </p>
+    <h1 class="font-display mt-1 text-3xl font-medium tracking-tight text-ink">
+      Nouvel ordre de travail
+    </h1>
+    <p class="mt-1 text-sm text-muted">
+      Créé au statut Planifié. Le véhicule doit déjà exister.
+    </p>
+  </div>
+
+  @if (vehicules.isLoading()) {
+  <p class="text-sm text-muted" role="status">Chargement des véhicules…</p>
+  } @else if (lookupsError()) {
+  <div
+    class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
+    role="alert"
+  >
+    <p>{{ lookupsError() }}</p>
+  </div>
+  } @else if (vehicules.hasValue()) {
+  <form (submit)="onSubmit($event)" class="flex flex-col gap-5">
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-medium text-muted" for="vehiculeId">
+        Véhicule
+      </label>
+      <select [formField]="createForm.vehiculeId" class="field" id="vehiculeId">
+        <option value="">Choisir un véhicule…</option>
+        @for (vehicule of vehiculeOptions(); track vehicule.id) {
+        <option [value]="vehicule.id">{{ vehicule.immatriculation }}</option>
+        }
+      </select>
+      @if ( createForm.vehiculeId().touched() &&
+      createForm.vehiculeId().invalid() ) {
+      <p class="text-xs text-brake" role="alert">
+        {{ firstFieldError(createForm.vehiculeId().errors()) }}
+      </p>
+      }
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-medium text-muted" for="type">Type</label>
+      <select [formField]="createForm.type" class="field" id="type">
+        @for (type of types; track type) {
+        <option [value]="type">{{ typeInterventionLabel(type) }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="datePlanifiee">
+          Date planifiée
+        </label>
+        <input
+          [formField]="createForm.datePlanifiee"
+          class="field"
+          id="datePlanifiee"
+          type="datetime-local"
+        >
+        @if ( createForm.datePlanifiee().touched() &&
+        createForm.datePlanifiee().invalid() ) {
+        <p class="text-xs text-brake" role="alert">
+          {{ firstFieldError(createForm.datePlanifiee().errors()) }}
+        </p>
+        }
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="montant">
+          Coût estimé (EUR)
+        </label>
+        <input
+          [formField]="createForm.montant"
+          class="field"
+          id="montant"
+          step="0.01"
+          type="number"
+        >
+        @if (createForm.montant().touched() && createForm.montant().invalid()) {
+        <p class="text-xs text-brake" role="alert">
+          {{ firstFieldError(createForm.montant().errors()) }}
+        </p>
+        }
+      </div>
+    </div>
+
+    @if (formError()) {
+    <p
+      class="border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
+      role="alert"
+    >
+      {{ formError() }}
+    </p>
+    }
+
+    <div class="flex flex-wrap gap-3">
+      <button
+        class="pressable min-h-11 bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
+        type="submit"
+      >
+        Enregistrer
+      </button>
+      <a
+        class="pressable pressable-border inline-flex min-h-11 items-center border border-line px-4 py-2.5 text-sm font-medium text-ink"
+        routerLink="/maintenance"
+      >
+        Annuler
+      </a>
+    </div>
+  </form>
+  }
+</div>

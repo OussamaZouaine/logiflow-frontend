@@ -1,0 +1,120 @@
+<div class="flex flex-col gap-8">
+  <div>
+    <a
+      class="text-xs font-medium tracking-wide text-muted underline-offset-2 hover:text-ink hover:underline"
+      routerLink="/utilisateurs"
+    >
+      ← Utilisateurs
+    </a>
+    @if (utilisateur.isLoading()) {
+    <p class="mt-4 text-sm text-muted" role="status">Chargement…</p>
+    } @else if (utilisateur.error()) {
+    <div
+      class="mt-4 border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
+      role="alert"
+    >
+      <p>{{ loadError() }}</p>
+      <button
+        (click)="utilisateur.reload()"
+        class="pressable mt-2 font-medium text-ink underline underline-offset-2"
+        type="button"
+      >
+        Réessayer
+      </button>
+    </div>
+    } @else if (utilisateur.hasValue()) {
+    <p
+      class="mt-4 text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase"
+    >
+      IAM
+    </p>
+    <h1
+      class="font-display mt-1 font-mono text-3xl font-medium tracking-tight text-ink"
+    >
+      {{ utilisateur.value().login }}
+    </h1>
+    <p class="mt-1 text-sm text-muted">
+      {{ utilisateur.value().actif ? "Actif" : "Inactif" }}
+    </p>
+    }
+  </div>
+
+  @if (utilisateur.hasValue()) {
+  <form
+    (submit)="onSubmit($event)"
+    class="flex max-w-lg flex-col gap-5 border border-line bg-surface p-5"
+  >
+    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+      Fiche
+    </h2>
+    <p class="text-sm text-muted">Le login n'est pas modifiable.</p>
+
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-medium text-muted" for="email">Email</label>
+      <input [formField]="editForm.email" class="field" id="email" type="email">
+      @if (editForm.email().touched() && editForm.email().invalid()) {
+      <p class="text-xs text-brake" role="alert">
+        {{ firstFieldError(editForm.email().errors()) }}
+      </p>
+      }
+    </div>
+
+    <fieldset class="flex flex-col gap-2">
+      <legend class="text-xs font-medium text-muted">Rôles</legend>
+      @for (role of roles; track role) {
+      <label class="flex items-center gap-2 text-sm text-ink">
+        <input
+          (change)="toggleRole(role, $event)"
+          [checked]="draft().roles.includes(role)"
+          class="size-4 accent-pine"
+          type="checkbox"
+        >
+        {{ roleLabel(role) }}
+      </label>
+      }
+    </fieldset>
+
+    @if (formError()) {
+    <p
+      class="border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
+      role="alert"
+    >
+      {{ formError() }}
+    </p>
+    }
+
+    <button
+      class="pressable min-h-11 w-fit bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
+      type="submit"
+    >
+      Enregistrer
+    </button>
+  </form>
+
+  @if (utilisateur.value().actif) {
+  <section class="max-w-lg border border-line bg-surface p-5">
+    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+      Désactivation
+    </h2>
+    <p class="mt-1 text-sm text-muted">
+      Le compte reste en base, marqué inactif. Pas de suppression physique, pas
+      de réactivation via l'API.
+    </p>
+    @if (deactivateError()) {
+    <p
+      class="mt-4 border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
+      role="alert"
+    >
+      {{ deactivateError() }}
+    </p>
+    }
+    <button
+      (click)="desactiver()"
+      class="pressable pressable-border mt-4 min-h-11 border border-brake/40 px-4 py-2.5 text-sm font-medium text-brake"
+      type="button"
+    >
+      Désactiver
+    </button>
+  </section>
+  } }
+</div>

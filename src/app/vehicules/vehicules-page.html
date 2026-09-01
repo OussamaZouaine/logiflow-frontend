@@ -4,34 +4,34 @@
       <p
         class="text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase"
       >
-        Référentiel
+        Flotte
       </p>
       <h1
         class="font-display mt-1 text-3xl font-medium tracking-tight text-ink"
       >
-        Sites
+        Véhicules
       </h1>
       <p class="mt-1 text-sm text-muted">
-        Quais de chargement et de déchargement.
+        Parc motorisé — plaque SIV
+        <span class="font-mono text-ink">AA-123-AA</span>
       </p>
     </div>
-    <!-- biome-ignore lint/a11y/useValidAnchor: <it's an angular router link> -->
     <a
       class="pressable min-h-11 bg-pine px-4 py-2.5 text-center text-sm font-medium tracking-wide text-surface"
-      routerLink="/sites/nouveau"
+      routerLink="/vehicules/nouveau"
     >
-      Nouveau site
+      Nouveau véhicule
     </a>
   </div>
 
   <form (submit)="applySearch($event)" class="flex gap-2">
-    <label class="sr-only" for="site-search">Rechercher</label>
+    <label class="sr-only" for="vehicule-search">Rechercher</label>
     <input
       (input)="onSearchInput($event)"
       [value]="searchDraft()"
       class="field min-w-0 flex-1"
-      id="site-search"
-      placeholder="Code ou libellé…"
+      id="vehicule-search"
+      placeholder="Immatriculation…"
       type="search"
     >
     <button
@@ -42,63 +42,67 @@
     </button>
   </form>
 
-  @if (sites.isLoading()) {
-  <p class="text-sm text-muted" role="status">Chargement des sites…</p>
-  } @else if (sites.error()) {
+  @if (vehicules.isLoading()) {
+  <p class="text-sm text-muted" role="status">Chargement des véhicules…</p>
+  } @else if (vehicules.error()) {
   <div
     class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
     role="alert"
   >
     <p>{{ errorMessage() }}</p>
     <button
-      (click)="sites.reload()"
+      (click)="vehicules.reload()"
       class="pressable mt-2 font-medium text-ink underline underline-offset-2"
       type="button"
     >
       Réessayer
     </button>
   </div>
-  } @else if (sites.hasValue() && sites.value().content.length === 0) {
-  <p class="text-sm text-muted">Aucun site en base.</p>
-  } @else if (sites.hasValue()) {
+  } @else if (vehicules.hasValue() && vehicules.value().content.length === 0) {
+  <p class="text-sm text-muted">Aucun véhicule.</p>
+  } @else if (vehicules.hasValue()) {
   <div class="overflow-x-auto border border-line bg-surface">
     <table class="w-full min-w-xl text-left text-sm">
       <thead
         class="border-b border-line text-[0.7rem] font-medium tracking-[0.12em] text-muted uppercase"
       >
         <tr>
-          <th class="px-4 py-3 font-medium" scope="col">Code</th>
-          <th class="px-4 py-3 font-medium" scope="col">Libellé</th>
-          <th class="px-4 py-3 font-medium" scope="col">Adresse</th>
+          <th class="px-4 py-3 font-medium" scope="col">Immatriculation</th>
+          <th class="px-4 py-3 font-medium" scope="col">Type</th>
+          <th class="px-4 py-3 font-medium" scope="col">PTAC</th>
+          <th class="px-4 py-3 font-medium" scope="col">Km</th>
           <th class="px-4 py-3 font-medium" scope="col">Statut</th>
         </tr>
       </thead>
       <tbody>
-        @for (site of sites.value().content; track site.id) {
+        @for (vehicule of vehicules.value().content; track vehicule.id) {
         <tr class="border-b border-line last:border-0">
           <td class="px-4 py-3">
-            <!-- biome-ignore lint/a11y/useValidAnchor: <it's an angular router link> -->
             <a
-              [routerLink]="['/sites', site.id]"
+              [routerLink]="['/vehicules', vehicule.id]"
               class="font-mono text-xs text-pine underline-offset-2 hover:underline"
             >
-              {{ site.code }}
+              {{ vehicule.immatriculation }}
             </a>
           </td>
-          <td class="px-4 py-3 font-medium text-ink">{{ site.libelle }}</td>
-          <td class="px-4 py-3 text-muted">{{ site.adresse ?? "—" }}</td>
-          <td class="px-4 py-3 text-ink">
-            {{ site.actif ? "Actif" : "Inactif" }}
+          <td class="px-4 py-3 text-ink">{{ typeLabel(vehicule.type) }}</td>
+          <td class="px-4 py-3 font-mono tabular-nums text-muted">
+            {{ vehicule.ptacKg }}
+            kg
           </td>
+          <td class="px-4 py-3 font-mono tabular-nums text-muted">
+            {{ vehicule.kilometrage }}
+          </td>
+          <td class="px-4 py-3 text-ink">{{ statutLabel(vehicule.statut) }}</td>
         </tr>
         }
       </tbody>
     </table>
   </div>
-  @if (sites.value().totalElements) {
+  @if (vehicules.value().totalElements) {
   <p class="font-mono text-sm tabular-nums text-muted">
-    {{ sites.value().totalElements }}
-    site(s)
+    {{ vehicules.value().totalElements }}
+    véhicule(s)
   </p>
   } }
 </div>

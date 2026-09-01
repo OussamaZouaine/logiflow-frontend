@@ -1,0 +1,132 @@
+<div class="flex max-w-lg flex-col gap-6">
+  <div>
+    <p class="text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase">
+      Référentiel
+    </p>
+    <h1 class="font-display mt-1 text-3xl font-medium tracking-tight text-ink">
+      Nouveau site
+    </h1>
+    <p class="mt-1 text-sm text-muted">Le code ne se modifie plus ensuite.</p>
+  </div>
+
+  <form (submit)="onSubmit($event)" class="flex flex-col gap-5">
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-medium text-muted" for="code">Code</label>
+      <input
+        [formField]="createForm.code"
+        autocomplete="off"
+        class="field"
+        id="code"
+        placeholder="SITE-LYON-01"
+        type="text"
+      >
+      @if (createForm.code().touched() && createForm.code().invalid()) {
+      <p class="text-xs text-brake" role="alert">
+        {{ firstFieldError(createForm.code().errors()) }}
+      </p>
+      }
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-medium text-muted" for="libelle">
+        Libellé
+      </label>
+      <input
+        [formField]="createForm.libelle"
+        class="field"
+        id="libelle"
+        type="text"
+      >
+      @if (createForm.libelle().touched() && createForm.libelle().invalid()) {
+      <p class="text-xs text-brake" role="alert">
+        {{ firstFieldError(createForm.libelle().errors()) }}
+      </p>
+      }
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-medium text-muted" for="adresse">
+        Adresse
+      </label>
+      <input
+        [formField]="createForm.adresse"
+        class="field"
+        id="adresse"
+        type="text"
+      >
+    </div>
+
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="latitude">
+          Latitude
+        </label>
+        <input
+          [formField]="createForm.latitude"
+          class="field"
+          id="latitude"
+          step="0.0001"
+          type="number"
+        >
+        @if (createForm.latitude().touched() && createForm.latitude().invalid())
+        {
+        <p class="text-xs text-brake" role="alert">
+          {{ firstFieldError(createForm.latitude().errors()) }}
+        </p>
+        }
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="longitude">
+          Longitude
+        </label>
+        <input
+          [formField]="createForm.longitude"
+          class="field"
+          id="longitude"
+          step="0.0001"
+          type="number"
+        >
+        @if ( createForm.longitude().touched() &&
+        createForm.longitude().invalid() ) {
+        <p class="text-xs text-brake" role="alert">
+          {{ firstFieldError(createForm.longitude().errors()) }}
+        </p>
+        }
+      </div>
+    </div>
+
+    <label class="flex items-center gap-2 text-sm text-ink">
+      <input
+        (change)="onPoidsLourd($event)"
+        [checked]="draft().interditPoidsLourd"
+        class="size-4 accent-pine"
+        type="checkbox"
+      >
+      Interdit aux poids lourds
+    </label>
+
+    @if (formError()) {
+    <p
+      class="border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
+      role="alert"
+    >
+      {{ formError() }}
+    </p>
+    }
+
+    <div class="flex flex-wrap gap-3">
+      <button
+        class="pressable min-h-11 bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
+        type="submit"
+      >
+        Enregistrer
+      </button>
+      <a
+        class="pressable pressable-border inline-flex min-h-11 items-center border border-line px-4 py-2.5 text-sm font-medium text-ink"
+        routerLink="/sites"
+      >
+        Annuler
+      </a>
+    </div>
+  </form>
+</div>

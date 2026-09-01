@@ -1,0 +1,94 @@
+<div class="flex flex-col gap-6">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <p
+        class="text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase"
+      >
+        Atelier
+      </p>
+      <h1
+        class="font-display mt-1 text-3xl font-medium tracking-tight text-ink"
+      >
+        Maintenance
+      </h1>
+      <p class="mt-1 text-sm text-muted">
+        Ordres de travail. Pas de GET collection : cette liste est la session en
+        cours.
+      </p>
+    </div>
+    <a
+      class="pressable min-h-11 bg-pine px-4 py-2.5 text-center text-sm font-medium tracking-wide text-surface"
+      routerLink="/maintenance/nouveau"
+    >
+      Nouvel ordre
+    </a>
+  </div>
+
+  <form (submit)="openById($event)" class="flex gap-2">
+    <label class="sr-only" for="ot-lookup">Ouvrir par identifiant</label>
+    <input
+      (input)="onLookupInput($event)"
+      [value]="lookupDraft()"
+      class="field min-w-0 flex-1"
+      id="ot-lookup"
+      placeholder="Identifiant d'ordre…"
+      type="search"
+    >
+    <button
+      class="pressable pressable-border shrink-0 border border-line px-4 py-2 text-sm font-medium text-ink"
+      type="submit"
+    >
+      Ouvrir
+    </button>
+  </form>
+
+  @if (ordres().length === 0) {
+  <p class="text-sm text-muted">
+    Aucun ordre dans cette session. Crée-en un, ou ouvre un identifiant connu.
+  </p>
+  } @else {
+  <div class="overflow-x-auto border border-line bg-surface">
+    <table class="w-full min-w-xl text-left text-sm">
+      <thead
+        class="border-b border-line text-[0.7rem] font-medium tracking-[0.12em] text-muted uppercase"
+      >
+        <tr>
+          <th class="px-4 py-3 font-medium" scope="col">Identifiant</th>
+          <th class="px-4 py-3 font-medium" scope="col">Type</th>
+          <th class="px-4 py-3 font-medium" scope="col">Planifié</th>
+          <th class="px-4 py-3 font-medium" scope="col">Coût</th>
+          <th class="px-4 py-3 font-medium" scope="col">Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (ordre of ordres(); track ordre.id) {
+        <tr class="border-b border-line last:border-0">
+          <td class="px-4 py-3">
+            <a
+              [routerLink]="['/maintenance', ordre.id]"
+              class="font-mono text-xs text-pine underline-offset-2 hover:underline"
+            >
+              {{ ordre.id }}
+            </a>
+          </td>
+          <td class="px-4 py-3 text-ink">
+            {{ typeInterventionLabel(ordre.type) }}
+          </td>
+          <td class="px-4 py-3 font-mono tabular-nums text-muted">
+            {{ formatDateTime(ordre.datePlanifiee) }}
+          </td>
+          <td class="px-4 py-3 font-mono tabular-nums text-ink">
+            {{ formatMoney(ordre.cout) }}
+          </td>
+          <td class="px-4 py-3 text-ink">{{ statutOtLabel(ordre.statut) }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <p class="font-mono text-sm tabular-nums text-muted">
+    {{ ordres().length }}
+    ordre(s)
+  </p>
+  }
+</div>

@@ -1,0 +1,102 @@
+<div class="flex flex-col gap-8">
+  <div>
+    <a
+      class="text-xs font-medium tracking-wide text-muted underline-offset-2 hover:text-ink hover:underline"
+      routerLink="/maintenance"
+    >
+      ← Maintenance
+    </a>
+    @if (ordre.isLoading()) {
+    <p class="mt-4 text-sm text-muted" role="status">Chargement…</p>
+    } @else if (ordre.error()) {
+    <div
+      class="mt-4 border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
+      role="alert"
+    >
+      <p>{{ loadError() }}</p>
+      <button
+        (click)="ordre.reload()"
+        class="pressable mt-2 font-medium text-ink underline underline-offset-2"
+        type="button"
+      >
+        Réessayer
+      </button>
+    </div>
+    } @else if (ordre.hasValue()) {
+    <p
+      class="mt-4 text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase"
+    >
+      Atelier
+    </p>
+    <h1
+      class="font-display mt-1 font-mono text-3xl font-medium tracking-tight text-ink"
+    >
+      {{ ordre.value().id }}
+    </h1>
+    <p class="mt-1 text-sm text-muted">
+      {{ statutOtLabel(ordre.value().statut) }}
+      ·
+      {{ typeInterventionLabel(ordre.value().type) }}
+    </p>
+    }
+  </div>
+
+  @if (ordre.hasValue()) {
+  <section class="max-w-lg border border-line bg-surface p-5">
+    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+      Fiche
+    </h2>
+    <dl class="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+      <div>
+        <dt class="text-xs text-muted">Planifié</dt>
+        <dd class="mt-0.5 font-mono tabular-nums text-ink">
+          {{ formatDateTime(ordre.value().datePlanifiee) }}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs text-muted">Coût</dt>
+        <dd class="mt-0.5 font-mono tabular-nums text-ink">
+          {{ formatMoney(ordre.value().cout) }}
+        </dd>
+      </div>
+      <div class="sm:col-span-2">
+        <dt class="text-xs text-muted">Véhicule</dt>
+        <dd class="mt-0.5 font-mono text-xs text-ink">
+          {{ ordre.value().vehiculeId }}
+        </dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="max-w-lg border border-line bg-surface p-5">
+    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+      Statut
+    </h2>
+    <p class="mt-1 text-sm text-muted">
+      Pas de suppression physique. Annulation = statut Annulé.
+    </p>
+    @if (statutError()) {
+    <p
+      class="mt-4 border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
+      role="alert"
+    >
+      {{ statutError() }}
+    </p>
+    } @if (nextStatuts(ordre.value().statut).length === 0) {
+    <p class="mt-4 text-sm text-muted">Aucune transition possible.</p>
+    } @else {
+    <div class="mt-4 flex flex-wrap gap-2">
+      @for (statut of nextStatuts(ordre.value().statut); track statut) {
+      <button
+        (click)="changerStatut(statut)"
+        class="pressable pressable-border min-h-11 border border-line px-4 py-2.5 text-sm font-medium text-ink"
+        type="button"
+      >
+        {{ statutOtLabel(statut) }}
+      </button>
+      }
+    </div>
+    }
+  </section>
+  }
+</div>

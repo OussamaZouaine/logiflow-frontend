@@ -1,0 +1,106 @@
+<div class="flex max-w-lg flex-col gap-6">
+  <div>
+    <p class="text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase">
+      Flotte
+    </p>
+    <h1 class="font-display mt-1 text-3xl font-medium tracking-tight text-ink">
+      Nouveau véhicule
+    </h1>
+    <p class="mt-1 text-sm text-muted">
+      L'immatriculation et le type ne se modifient plus ensuite.
+    </p>
+  </div>
+
+  <form (submit)="onSubmit($event)" class="flex flex-col gap-5">
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-medium text-muted" for="immatriculation">
+        Immatriculation
+      </label>
+      <input
+        [formField]="createForm.immatriculation"
+        autocomplete="off"
+        class="field"
+        id="immatriculation"
+        placeholder="AA-123-AA"
+        type="text"
+      >
+      @if ( createForm.immatriculation().touched() &&
+      createForm.immatriculation().invalid() ) {
+      <p class="text-xs text-brake" role="alert">
+        {{ firstFieldError(createForm.immatriculation().errors()) }}
+      </p>
+      }
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-medium text-muted" for="type">Type</label>
+      <select [formField]="createForm.type" class="field" id="type">
+        @for (type of types; track type) {
+        <option [value]="type">{{ typeLabel(type) }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="ptacKg">
+          PTAC (kg)
+        </label>
+        <input
+          [formField]="createForm.ptacKg"
+          class="field"
+          id="ptacKg"
+          step="1"
+          type="number"
+        >
+        @if (createForm.ptacKg().touched() && createForm.ptacKg().invalid()) {
+        <p class="text-xs text-brake" role="alert">
+          {{ firstFieldError(createForm.ptacKg().errors()) }}
+        </p>
+        }
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="chargeUtileKg">
+          Charge utile (kg)
+        </label>
+        <input
+          [formField]="createForm.chargeUtileKg"
+          class="field"
+          id="chargeUtileKg"
+          step="1"
+          type="number"
+        >
+        @if ( createForm.chargeUtileKg().touched() &&
+        createForm.chargeUtileKg().invalid() ) {
+        <p class="text-xs text-brake" role="alert">
+          {{ firstFieldError(createForm.chargeUtileKg().errors()) }}
+        </p>
+        }
+      </div>
+    </div>
+
+    @if (formError()) {
+    <p
+      class="border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
+      role="alert"
+    >
+      {{ formError() }}
+    </p>
+    }
+
+    <div class="flex flex-wrap gap-3">
+      <button
+        class="pressable min-h-11 bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
+        type="submit"
+      >
+        Enregistrer
+      </button>
+      <a
+        class="pressable pressable-border inline-flex min-h-11 items-center border border-line px-4 py-2.5 text-sm font-medium text-ink"
+        routerLink="/vehicules"
+      >
+        Annuler
+      </a>
+    </div>
+  </form>
+</div>

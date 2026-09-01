@@ -1,0 +1,203 @@
+<div class="flex flex-col gap-8">
+  <div>
+    <a
+      class="text-xs font-medium tracking-wide text-muted underline-offset-2 hover:text-ink hover:underline"
+      routerLink="/vehicules"
+    >
+      ← Véhicules
+    </a>
+    @if (vehicule.isLoading()) {
+    <p class="mt-4 text-sm text-muted" role="status">Chargement…</p>
+    } @else if (vehicule.error()) {
+    <div
+      class="mt-4 border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
+      role="alert"
+    >
+      <p>{{ loadError() }}</p>
+      <button
+        (click)="vehicule.reload()"
+        class="pressable mt-2 font-medium text-ink underline underline-offset-2"
+        type="button"
+      >
+        Réessayer
+      </button>
+    </div>
+    } @else if (vehicule.hasValue()) {
+    <p
+      class="mt-4 text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase"
+    >
+      Flotte
+    </p>
+    <h1
+      class="font-display mt-1 font-mono text-3xl font-medium tracking-tight text-ink"
+    >
+      {{ vehicule.value().immatriculation }}
+    </h1>
+    <p class="mt-1 text-sm text-muted">
+      {{ typeLabel(vehicule.value().type) }}
+      ·
+      {{ statutLabel(vehicule.value().statut) }}
+      · PTAC
+      {{ vehicule.value().ptacKg }}
+      kg · utile
+      {{ vehicule.value().chargeUtileKg }}
+      kg
+    </p>
+    }
+  </div>
+
+  @if (vehicule.hasValue()) {
+  <section class="max-w-lg border border-line bg-surface p-5">
+    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+      Compteurs
+    </h2>
+    <p class="mt-1 text-sm text-muted">Le relevé ne peut pas reculer.</p>
+    <form (submit)="saveCompteurs($event)" class="mt-5 flex flex-col gap-5">
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-medium text-muted" for="kilometrage">
+            Kilométrage
+          </label>
+          <input
+            [formField]="compteursForm.kilometrage"
+            class="field"
+            id="kilometrage"
+            step="1"
+            type="number"
+          >
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-medium text-muted" for="heuresMoteur">
+            Heures moteur
+          </label>
+          <input
+            [formField]="compteursForm.heuresMoteur"
+            class="field"
+            id="heuresMoteur"
+            step="1"
+            type="number"
+          >
+        </div>
+      </div>
+      @if (compteursError()) {
+      <p
+        class="border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
+        role="alert"
+      >
+        {{ compteursError() }}
+      </p>
+      }
+      <button
+        class="pressable min-h-11 w-fit bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
+        type="submit"
+      >
+        Enregistrer le relevé
+      </button>
+    </form>
+  </section>
+
+  <section class="border border-line bg-surface p-5">
+    <div class="flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+          Documents
+        </h2>
+        <p class="mt-1 text-sm text-muted">
+          Remplace la liste complète à l'enregistrement.
+        </p>
+      </div>
+      <button
+        (click)="addDocument()"
+        class="pressable pressable-border border border-line px-3 py-1.5 text-xs font-medium text-ink"
+        type="button"
+      >
+        Ajouter
+      </button>
+    </div>
+
+    @if (documents().length === 0) {
+    <p class="mt-4 text-sm text-muted">Aucun document.</p>
+    } @else {
+    <ul class="mt-4 flex flex-col gap-3">
+      @for (document of documents(); track $index) {
+      <li
+        class="grid grid-cols-1 gap-2 border border-line p-3 sm:grid-cols-[8rem_1fr_9rem_auto] sm:items-end"
+      >
+        <div class="flex flex-col gap-1.5">
+          <label
+            [for]="'doc-type-' + $index"
+            class="text-xs font-medium text-muted"
+          >
+            Type
+          </label>
+          <select
+            (change)="onDocumentType($index, $event)"
+            [id]="'doc-type-' + $index"
+            [value]="document.type"
+            class="field"
+          >
+            @for (type of documentTypes; track type) {
+            <option [value]="type">{{ documentTypeLabel(type) }}</option>
+            }
+          </select>
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label
+            [for]="'doc-ref-' + $index"
+            class="text-xs font-medium text-muted"
+          >
+            Référence
+          </label>
+          <input
+            (input)="onDocumentReference($index, $event)"
+            [id]="'doc-ref-' + $index"
+            [value]="document.reference"
+            class="field"
+            type="text"
+          >
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label
+            [for]="'doc-exp-' + $index"
+            class="text-xs font-medium text-muted"
+          >
+            Expiration
+          </label>
+          <input
+            (change)="onDocumentExpiration($index, $event)"
+            (input)="onDocumentExpiration($index, $event)"
+            [id]="'doc-exp-' + $index"
+            [value]="document.dateExpiration"
+            class="field"
+            type="date"
+          >
+        </div>
+        <button
+          (click)="removeDocument($index)"
+          class="pressable pressable-border h-11 border border-line px-3 text-xs font-medium text-ink"
+          type="button"
+        >
+          Retirer
+        </button>
+      </li>
+      }
+    </ul>
+    } @if (documentsError()) {
+    <p
+      class="mt-4 border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
+      role="alert"
+    >
+      {{ documentsError() }}
+    </p>
+    }
+
+    <button
+      (click)="saveDocuments()"
+      class="pressable mt-4 min-h-11 bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
+      type="button"
+    >
+      Enregistrer les documents
+    </button>
+  </section>
+  }
+</div>

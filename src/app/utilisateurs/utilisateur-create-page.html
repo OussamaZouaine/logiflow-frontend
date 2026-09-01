@@ -1,0 +1,88 @@
+<div class="flex max-w-lg flex-col gap-6">
+  <div>
+    <p class="text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase">
+      IAM
+    </p>
+    <h1 class="font-display mt-1 text-3xl font-medium tracking-tight text-ink">
+      Nouvel utilisateur
+    </h1>
+    <p class="mt-1 text-sm text-muted">
+      Le login ne se modifie plus ensuite. Compte créé actif.
+    </p>
+  </div>
+
+  <form (submit)="onSubmit($event)" class="flex flex-col gap-5">
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-medium text-muted" for="login">Login</label>
+      <input
+        [formField]="createForm.login"
+        autocomplete="off"
+        class="field"
+        id="login"
+        placeholder="marie.dupont"
+        type="text"
+      >
+      @if (createForm.login().touched() && createForm.login().invalid()) {
+      <p class="text-xs text-brake" role="alert">
+        {{ firstFieldError(createForm.login().errors()) }}
+      </p>
+      }
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-medium text-muted" for="email">Email</label>
+      <input
+        [formField]="createForm.email"
+        autocomplete="off"
+        class="field"
+        id="email"
+        placeholder="marie.dupont@logiflow.tms"
+        type="email"
+      >
+      @if (createForm.email().touched() && createForm.email().invalid()) {
+      <p class="text-xs text-brake" role="alert">
+        {{ firstFieldError(createForm.email().errors()) }}
+      </p>
+      }
+    </div>
+
+    <fieldset class="flex flex-col gap-2">
+      <legend class="text-xs font-medium text-muted">Rôles</legend>
+      @for (role of roles; track role) {
+      <label class="flex items-center gap-2 text-sm text-ink">
+        <input
+          (change)="toggleRole(role, $event)"
+          [checked]="draft().roles.includes(role)"
+          class="size-4 accent-pine"
+          type="checkbox"
+        >
+        {{ roleLabel(role) }}
+      </label>
+      }
+    </fieldset>
+
+    @if (formError()) {
+    <p
+      class="border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
+      role="alert"
+    >
+      {{ formError() }}
+    </p>
+    }
+
+    <div class="flex flex-wrap gap-3">
+      <button
+        class="pressable min-h-11 bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
+        type="submit"
+      >
+        Enregistrer
+      </button>
+      <a
+        class="pressable pressable-border inline-flex min-h-11 items-center border border-line px-4 py-2.5 text-sm font-medium text-ink"
+        routerLink="/utilisateurs"
+      >
+        Annuler
+      </a>
+    </div>
+  </form>
+</div>

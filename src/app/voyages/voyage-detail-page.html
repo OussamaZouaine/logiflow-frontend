@@ -1,0 +1,217 @@
+<div class="flex flex-col gap-8">
+  <div>
+    <a
+      class="text-xs font-medium tracking-wide text-muted underline-offset-2 hover:text-ink hover:underline"
+      routerLink="/voyages"
+    >
+      ← Voyages
+    </a>
+    @if (voyage.isLoading()) {
+    <p class="mt-4 text-sm text-muted" role="status">Chargement…</p>
+    } @else if (voyage.error()) {
+    <div
+      class="mt-4 border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
+      role="alert"
+    >
+      <p>{{ loadError() }}</p>
+      <button
+        (click)="voyage.reload()"
+        class="pressable mt-2 font-medium text-ink underline underline-offset-2"
+        type="button"
+      >
+        Réessayer
+      </button>
+    </div>
+    } @else if (voyage.hasValue()) {
+    <p
+      class="mt-4 text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase"
+    >
+      Planning
+    </p>
+    <h1
+      class="font-display mt-1 font-mono text-3xl font-medium tracking-tight text-ink"
+    >
+      {{ voyage.value().reference }}
+    </h1>
+    <p class="mt-1 text-sm text-muted">
+      {{ statutVoyageLabel(voyage.value().statut) }}
+      ·
+      {{ typeVoyageLabel(voyage.value().typeVoyage) }}
+      ·
+      {{ porteeLabel(voyage.value().portee) }}
+    </p>
+    }
+  </div>
+
+  @if (voyage.hasValue()) {
+  <section class="max-w-lg border border-line bg-surface p-5">
+    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+      Fiche
+    </h2>
+    <dl class="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+      <div>
+        <dt class="text-xs text-muted">Départ prévu</dt>
+        <dd class="mt-0.5 font-mono tabular-nums text-ink">
+          {{ formatInstant(voyage.value().departPrevu) }}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs text-muted">Arrivée prévue</dt>
+        <dd class="mt-0.5 font-mono tabular-nums text-ink">
+          {{ formatInstant(voyage.value().arriveePrevue) }}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs text-muted">Véhicule</dt>
+        <dd class="mt-0.5 font-mono text-xs text-ink">
+          {{ voyage.value().vehiculeId }}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs text-muted">Remplissage</dt>
+        <dd class="mt-0.5 font-mono tabular-nums text-ink">
+          {{ remplissageLabel(voyage.value().tauxRemplissage) }}
+        </dd>
+      </div>
+      <div class="sm:col-span-2">
+        <dt class="text-xs text-muted">Dossiers</dt>
+        <dd class="mt-0.5 font-mono text-xs text-ink">
+          {{ voyage.value().dossierIds.join(", ") }}
+        </dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="max-w-lg border border-line bg-surface p-5">
+    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+      Trajet
+    </h2>
+    <p class="mt-1 font-mono text-sm tabular-nums text-muted">
+      {{ voyage.value().trajet.distanceTotaleKm }}
+      km ·
+      {{ voyage.value().trajet.dureeConduiteMin }}
+      min de conduite
+    </p>
+    <ol class="mt-4 flex flex-col gap-3">
+      @for (etape of voyage.value().trajet.etapes; track etape.ordre) {
+      <li class="border-l-2 border-line pl-3 text-sm">
+        <p class="font-medium text-ink">{{ typeEtapeLabel(etape.type) }}</p>
+        <p class="font-mono text-xs tabular-nums text-muted">
+          {{ formatInstant(etape.eta) }}
+        </p>
+      </li>
+      }
+    </ol>
+  </section>
+
+  <section class="max-w-lg border border-line bg-surface p-5">
+    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+      Statut
+    </h2>
+    <p class="mt-1 text-sm text-muted">
+      Pas de suppression physique. Annulation = statut Annulé.
+    </p>
+    @if (statutError()) {
+    <p
+      class="mt-4 border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
+      role="alert"
+    >
+      {{ statutError() }}
+    </p>
+    } @if (nextStatuts(voyage.value().statut).length === 0) {
+    <p class="mt-4 text-sm text-muted">Aucune transition possible.</p>
+    } @else {
+    <div class="mt-4 flex flex-wrap gap-2">
+      @for (statut of nextStatuts(voyage.value().statut); track statut) {
+      <button
+        (click)="changerStatut(statut)"
+        class="pressable pressable-border min-h-11 border border-line px-4 py-2.5 text-sm font-medium text-ink"
+        type="button"
+      >
+        {{ statutVoyageLabel(statut) }}
+      </button>
+      }
+    </div>
+    }
+  </section>
+
+  <section class="max-w-lg border border-line bg-surface p-5">
+    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+      Exécution
+    </h2>
+    <p class="mt-1 text-sm text-muted">
+      Événements de suivi. Immuables une fois déclarés.
+    </p>
+
+    @if (evenements.isLoading()) {
+    <p class="mt-4 text-sm text-muted" role="status">
+      Chargement des événements…
+    </p>
+    } @else if (evenements.error()) {
+    <p class="mt-4 text-sm text-brake" role="alert">{{ eventsError() }}</p>
+    } @else if (evenements.hasValue() && evenements.value().length === 0) {
+    <p class="mt-4 text-sm text-muted">Aucun événement déclaré.</p>
+    } @else if (evenements.hasValue()) {
+    <ul class="mt-4 flex flex-col gap-3">
+      @for (evenement of evenements.value(); track evenement.id) {
+      <li class="border-b border-line pb-3 last:border-0 last:pb-0">
+        <p class="text-sm font-medium text-ink">
+          {{ typeEvenementLabel(evenement.type) }}
+        </p>
+        <p class="font-mono text-xs tabular-nums text-muted">
+          {{ formatInstant(evenement.horodatage) }}
+        </p>
+        @if (evenement.commentaire) {
+        <p class="mt-1 text-sm text-muted">{{ evenement.commentaire }}</p>
+        }
+      </li>
+      }
+    </ul>
+    }
+
+    <form (submit)="declarerEvenement($event)" class="mt-5 flex flex-col gap-3">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="eventType">
+          Type d'événement
+        </label>
+        <select
+          (change)="onEventType($event)"
+          [value]="eventType()"
+          class="field"
+          id="eventType"
+        >
+          @for (type of eventTypes; track type) {
+          <option [value]="type">{{ typeEvenementLabel(type) }}</option>
+          }
+        </select>
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="eventComment">
+          Commentaire
+        </label>
+        <input
+          (input)="onEventComment($event)"
+          [value]="eventComment()"
+          class="field"
+          id="eventComment"
+          type="text"
+        >
+      </div>
+      @if (eventError()) {
+      <p
+        class="border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
+        role="alert"
+      >
+        {{ eventError() }}
+      </p>
+      }
+      <button
+        class="pressable min-h-11 w-fit bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
+        type="submit"
+      >
+        Déclarer
+      </button>
+    </form>
+  </section>
+  }
+</div>

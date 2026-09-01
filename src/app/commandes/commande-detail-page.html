@@ -1,0 +1,107 @@
+<div class="flex flex-col gap-8">
+  <div>
+    <a
+      class="text-xs font-medium tracking-wide text-muted underline-offset-2 hover:text-ink hover:underline"
+      routerLink="/commandes"
+    >
+      ← Commandes
+    </a>
+    @if (commande.isLoading()) {
+    <p class="mt-4 text-sm text-muted" role="status">Chargement…</p>
+    } @else if (commande.error()) {
+    <div
+      class="mt-4 border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
+      role="alert"
+    >
+      <p>{{ loadError() }}</p>
+      <button
+        (click)="commande.reload()"
+        class="pressable mt-2 font-medium text-ink underline underline-offset-2"
+        type="button"
+      >
+        Réessayer
+      </button>
+    </div>
+    } @else if (commande.hasValue()) {
+    <p
+      class="mt-4 text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase"
+    >
+      Commercial
+    </p>
+    <h1
+      class="font-display mt-1 font-mono text-3xl font-medium tracking-tight text-ink"
+    >
+      {{ commande.value().reference }}
+    </h1>
+    <p class="mt-1 text-sm text-muted">
+      {{ statutCommandeLabel(commande.value().statut) }}
+    </p>
+    }
+  </div>
+
+  @if (commande.hasValue()) {
+  <section class="max-w-lg border border-line bg-surface p-5">
+    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+      Fiche
+    </h2>
+    <dl class="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+      <div>
+        <dt class="text-xs text-muted">Date souhaitée</dt>
+        <dd class="mt-0.5 font-mono tabular-nums text-ink">
+          {{ formatDate(commande.value().dateSouhaitee) }}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs text-muted">Prix négocié</dt>
+        <dd class="mt-0.5 font-mono tabular-nums text-ink">
+          {{ formatMoney(commande.value().prixNegocie) }}
+        </dd>
+      </div>
+      <div class="sm:col-span-2">
+        <dt class="text-xs text-muted">Client</dt>
+        <dd class="mt-0.5 font-mono text-xs text-ink">
+          {{ commande.value().clientId }}
+        </dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="max-w-lg border border-line bg-surface p-5">
+    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+      Cycle de vie
+    </h2>
+    <p class="mt-1 text-sm text-muted">
+      Pas de suppression physique. Annulation = statut Annulée.
+    </p>
+    @if (actionError()) {
+    <p
+      class="mt-4 border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
+      role="alert"
+    >
+      {{ actionError() }}
+    </p>
+    }
+    <div class="mt-4 flex flex-wrap gap-2">
+      @if (commande.value().statut === "RECUE") {
+      <button
+        (click)="confirmer()"
+        class="pressable min-h-11 bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
+        type="button"
+      >
+        Confirmer
+      </button>
+      } @if (commande.value().statut !== "ANNULEE") {
+      <button
+        (click)="annuler()"
+        class="pressable pressable-border min-h-11 border border-brake/40 px-4 py-2.5 text-sm font-medium text-brake"
+        type="button"
+      >
+        Annuler
+      </button>
+      } @if (commande.value().statut === "ANNULEE") {
+      <p class="text-sm text-muted">Commande déjà annulée.</p>
+      }
+    </div>
+  </section>
+  }
+</div>

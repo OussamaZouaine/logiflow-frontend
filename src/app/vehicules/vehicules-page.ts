@@ -4,30 +4,33 @@ import { RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
-import type { Site } from "./site";
+import { statutLabel, typeLabel, type Vehicule } from "./vehicule";
 
-const SITES_PAGE_SIZE = 20;
+const VEHICULES_PAGE_SIZE = 20;
 
 @Component({
   imports: [RouterLink],
-  selector: "app-sites-page",
-  templateUrl: "./sites-page.html",
+  selector: "app-vehicules-page",
+  templateUrl: "./vehicules-page.html",
 })
-export class SitesPage {
+export class VehiculesPage {
+  protected readonly typeLabel = typeLabel;
+  protected readonly statutLabel = statutLabel;
+
   protected readonly searchDraft = signal("");
   protected readonly search = signal("");
 
-  protected readonly sites = httpResource<PageResponse<Site>>(() => ({
+  protected readonly vehicules = httpResource<PageResponse<Vehicule>>(() => ({
     params: {
       page: 0,
       q: this.search().trim(),
-      size: SITES_PAGE_SIZE,
+      size: VEHICULES_PAGE_SIZE,
     },
-    url: `${environment.apiBaseUrl}/sites`,
+    url: `${environment.apiBaseUrl}/vehicules`,
   }));
 
   protected readonly errorMessage = computed(() =>
-    httpErrorMessage(this.sites.error())
+    httpErrorMessage(this.vehicules.error())
   );
 
   protected onSearchInput(event: Event): void {
