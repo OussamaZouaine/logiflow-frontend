@@ -1,0 +1,7 @@
+# pnpm 11 blocks dependency build scripts until they are allowlisted.
+# These four are required for Angular (esbuild) and its native helpers.
+allowBuilds:
+  "@parcel/watcher": true
+  esbuild: true
+  lmdb: true
+  msgpackr-extract: true
