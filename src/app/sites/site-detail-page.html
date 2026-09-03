@@ -1,5 +1,6 @@
 <div class="flex flex-col gap-8">
   <div>
+    <!-- biome-ignore lint/a11y/useValidAnchor: <it's an angular router link> -->
     <a
       class="text-xs font-medium tracking-wide text-muted underline-offset-2 hover:text-ink hover:underline"
       routerLink="/sites"
@@ -29,7 +30,7 @@
       Référentiel
     </p>
     <h1
-      class="font-display mt-1 font-mono text-3xl font-medium tracking-tight text-ink"
+      class="font-display mt-1 text-3xl font-medium tracking-tight text-ink"
     >
       {{ site.value().code }}
     </h1>
