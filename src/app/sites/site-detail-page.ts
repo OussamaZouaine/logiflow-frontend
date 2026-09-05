@@ -21,9 +21,13 @@ import { httpErrorMessage } from "../core/api/http-error";
 import { firstFieldError } from "../core/forms/first-field-error";
 import { draftToWrite, emptySiteDraft, type Site, siteToDraft } from "./site";
 import { SiteApi } from "./site-api";
+import {
+  type SiteLocalisationCoordinates,
+  SiteLocalisationMap,
+} from "./site-localisation-map";
 
 @Component({
-  imports: [FormField, RouterLink],
+  imports: [FormField, RouterLink, SiteLocalisationMap],
   selector: "app-site-detail-page",
   templateUrl: "./site-detail-page.html",
 })
@@ -76,6 +80,14 @@ export class SiteDetailPage {
         interditPoidsLourd: target.checked,
       }));
     }
+  }
+
+  protected onLocalisationChange(coords: SiteLocalisationCoordinates): void {
+    this.draft.update((current) => ({
+      ...current,
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+    }));
   }
 
   protected async onSubmit(event: SubmitEvent): Promise<void> {

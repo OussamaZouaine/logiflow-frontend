@@ -1,3 +1,5 @@
+import { DEFAULT_SITE_LOCALISATION } from "./site-localisation";
+
 export interface GeoPoint {
   latitude: number;
   longitude: number;
@@ -45,9 +47,9 @@ export function emptySiteDraft(): SiteDraft {
     adresse: "",
     code: "",
     interditPoidsLourd: false,
-    latitude: 48.8566,
+    latitude: DEFAULT_SITE_LOCALISATION.latitude,
     libelle: "",
-    longitude: 2.3522,
+    longitude: DEFAULT_SITE_LOCALISATION.longitude,
   };
 }
 
