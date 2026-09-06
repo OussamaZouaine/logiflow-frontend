@@ -1,5 +1,6 @@
 import type { Routes } from "@angular/router";
 import { guestGuard, roleGuard, signedInGuard } from "./core/auth/guards";
+import { DOSSIERS_PLAN_ROLES } from "./core/auth/role";
 import { workDestination } from "./core/nav/work-destination";
 
 export const routes: Routes = [
@@ -150,6 +151,33 @@ export const routes: Routes = [
             (module) => module.CommandeDetailPage
           ),
         path: "commandes/:id",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("dossiers").roles },
+        loadComponent: () =>
+          import("./dossiers/dossiers-page").then(
+            (module) => module.DossiersPage
+          ),
+        path: "dossiers",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: DOSSIERS_PLAN_ROLES },
+        loadComponent: () =>
+          import("./dossiers/dossier-create-page").then(
+            (module) => module.DossierCreatePage
+          ),
+        path: "dossiers/nouveau",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("dossiers").roles },
+        loadComponent: () =>
+          import("./dossiers/dossier-detail-page").then(
+            (module) => module.DossierDetailPage
+          ),
+        path: "dossiers/:id",
       },
       {
         canActivate: [roleGuard],

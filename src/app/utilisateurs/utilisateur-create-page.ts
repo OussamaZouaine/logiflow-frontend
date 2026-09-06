@@ -4,6 +4,7 @@ import { Router, RouterLink } from "@angular/router";
 import { httpErrorMessage } from "../core/api/http-error";
 import { type Role, roleLabel } from "../core/auth/role";
 import { firstFieldError } from "../core/forms/first-field-error";
+import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
 import {
   draftToWrite,
   emptyUtilisateurDraft,
@@ -24,7 +25,10 @@ export class UtilisateurCreatePage {
   protected readonly roles = UTILISATEUR_ROLES;
   protected readonly roleLabel = roleLabel;
   protected readonly firstFieldError = firstFieldError;
+  protected readonly showFieldError = showFieldError;
+  protected readonly fieldClasses = fieldClasses;
   protected readonly formError = signal<string | null>(null);
+  protected readonly rolesTouched = signal(false);
 
   protected readonly draft = signal(emptyUtilisateurDraft());
 
@@ -45,11 +49,11 @@ export class UtilisateurCreatePage {
   protected async onSubmit(event: SubmitEvent): Promise<void> {
     event.preventDefault();
     this.formError.set(null);
-    if (this.draft().roles.length === 0) {
-      this.formError.set("Au moins un rôle est obligatoire.");
-      return;
-    }
+    this.rolesTouched.set(true);
     await submit(this.createForm, async () => {
+      if (this.draft().roles.length === 0) {
+        return;
+      }
       try {
         const created = await this.api.create(draftToWrite(this.draft()));
         await this.router.navigate(["/utilisateurs", created.id]);

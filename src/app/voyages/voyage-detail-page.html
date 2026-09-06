@@ -75,8 +75,19 @@
       </div>
       <div class="sm:col-span-2">
         <dt class="text-xs text-muted">Dossiers</dt>
-        <dd class="mt-0.5 font-mono text-xs text-ink">
-          {{ voyage.value().dossierIds.join(", ") }}
+        <dd class="mt-0.5 text-sm text-ink">
+          <ul class="flex flex-col gap-1">
+            @for (dossierId of voyage.value().dossierIds; track dossierId) {
+            <li>
+              <a
+                [routerLink]="['/dossiers', dossierId]"
+                class="font-mono text-xs text-pine underline-offset-2 hover:underline"
+              >
+                {{ dossierLabel(dossierId) }}
+              </a>
+            </li>
+            }
+          </ul>
         </dd>
       </div>
     </dl>

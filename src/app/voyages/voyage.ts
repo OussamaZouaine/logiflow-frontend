@@ -99,7 +99,6 @@ export interface VoyageDraft {
   chauffeurId: string;
   departPrevu: string;
   distanceTotaleKm: number;
-  dossierId: string;
   dureeConduiteMin: number;
   portee: Portee;
   typeVoyage: TypeVoyage;
@@ -123,8 +122,10 @@ export interface VoyageLookupVehicule {
 
 export interface VoyageLookupDossier {
   id: string;
+  poidsBrutKg: number;
   reference: string;
   statut: string;
+  volumeM3: number;
 }
 
 export interface VoyageLookupChauffeur {
@@ -154,7 +155,6 @@ export function emptyVoyageDraft(): VoyageDraft {
     chauffeurId: "",
     departPrevu: toDatetimeLocal(depart),
     distanceTotaleKm: 450,
-    dossierId: "",
     dureeConduiteMin: 360,
     portee: "NATIONAL",
     typeVoyage: "SIMPLE",
@@ -162,7 +162,10 @@ export function emptyVoyageDraft(): VoyageDraft {
   };
 }
 
-export function draftToWrite(draft: VoyageDraft): VoyageWrite {
+export function draftToWrite(
+  draft: VoyageDraft,
+  dossierIds: readonly string[]
+): VoyageWrite {
   const departPrevu = datetimeLocalToIso(draft.departPrevu);
   const arriveePrevue = datetimeLocalToIso(draft.arriveePrevue);
   const spanMin = minutesBetween(draft.departPrevu, draft.arriveePrevue);
@@ -177,7 +180,7 @@ export function draftToWrite(draft: VoyageDraft): VoyageWrite {
     ],
     arriveePrevue,
     departPrevu,
-    dossierIds: [draft.dossierId],
+    dossierIds: [...dossierIds],
     portee: draft.portee,
     remorqueId: null,
     trajet: {

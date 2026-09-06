@@ -9,19 +9,30 @@
     <p class="mt-1 text-sm text-muted">Le code ne se modifie plus ensuite.</p>
   </div>
 
-  <form (submit)="onSubmit($event)" class="flex flex-col gap-5">
+  <form (submit)="onSubmit($event)" class="flex flex-col gap-5" novalidate>
+    @if (createForm().touched() && createForm().invalid()) {
+    <div
+      class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
+      role="alert"
+    >
+      <p class="font-medium">Certains champs sont à corriger.</p>
+      <p class="mt-1 text-xs text-brake/90">
+        Consultez les messages sous chaque champ en surbrillance.
+      </p>
+    </div>
+    }
     <div class="flex max-w-lg flex-col gap-5">
       <div class="flex flex-col gap-1.5">
         <label class="text-xs font-medium text-muted" for="code">Code</label>
         <input
           [formField]="createForm.code"
+          [class]="fieldClasses(createForm.code())"
           autocomplete="off"
-          class="field"
           id="code"
           placeholder="SITE-LYON-01"
           type="text"
         >
-        @if (createForm.code().touched() && createForm.code().invalid()) {
+        @if (showFieldError(createForm.code())) {
         <p class="text-xs text-brake" role="alert">
           {{ firstFieldError(createForm.code().errors()) }}
         </p>
@@ -34,11 +45,11 @@
         </label>
         <input
           [formField]="createForm.libelle"
-          class="field"
+          [class]="fieldClasses(createForm.libelle())"
           id="libelle"
           type="text"
         >
-        @if (createForm.libelle().touched() && createForm.libelle().invalid()) {
+        @if (showFieldError(createForm.libelle())) {
         <p class="text-xs text-brake" role="alert">
           {{ firstFieldError(createForm.libelle().errors()) }}
         </p>
@@ -64,13 +75,12 @@
           </label>
           <input
             [formField]="createForm.latitude"
-            class="field"
+            [class]="fieldClasses(createForm.latitude())"
             id="latitude"
             step="0.0001"
             type="number"
           >
-          @if (createForm.latitude().touched() &&
-          createForm.latitude().invalid()) {
+          @if (showFieldError(createForm.latitude())) {
           <p class="text-xs text-brake" role="alert">
             {{ firstFieldError(createForm.latitude().errors()) }}
           </p>
@@ -82,13 +92,12 @@
           </label>
           <input
             [formField]="createForm.longitude"
-            class="field"
+            [class]="fieldClasses(createForm.longitude())"
             id="longitude"
             step="0.0001"
             type="number"
           >
-          @if ( createForm.longitude().touched() &&
-          createForm.longitude().invalid() ) {
+          @if (showFieldError(createForm.longitude())) {
           <p class="text-xs text-brake" role="alert">
             {{ firstFieldError(createForm.longitude().errors()) }}
           </p>

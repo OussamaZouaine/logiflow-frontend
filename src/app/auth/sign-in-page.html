@@ -56,21 +56,29 @@
           }
         </div>
 
-        <form (submit)="onSubmit($event)" class="mt-7 flex flex-col gap-5">
+        <form (submit)="onSubmit($event)" class="mt-7 flex flex-col gap-5" novalidate>
+          @if (signInForm().touched() && signInForm().invalid()) {
+          <div
+            class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
+            role="alert"
+          >
+            <p class="font-medium">Identifiant ou mot de passe manquant.</p>
+          </div>
+          }
           <div class="flex flex-col gap-1.5">
             <label class="text-xs font-medium text-muted" for="login">
               Identifiant
             </label>
             <input
               [formField]="signInForm.login"
+              [class]="fieldClasses(signInForm.login())"
               autocomplete="username"
-              class="field"
               id="login"
               type="text"
             >
-            @if (signInForm.login().touched() && signInForm.login().invalid()) {
+            @if (showFieldError(signInForm.login())) {
             <p class="text-xs text-brake" role="alert">
-              {{ firstError(signInForm.login().errors()) }}
+              {{ firstFieldError(signInForm.login().errors()) }}
             </p>
             }
           </div>
@@ -81,15 +89,14 @@
             </label>
             <input
               [formField]="signInForm.password"
+              [class]="fieldClasses(signInForm.password())"
               autocomplete="current-password"
-              class="field"
               id="password"
               type="password"
             >
-            @if ( signInForm.password().touched() &&
-            signInForm.password().invalid() ) {
+            @if (showFieldError(signInForm.password())) {
             <p class="text-xs text-brake" role="alert">
-              {{ firstError(signInForm.password().errors()) }}
+              {{ firstFieldError(signInForm.password().errors()) }}
             </p>
             }
           </div>

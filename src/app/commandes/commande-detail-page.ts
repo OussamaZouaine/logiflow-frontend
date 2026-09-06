@@ -3,6 +3,10 @@ import { Component, computed, inject, input, signal } from "@angular/core";
 import { RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
+import type { PageResponse } from "../core/api/page-response";
+import { DemoSessionService } from "../core/auth/demo-session";
+import { DOSSIERS_PLAN_ROLES } from "../core/auth/role";
+import { statutDossierLabel, type Dossier } from "../dossiers/dossier";
 import {
   type Commande,
   formatDate,
@@ -18,18 +22,33 @@ import { CommandeApi } from "./commande-api";
 })
 export class CommandeDetailPage {
   private readonly api = inject(CommandeApi);
+  private readonly session = inject(DemoSessionService);
 
   readonly id = input.required<string>();
 
   protected readonly formatDate = formatDate;
   protected readonly formatMoney = formatMoney;
   protected readonly statutCommandeLabel = statutCommandeLabel;
+  protected readonly statutDossierLabel = statutDossierLabel;
 
   protected readonly actionError = signal<string | null>(null);
+
+  protected readonly canOpenDossier = computed(() =>
+    this.session.hasAnyRole(DOSSIERS_PLAN_ROLES)
+  );
 
   protected readonly commande = httpResource<Commande>(() => ({
     url: `${environment.apiBaseUrl}/commandes/${this.id()}`,
   }));
+
+  protected readonly dossiersLiees = httpResource<PageResponse<Dossier>>(() => ({
+    params: { commandeId: this.id() },
+    url: `${environment.apiBaseUrl}/dossiers`,
+  }));
+
+  protected readonly dossiersList = computed(
+    () => this.dossiersLiees.value()?.content ?? []
+  );
 
   protected readonly loadError = computed(() =>
     httpErrorMessage(this.commande.error())

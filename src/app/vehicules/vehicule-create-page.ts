@@ -10,6 +10,7 @@ import {
 import { Router, RouterLink } from "@angular/router";
 import { httpErrorMessage } from "../core/api/http-error";
 import { firstFieldError } from "../core/forms/first-field-error";
+import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
 import { typeLabel, VEHICULE_TYPES, type VehiculeType } from "./vehicule";
 import { VehiculeApi } from "./vehicule-api";
 
@@ -27,6 +28,8 @@ export class VehiculeCreatePage {
   protected readonly types = VEHICULE_TYPES;
   protected readonly typeLabel = typeLabel;
   protected readonly firstFieldError = firstFieldError;
+  protected readonly showFieldError = showFieldError;
+  protected readonly fieldClasses = fieldClasses;
   protected readonly formError = signal<string | null>(null);
 
   protected readonly draft = signal({

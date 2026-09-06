@@ -8,6 +8,8 @@ import {
 } from "../core/auth/demo-identity";
 import { DemoSessionService } from "../core/auth/demo-session";
 import { roleLabel } from "../core/auth/role";
+import { firstFieldError } from "../core/forms/first-field-error";
+import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
 
 @Component({
   imports: [FormField],
@@ -22,6 +24,9 @@ export class SignInPage {
   protected readonly identities = DEMO_IDENTITIES;
   protected readonly demoPassword = DEMO_PASSWORD;
   protected readonly roleLabel = roleLabel;
+  protected readonly firstFieldError = firstFieldError;
+  protected readonly showFieldError = showFieldError;
+  protected readonly fieldClasses = fieldClasses;
   protected readonly authError = signal<string | null>(null);
 
   protected readonly credentials = signal({
@@ -54,10 +59,5 @@ export class SignInPage {
       }
       await this.router.navigateByUrl("/");
     });
-  }
-
-  protected firstError(errors: readonly { message?: string }[]): string | null {
-    const message = errors[0]?.message;
-    return message ?? null;
   }
 }

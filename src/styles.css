@@ -70,6 +70,15 @@ body {
   border-color: var(--color-pine);
 }
 
+.field--invalid {
+  border-color: color-mix(in srgb, var(--color-brake) 55%, var(--color-line));
+  background: color-mix(in srgb, var(--color-brake) 4%, var(--color-surface));
+}
+
+.field--invalid:focus {
+  border-color: var(--color-brake);
+}
+
 @media (hover: hover) and (pointer: fine) {
   .pressable-border:hover {
     border-color: var(--color-pine);

@@ -12,7 +12,18 @@
     </p>
   </div>
 
-  <form (submit)="onSubmit($event)" class="flex flex-col gap-5">
+  <form (submit)="onSubmit($event)" class="flex flex-col gap-5" novalidate>
+    @if (createForm().touched() && createForm().invalid()) {
+    <div
+      class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
+      role="alert"
+    >
+      <p class="font-medium">Certains champs sont à corriger.</p>
+      <p class="mt-1 text-xs text-brake/90">
+        Consultez les messages sous chaque champ en surbrillance.
+      </p>
+    </div>
+    }
     <label class="flex items-center gap-2 text-sm text-ink">
       <input
         (change)="onNouveauClient($event)"
@@ -30,12 +41,17 @@
       </label>
       <input
         [formField]="createForm.clientCode"
+        [class]="fieldClasses(createForm.clientCode())"
         autocomplete="off"
-        class="field"
         id="clientCode"
         placeholder="CLI-LYON-01"
         type="text"
       >
+      @if (showFieldError(createForm.clientCode())) {
+      <p class="text-xs text-brake" role="alert">
+        {{ firstFieldError(createForm.clientCode().errors()) }}
+      </p>
+      }
     </div>
     <div class="flex flex-col gap-1.5">
       <label class="text-xs font-medium text-muted" for="clientRaisonSociale">
@@ -43,10 +59,15 @@
       </label>
       <input
         [formField]="createForm.clientRaisonSociale"
-        class="field"
+        [class]="fieldClasses(createForm.clientRaisonSociale())"
         id="clientRaisonSociale"
         type="text"
       >
+      @if (showFieldError(createForm.clientRaisonSociale())) {
+      <p class="text-xs text-brake" role="alert">
+        {{ firstFieldError(createForm.clientRaisonSociale().errors()) }}
+      </p>
+      }
     </div>
     } @else {
     <div class="flex flex-col gap-1.5">
@@ -55,11 +76,16 @@
       </label>
       <input
         [formField]="createForm.clientId"
+        [class]="fieldClasses(createForm.clientId())"
         autocomplete="off"
-        class="field"
         id="clientId"
         type="text"
       >
+      @if (showFieldError(createForm.clientId())) {
+      <p class="text-xs text-brake" role="alert">
+        {{ firstFieldError(createForm.clientId().errors()) }}
+      </p>
+      }
     </div>
     }
 
@@ -70,12 +96,11 @@
         </label>
         <input
           [formField]="createForm.dateSouhaitee"
-          class="field"
+          [class]="fieldClasses(createForm.dateSouhaitee())"
           id="dateSouhaitee"
           type="date"
         >
-        @if ( createForm.dateSouhaitee().touched() &&
-        createForm.dateSouhaitee().invalid() ) {
+        @if (showFieldError(createForm.dateSouhaitee())) {
         <p class="text-xs text-brake" role="alert">
           {{ firstFieldError(createForm.dateSouhaitee().errors()) }}
         </p>
@@ -87,12 +112,12 @@
         </label>
         <input
           [formField]="createForm.montant"
-          class="field"
+          [class]="fieldClasses(createForm.montant())"
           id="montant"
           step="0.01"
           type="number"
         >
-        @if (createForm.montant().touched() && createForm.montant().invalid()) {
+        @if (showFieldError(createForm.montant())) {
         <p class="text-xs text-brake" role="alert">
           {{ firstFieldError(createForm.montant().errors()) }}
         </p>

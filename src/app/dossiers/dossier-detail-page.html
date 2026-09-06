@@ -1,0 +1,235 @@
+<div class="flex flex-col gap-8">
+  <div>
+    <a
+      class="text-xs font-medium tracking-wide text-muted underline-offset-2 hover:text-ink hover:underline"
+      routerLink="/dossiers"
+    >
+      ← Dossiers
+    </a>
+    @if (dossier.isLoading()) {
+    <p class="mt-4 text-sm text-muted" role="status">Chargement…</p>
+    } @else if (dossier.error()) {
+    <div
+      class="mt-4 border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
+      role="alert"
+    >
+      <p>{{ loadError() }}</p>
+      <button
+        (click)="dossier.reload()"
+        class="pressable mt-2 font-medium text-ink underline underline-offset-2"
+        type="button"
+      >
+        Réessayer
+      </button>
+    </div>
+    } @else if (dossier.hasValue()) {
+    <p
+      class="mt-4 text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase"
+    >
+      Exploitation
+    </p>
+    <h1
+      class="font-display mt-1 font-mono text-3xl font-medium tracking-tight text-ink"
+    >
+      {{ dossier.value().reference }}
+    </h1>
+    <p class="mt-1 text-sm text-muted">
+      {{ statutDossierLabel(dossier.value().statut) }}
+      ·
+      {{ typeTransportLabel(dossier.value().typeTransport) }}
+      @if (dossier.value().groupable) {
+      · Groupable
+      }
+      @if (dossier.value().contientAdr) {
+      · ADR
+      }
+    </p>
+    }
+  </div>
+
+  @if (dossier.hasValue()) {
+  <section class="max-w-lg border border-line bg-surface p-5">
+    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+      Fiche
+    </h2>
+    <dl class="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+      <div>
+        <dt class="text-xs text-muted">Commande</dt>
+        <dd class="mt-0.5 text-sm text-ink">
+          <a
+            [routerLink]="['/commandes', dossier.value().commandeId]"
+            class="text-pine underline-offset-2 hover:underline"
+          >
+            {{ commandeLabel(dossier.value().commandeId) }}
+          </a>
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs text-muted">Famille</dt>
+        <dd class="mt-0.5 text-ink">{{ dossier.value().familleMarchandise }}</dd>
+      </div>
+      <div>
+        <dt class="text-xs text-muted">Poids brut</dt>
+        <dd class="mt-0.5 font-mono tabular-nums text-ink">
+          {{ dossier.value().poidsBrutKg }} kg
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs text-muted">Volume</dt>
+        <dd class="mt-0.5 font-mono tabular-nums text-ink">
+          {{ dossier.value().volumeM3 }} m³
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs text-muted">Palettes</dt>
+        <dd class="mt-0.5 font-mono tabular-nums text-ink">
+          {{ dossier.value().nbPalettes }}
+        </dd>
+      </div>
+      @if (dossier.value().temperatureRequise !== null) {
+      <div>
+        <dt class="text-xs text-muted">Température</dt>
+        <dd class="mt-0.5 font-mono tabular-nums text-ink">
+          {{ dossier.value().temperatureRequise }} °C
+        </dd>
+      </div>
+      }
+      @if (dossier.value().carrosserieRequise) {
+      <div>
+        <dt class="text-xs text-muted">Carrosserie</dt>
+        <dd class="mt-0.5 text-ink">
+          {{ dossier.value().carrosserieRequise }}
+        </dd>
+      </div>
+      }
+    </dl>
+  </section>
+
+  <section class="max-w-lg border border-line bg-surface p-5">
+    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+      Marchandise
+    </h2>
+    <ul class="mt-4 flex flex-col gap-3 text-sm">
+      @for (ligne of dossier.value().lignesMarchandise; track ligne.designation) {
+      <li class="border border-line px-3 py-2">
+        <p class="font-medium text-ink">{{ ligne.designation }}</p>
+        <p class="mt-1 font-mono text-xs tabular-nums text-muted">
+          {{ ligne.poidsKg }} kg · {{ ligne.volumeM3 }} m³ ·
+          {{ ligne.nbColis }} colis
+          @if (ligne.classeAdr) {
+          · ADR {{ ligne.classeAdr }}
+          }
+        </p>
+      </li>
+      }
+    </ul>
+  </section>
+
+  <section class="max-w-lg border border-line bg-surface p-5">
+    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+      Segments
+    </h2>
+    <ol class="mt-4 flex flex-col gap-3 text-sm">
+      @for (segment of dossier.value().segments; track segment.ordre) {
+      <li class="border border-line px-3 py-2">
+        <p class="font-medium text-ink">
+          {{ typeSegmentLabel(segment.type) }}
+          <span class="font-mono text-xs text-muted">#{{ segment.ordre }}</span>
+        </p>
+        <p class="mt-1 text-sm text-ink">
+          <a
+            [routerLink]="['/sites', segment.siteId]"
+            class="text-pine underline-offset-2 hover:underline"
+          >
+            {{ siteLabel(segment.siteId) }}
+          </a>
+        </p>
+        <p class="mt-1 font-mono text-xs tabular-nums text-muted">
+          {{ formatWindow(segment.fenetre) }}
+        </p>
+      </li>
+      }
+    </ol>
+  </section>
+
+  @if (dossier.value().statut === "CREE" && canPlan()) {
+  <section class="max-w-lg border border-line bg-surface p-5">
+    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+      Planification
+    </h2>
+    <p class="mt-1 text-sm text-muted">
+      Créer un voyage qui exécute ce dossier. Le statut passera à Planifié
+      automatiquement.
+    </p>
+    <a
+      [routerLink]="['/voyages/nouveau']"
+      [queryParams]="{ dossierId: dossier.value().id }"
+      class="pressable mt-4 inline-flex min-h-11 items-center bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
+    >
+      Planifier un voyage
+    </a>
+  </section>
+  }
+
+  @if (dossier.value().statut === "PLANIFIE") {
+  <section class="max-w-lg border border-line bg-surface p-5">
+    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+      Planification
+    </h2>
+    @if (canOpenVoyages()) {
+      @if (voyagesPorteurs.isLoading()) {
+      <p class="mt-4 text-sm text-muted" role="status">Chargement…</p>
+      } @else if (voyagesPorteursList().length === 0) {
+      <p class="mt-4 text-sm text-muted">Aucun voyage trouvé pour ce dossier.</p>
+      } @else {
+      <ul class="mt-4 flex flex-col gap-2 text-sm">
+        @for (voyage of voyagesPorteursList(); track voyage.id) {
+        <li>
+          <a
+            [routerLink]="['/voyages', voyage.id]"
+            class="font-mono text-pine underline-offset-2 hover:underline"
+          >
+            {{ voyage.reference }}
+          </a>
+        </li>
+        }
+      </ul>
+      }
+    } @else {
+    <p class="mt-4 text-sm text-muted">Planifié sur un voyage.</p>
+    }
+  </section>
+  }
+
+  @if (canPlan() && manualNextStatuts(dossier.value().statut).length > 0) {
+  <section class="max-w-lg border border-line bg-surface p-5">
+    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+      Cycle de vie
+    </h2>
+    <p class="mt-1 text-sm text-muted">
+      Transitions autorisées par le domaine. Pas de modification du contenu
+      après création.
+    </p>
+    @if (statutError()) {
+    <p
+      class="mt-4 border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
+      role="alert"
+    >
+      {{ statutError() }}
+    </p>
+    }
+    <div class="mt-4 flex flex-wrap gap-2">
+      @for (statut of manualNextStatuts(dossier.value().statut); track statut) {
+      <button
+        (click)="changerStatut(statut)"
+        class="pressable min-h-11 border border-line px-4 py-2.5 text-sm font-medium text-ink"
+        type="button"
+      >
+        → {{ statutDossierLabel(statut) }}
+      </button>
+      }
+    </div>
+  </section>
+  }
+  }
+</div>

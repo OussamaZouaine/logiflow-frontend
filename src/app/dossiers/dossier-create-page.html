@@ -1,0 +1,411 @@
+<div class="flex max-w-lg flex-col gap-6">
+  <div>
+    <a
+      class="text-xs font-medium tracking-wide text-muted underline-offset-2 hover:text-ink hover:underline"
+      routerLink="/dossiers"
+    >
+      ← Dossiers
+    </a>
+    <p class="mt-4 text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase">
+      Exploitation
+    </p>
+    <h1 class="font-display mt-1 text-3xl font-medium tracking-tight text-ink">
+      Nouveau dossier
+    </h1>
+    <p class="mt-1 text-sm text-muted">
+      Seule une commande confirmée peut générer un dossier. Au moins une ligne
+      de marchandise et deux segments (chargement, déchargement).
+    </p>
+  </div>
+
+  @if (commandes.isLoading() || sites.isLoading()) {
+  <p class="text-sm text-muted" role="status">Chargement des ressources…</p>
+  } @else if (lookupsError()) {
+  <div
+    class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
+    role="alert"
+  >
+    <p>{{ lookupsError() }}</p>
+  </div>
+  } @else if (lookupsReady()) {
+  <form (submit)="onSubmit($event)" class="flex flex-col gap-5" novalidate>
+    @if (createForm().touched() && createForm().invalid()) {
+    <div
+      class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
+      role="alert"
+    >
+      <p class="font-medium">Certains champs sont à corriger.</p>
+      <p class="mt-1 text-xs text-brake/90">
+        Consultez les messages sous chaque champ en surbrillance.
+      </p>
+    </div>
+    }
+
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-medium text-muted" for="commandeId">
+        Commande confirmée
+      </label>
+      <select
+        [formField]="createForm.commandeId"
+        [class]="fieldClasses(createForm.commandeId())"
+        id="commandeId"
+      >
+        <option value="">Choisir une commande…</option>
+        @for (commande of commandeOptions(); track commande.id) {
+        <option [value]="commande.id">
+          {{ commande.reference }}
+          — {{ commande.dateSouhaitee }}
+        </option>
+        }
+      </select>
+      @if (showFieldError(createForm.commandeId())) {
+      <p class="text-xs text-brake" role="alert">
+        {{ firstFieldError(createForm.commandeId().errors()) }}
+      </p>
+      }
+      @if (commandeOptions().length === 0) {
+      <p class="text-xs text-muted">
+        Aucune commande confirmée — confirmez une commande d'abord.
+      </p>
+      }
+    </div>
+
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="typeTransport">
+          Type de transport
+        </label>
+        <select
+          [formField]="createForm.typeTransport"
+          class="field"
+          id="typeTransport"
+        >
+          @for (type of types; track type) {
+          <option [value]="type">{{ typeTransportLabel(type) }}</option>
+          }
+        </select>
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="nbPalettes">
+          Palettes
+        </label>
+        <input
+          [formField]="createForm.nbPalettes"
+          [class]="fieldClasses(createForm.nbPalettes())"
+          id="nbPalettes"
+          inputmode="numeric"
+          type="number"
+        >
+        @if (showFieldError(createForm.nbPalettes())) {
+        <p class="text-xs text-brake" role="alert">
+          {{ firstFieldError(createForm.nbPalettes().errors()) }}
+        </p>
+        }
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-medium text-muted" for="familleMarchandise">
+        Famille de marchandise
+      </label>
+      <input
+        [formField]="createForm.familleMarchandise"
+        [class]="fieldClasses(createForm.familleMarchandise())"
+        id="familleMarchandise"
+        type="text"
+      >
+      @if (showFieldError(createForm.familleMarchandise())) {
+      <p class="text-xs text-brake" role="alert">
+        {{ firstFieldError(createForm.familleMarchandise().errors()) }}
+      </p>
+      }
+    </div>
+
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="carrosserieRequise">
+          Carrosserie (optionnel)
+        </label>
+        <select
+          [formField]="createForm.carrosserieRequise"
+          class="field"
+          id="carrosserieRequise"
+        >
+          <option value="">Aucune contrainte</option>
+          @for (carrosserie of carrosseries; track carrosserie) {
+          <option [value]="carrosserie">
+            {{ carrosserieRequiseLabel(carrosserie) }}
+          </option>
+          }
+        </select>
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="temperatureRequise">
+          Température °C (optionnel)
+        </label>
+        <input
+          [formField]="createForm.temperatureRequise"
+          class="field"
+          id="temperatureRequise"
+          inputmode="decimal"
+          type="text"
+        >
+      </div>
+    </div>
+
+    <label class="flex items-center gap-2 text-sm text-ink">
+      <input
+        (change)="onGroupable($event)"
+        [checked]="draft().groupable"
+        class="size-4"
+        type="checkbox"
+      >
+      Éligible au groupage
+    </label>
+
+    <fieldset class="flex flex-col gap-4 border border-line p-4">
+      <legend class="px-1 text-sm font-medium text-ink">
+        Ligne de marchandise
+      </legend>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="designation">
+          Désignation
+        </label>
+        <input
+          [formField]="createForm.designation"
+          [class]="fieldClasses(createForm.designation())"
+          id="designation"
+          type="text"
+        >
+        @if (showFieldError(createForm.designation())) {
+        <p class="text-xs text-brake" role="alert">
+          {{ firstFieldError(createForm.designation().errors()) }}
+        </p>
+        }
+      </div>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-medium text-muted" for="poidsKg">
+            Poids kg
+          </label>
+          <input
+            [formField]="createForm.poidsKg"
+            [class]="fieldClasses(createForm.poidsKg())"
+            id="poidsKg"
+            inputmode="decimal"
+            type="number"
+          >
+          @if (showFieldError(createForm.poidsKg())) {
+          <p class="text-xs text-brake" role="alert">
+            {{ firstFieldError(createForm.poidsKg().errors()) }}
+          </p>
+          }
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-medium text-muted" for="volumeM3">
+            Volume m³
+          </label>
+          <input
+            [formField]="createForm.volumeM3"
+            [class]="fieldClasses(createForm.volumeM3())"
+            id="volumeM3"
+            inputmode="decimal"
+            type="number"
+          >
+          @if (showFieldError(createForm.volumeM3())) {
+          <p class="text-xs text-brake" role="alert">
+            {{ firstFieldError(createForm.volumeM3().errors()) }}
+          </p>
+          }
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-medium text-muted" for="nbColis">
+            Colis
+          </label>
+          <input
+            [formField]="createForm.nbColis"
+            [class]="fieldClasses(createForm.nbColis())"
+            id="nbColis"
+            inputmode="numeric"
+            type="number"
+          >
+          @if (showFieldError(createForm.nbColis())) {
+          <p class="text-xs text-brake" role="alert">
+            {{ firstFieldError(createForm.nbColis().errors()) }}
+          </p>
+          }
+        </div>
+      </div>
+      <label class="flex items-center gap-2 text-sm text-ink">
+        <input
+          (change)="onGerbable($event)"
+          [checked]="draft().gerbable"
+          class="size-4"
+          type="checkbox"
+        >
+        Gerbable
+      </label>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-medium text-muted" for="classeAdr">
+            Classe ADR (optionnel)
+          </label>
+          <input
+            [formField]="createForm.classeAdr"
+            class="field"
+            id="classeAdr"
+            type="text"
+          >
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-medium text-muted" for="numeroOnu">
+            N° ONU (optionnel)
+          </label>
+          <input
+            [formField]="createForm.numeroOnu"
+            class="field"
+            id="numeroOnu"
+            type="text"
+          >
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="flex flex-col gap-4 border border-line p-4">
+      <legend class="px-1 text-sm font-medium text-ink">Chargement</legend>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="chargementSiteId">
+          Site
+        </label>
+        <select
+          [formField]="createForm.chargementSiteId"
+          [class]="fieldClasses(createForm.chargementSiteId())"
+          id="chargementSiteId"
+        >
+          <option value="">Choisir un site…</option>
+          @for (site of siteOptions(); track site.id) {
+          <option [value]="site.id">
+            {{ site.code }} — {{ site.libelle }}
+          </option>
+          }
+        </select>
+        @if (showFieldError(createForm.chargementSiteId())) {
+        <p class="text-xs text-brake" role="alert">
+          {{ firstFieldError(createForm.chargementSiteId().errors()) }}
+        </p>
+        }
+      </div>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-medium text-muted" for="chargementDebut">
+            Début fenêtre
+          </label>
+          <input
+            [formField]="createForm.chargementDebut"
+            [class]="fieldClasses(createForm.chargementDebut())"
+            id="chargementDebut"
+            type="datetime-local"
+          >
+          @if (showFieldError(createForm.chargementDebut())) {
+          <p class="text-xs text-brake" role="alert">
+            {{ firstFieldError(createForm.chargementDebut().errors()) }}
+          </p>
+          }
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-medium text-muted" for="chargementFin">
+            Fin fenêtre
+          </label>
+          <input
+            [formField]="createForm.chargementFin"
+            [class]="fieldClasses(createForm.chargementFin())"
+            id="chargementFin"
+            type="datetime-local"
+          >
+          @if (showFieldError(createForm.chargementFin())) {
+          <p class="text-xs text-brake" role="alert">
+            {{ firstFieldError(createForm.chargementFin().errors()) }}
+          </p>
+          }
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="flex flex-col gap-4 border border-line p-4">
+      <legend class="px-1 text-sm font-medium text-ink">Déchargement</legend>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="dechargementSiteId">
+          Site
+        </label>
+        <select
+          [formField]="createForm.dechargementSiteId"
+          [class]="fieldClasses(createForm.dechargementSiteId())"
+          id="dechargementSiteId"
+        >
+          <option value="">Choisir un site…</option>
+          @for (site of siteOptions(); track site.id) {
+          <option [value]="site.id">
+            {{ site.code }} — {{ site.libelle }}
+          </option>
+          }
+        </select>
+        @if (showFieldError(createForm.dechargementSiteId())) {
+        <p class="text-xs text-brake" role="alert">
+          {{ firstFieldError(createForm.dechargementSiteId().errors()) }}
+        </p>
+        }
+      </div>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-medium text-muted" for="dechargementDebut">
+            Début fenêtre
+          </label>
+          <input
+            [formField]="createForm.dechargementDebut"
+            [class]="fieldClasses(createForm.dechargementDebut())"
+            id="dechargementDebut"
+            type="datetime-local"
+          >
+          @if (showFieldError(createForm.dechargementDebut())) {
+          <p class="text-xs text-brake" role="alert">
+            {{ firstFieldError(createForm.dechargementDebut().errors()) }}
+          </p>
+          }
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-medium text-muted" for="dechargementFin">
+            Fin fenêtre
+          </label>
+          <input
+            [formField]="createForm.dechargementFin"
+            [class]="fieldClasses(createForm.dechargementFin())"
+            id="dechargementFin"
+            type="datetime-local"
+          >
+          @if (showFieldError(createForm.dechargementFin())) {
+          <p class="text-xs text-brake" role="alert">
+            {{ firstFieldError(createForm.dechargementFin().errors()) }}
+          </p>
+          }
+        </div>
+      </div>
+    </fieldset>
+
+    @if (formError()) {
+    <p
+      class="border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
+      role="alert"
+    >
+      {{ formError() }}
+    </p>
+    }
+
+    <button
+      class="pressable min-h-11 bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
+      type="submit"
+    >
+      Créer le dossier
+    </button>
+  </form>
+  }
+</div>

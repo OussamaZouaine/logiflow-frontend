@@ -39,7 +39,18 @@
   </div>
 
   @if (site.hasValue()) {
-  <form (submit)="onSubmit($event)" class="flex flex-col gap-5">
+  <form (submit)="onSubmit($event)" class="flex flex-col gap-5" novalidate>
+    @if (editForm().touched() && editForm().invalid()) {
+    <div
+      class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
+      role="alert"
+    >
+      <p class="font-medium">Certains champs sont à corriger.</p>
+      <p class="mt-1 text-xs text-brake/90">
+        Consultez les messages sous chaque champ en surbrillance.
+      </p>
+    </div>
+    }
     <div class="flex max-w-lg flex-col gap-5 border border-line bg-surface p-5">
       <h2 class="font-display text-xl font-medium tracking-tight text-ink">
         Fiche
@@ -52,11 +63,11 @@
         </label>
         <input
           [formField]="editForm.libelle"
-          class="field"
+          [class]="fieldClasses(editForm.libelle())"
           id="libelle"
           type="text"
         >
-        @if (editForm.libelle().touched() && editForm.libelle().invalid()) {
+        @if (showFieldError(editForm.libelle())) {
         <p class="text-xs text-brake" role="alert">
           {{ firstFieldError(editForm.libelle().errors()) }}
         </p>
@@ -82,12 +93,12 @@
           </label>
           <input
             [formField]="editForm.latitude"
-            class="field"
+            [class]="fieldClasses(editForm.latitude())"
             id="latitude"
             step="0.0001"
             type="number"
           >
-          @if (editForm.latitude().touched() && editForm.latitude().invalid()) {
+          @if (showFieldError(editForm.latitude())) {
           <p class="text-xs text-brake" role="alert">
             {{ firstFieldError(editForm.latitude().errors()) }}
           </p>
@@ -99,13 +110,12 @@
           </label>
           <input
             [formField]="editForm.longitude"
-            class="field"
+            [class]="fieldClasses(editForm.longitude())"
             id="longitude"
             step="0.0001"
             type="number"
           >
-          @if (editForm.longitude().touched() && editForm.longitude().invalid())
-          {
+          @if (showFieldError(editForm.longitude())) {
           <p class="text-xs text-brake" role="alert">
             {{ firstFieldError(editForm.longitude().errors()) }}
           </p>

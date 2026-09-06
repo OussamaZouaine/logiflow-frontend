@@ -13,6 +13,7 @@ import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import { type Role, roleLabel } from "../core/auth/role";
 import { firstFieldError } from "../core/forms/first-field-error";
+import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
 import {
   draftToWrite,
   emptyUtilisateurDraft,
@@ -36,7 +37,10 @@ export class UtilisateurDetailPage {
   protected readonly roles = UTILISATEUR_ROLES;
   protected readonly roleLabel = roleLabel;
   protected readonly firstFieldError = firstFieldError;
+  protected readonly showFieldError = showFieldError;
+  protected readonly fieldClasses = fieldClasses;
   protected readonly formError = signal<string | null>(null);
+  protected readonly rolesTouched = signal(false);
   protected readonly deactivateError = signal<string | null>(null);
 
   protected readonly utilisateur = httpResource<Utilisateur>(() => ({
@@ -79,11 +83,11 @@ export class UtilisateurDetailPage {
   protected async onSubmit(event: SubmitEvent): Promise<void> {
     event.preventDefault();
     this.formError.set(null);
-    if (this.draft().roles.length === 0) {
-      this.formError.set("Au moins un rôle est obligatoire.");
-      return;
-    }
+    this.rolesTouched.set(true);
     await submit(this.editForm, async () => {
+      if (this.draft().roles.length === 0) {
+        return;
+      }
       try {
         const updated = await this.api.update(
           this.id(),

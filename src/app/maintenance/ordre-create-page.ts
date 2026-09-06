@@ -6,6 +6,7 @@ import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
 import { firstFieldError } from "../core/forms/first-field-error";
+import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
 import {
   draftToWrite,
   emptyOrdreDraft,
@@ -30,6 +31,8 @@ export class OrdreCreatePage {
   protected readonly types = TYPE_INTERVENTIONS;
   protected readonly typeInterventionLabel = typeInterventionLabel;
   protected readonly firstFieldError = firstFieldError;
+  protected readonly showFieldError = showFieldError;
+  protected readonly fieldClasses = fieldClasses;
   protected readonly formError = signal<string | null>(null);
 
   protected readonly vehicules = httpResource<PageResponse<VehiculeLookup>>(

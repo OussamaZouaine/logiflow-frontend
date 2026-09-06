@@ -16,6 +16,22 @@ describe("destinationsForRoles", () => {
   });
 
   it("gives admin every destination", () => {
-    expect(destinationsForRoles(["ADMINISTRATEUR"])).toHaveLength(6);
+    expect(destinationsForRoles(["ADMINISTRATEUR"])).toHaveLength(7);
+  });
+
+  it("includes Dossiers for commercial and exploitant", () => {
+    expect(
+      destinationsForRoles(["COMMERCIAL"]).map((destination) => destination.id)
+    ).toContain("dossiers");
+    expect(
+      destinationsForRoles(["EXPLOITANT"]).map((destination) => destination.id)
+    ).toContain("dossiers");
+  });
+
+  it("excludes Dossiers from chauffeur", () => {
+    const ids = destinationsForRoles(["CHAUFFEUR"]).map(
+      (destination) => destination.id
+    );
+    expect(ids).not.toContain("dossiers");
   });
 });

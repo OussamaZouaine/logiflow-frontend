@@ -80,6 +80,20 @@ describe("VoyageDetailPage", () => {
           "/api/v1/voyages/55555555-5555-5555-5555-555555555555/evenements"
       )
       .flush([]);
+    http
+      .expectOne((req) => req.url === "/api/v1/dossiers")
+      .flush({
+        content: [
+          {
+            id: "44444444-4444-4444-4444-444444444444",
+            reference: "DT-2026-00001",
+          },
+        ],
+        pageNumber: 0,
+        pageSize: 50,
+        totalElements: 1,
+        totalPages: 1,
+      });
 
     await fixture.whenStable();
     fixture.detectChanges();

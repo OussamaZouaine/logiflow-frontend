@@ -91,6 +91,20 @@ export function formatDate(value: string): string {
   return parsed.toLocaleDateString("fr-FR");
 }
 
+export function formatCommandeLabel(
+  commande: Pick<Commande, "reference" | "dateSouhaitee">
+): string {
+  return `${commande.reference} — ${formatDate(commande.dateSouhaitee)}`;
+}
+
+export function commandeLabelFromLookup(
+  commandeId: string,
+  commandesById: ReadonlyMap<string, Pick<Commande, "reference" | "dateSouhaitee">>
+): string {
+  const commande = commandesById.get(commandeId);
+  return commande ? formatCommandeLabel(commande) : commandeId;
+}
+
 export function toDateInput(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");

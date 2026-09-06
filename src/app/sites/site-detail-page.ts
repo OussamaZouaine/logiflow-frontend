@@ -19,6 +19,7 @@ import { RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import { firstFieldError } from "../core/forms/first-field-error";
+import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
 import { draftToWrite, emptySiteDraft, type Site, siteToDraft } from "./site";
 import { SiteApi } from "./site-api";
 import {
@@ -37,6 +38,8 @@ export class SiteDetailPage {
   readonly id = input.required<string>();
 
   protected readonly firstFieldError = firstFieldError;
+  protected readonly showFieldError = showFieldError;
+  protected readonly fieldClasses = fieldClasses;
   protected readonly formError = signal<string | null>(null);
   protected readonly deactivateError = signal<string | null>(null);
 

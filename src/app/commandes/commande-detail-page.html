@@ -66,6 +66,42 @@
     </dl>
   </section>
 
+  @if (commande.value().statut === "CONFIRMEE") {
+  <section class="max-w-lg border border-line bg-surface p-5">
+    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+      Dossiers de transport
+    </h2>
+    @if (dossiersLiees.isLoading()) {
+    <p class="mt-4 text-sm text-muted" role="status">Chargement…</p>
+    } @else if (dossiersList().length === 0) {
+    <p class="mt-4 text-sm text-muted">Aucun dossier pour cette commande.</p>
+    } @else {
+    <ul class="mt-4 flex flex-col gap-2 text-sm">
+      @for (dossier of dossiersList(); track dossier.id) {
+      <li class="flex flex-wrap items-baseline justify-between gap-2 border border-line px-3 py-2">
+        <a
+          [routerLink]="['/dossiers', dossier.id]"
+          class="font-mono text-pine underline-offset-2 hover:underline"
+        >
+          {{ dossier.reference }}
+        </a>
+        <span class="text-muted">{{ statutDossierLabel(dossier.statut) }}</span>
+      </li>
+      }
+    </ul>
+    }
+    @if (canOpenDossier()) {
+    <a
+      [routerLink]="['/dossiers/nouveau']"
+      [queryParams]="{ commandeId: commande.value().id }"
+      class="pressable mt-4 inline-flex min-h-11 items-center bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
+    >
+      Créer un dossier
+    </a>
+    }
+  </section>
+  }
+
   <section class="max-w-lg border border-line bg-surface p-5">
     <h2 class="font-display text-xl font-medium tracking-tight text-ink">
       Cycle de vie

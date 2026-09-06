@@ -43,7 +43,19 @@
   <form
     (submit)="onSubmit($event)"
     class="flex max-w-lg flex-col gap-5 border border-line bg-surface p-5"
+    novalidate
   >
+    @if (editForm().touched() && editForm().invalid()) {
+    <div
+      class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
+      role="alert"
+    >
+      <p class="font-medium">Certains champs sont à corriger.</p>
+      <p class="mt-1 text-xs text-brake/90">
+        Consultez les messages sous chaque champ en surbrillance.
+      </p>
+    </div>
+    }
     <h2 class="font-display text-xl font-medium tracking-tight text-ink">
       Fiche
     </h2>
@@ -51,8 +63,13 @@
 
     <div class="flex flex-col gap-1.5">
       <label class="text-xs font-medium text-muted" for="email">Email</label>
-      <input [formField]="editForm.email" class="field" id="email" type="email">
-      @if (editForm.email().touched() && editForm.email().invalid()) {
+      <input
+        [formField]="editForm.email"
+        [class]="fieldClasses(editForm.email())"
+        id="email"
+        type="email"
+      >
+      @if (showFieldError(editForm.email())) {
       <p class="text-xs text-brake" role="alert">
         {{ firstFieldError(editForm.email().errors()) }}
       </p>
@@ -73,6 +90,11 @@
       </label>
       }
     </fieldset>
+    @if (rolesTouched() && draft().roles.length === 0) {
+    <p class="text-xs text-brake" role="alert">
+      Au moins un rôle est obligatoire.
+    </p>
+    }
 
     @if (formError()) {
     <p

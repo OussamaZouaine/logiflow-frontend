@@ -22,6 +22,23 @@ export const VOYAGES_PLAN_ROLES: readonly Role[] = [
   "EXPLOITANT",
 ];
 
+/** List and detail on /voyages. */
+export const VOYAGES_ALLOWED_ROLES: readonly Role[] = [
+  ...VOYAGES_PLAN_ROLES,
+  "CHAUFFEUR",
+];
+
+/** List and detail on /dossiers — same as Commandes. */
+export const DOSSIERS_ALLOWED_ROLES: readonly Role[] = [
+  "ADMINISTRATEUR",
+  "RESPONSABLE_EXPLOITATION",
+  "EXPLOITANT",
+  "COMMERCIAL",
+];
+
+/** Create dossier and advance StatutDossier — same as voyage planning. */
+export const DOSSIERS_PLAN_ROLES: readonly Role[] = VOYAGES_PLAN_ROLES;
+
 export function isRole(value: unknown): value is Role {
   return (
     typeof value === "string" && (ROLES as readonly string[]).includes(value)

@@ -1,11 +1,13 @@
 import { httpResource } from "@angular/common/http";
 import { Component, computed, inject, signal } from "@angular/core";
 import { FormField, form, min, required, submit } from "@angular/forms/signals";
-import { Router, RouterLink } from "@angular/router";
+import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
 import { firstFieldError } from "../core/forms/first-field-error";
+import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
+import { validateTimeWindowEndAfterStart } from "../core/forms/time-window-validation";
 import {
   draftToWrite,
   emptyVoyageDraft,
@@ -28,6 +30,7 @@ const LOOKUP_PAGE_SIZE = 50;
 })
 export class VoyageCreatePage {
   private readonly api = inject(VoyageApi);
+  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
   protected readonly types = TYPE_VOYAGES;
@@ -35,7 +38,14 @@ export class VoyageCreatePage {
   protected readonly typeVoyageLabel = typeVoyageLabel;
   protected readonly porteeLabel = porteeLabel;
   protected readonly firstFieldError = firstFieldError;
+  protected readonly showFieldError = showFieldError;
+  protected readonly fieldClasses = fieldClasses;
   protected readonly formError = signal<string | null>(null);
+  protected readonly dossierSelectionError = signal<string | null>(null);
+
+  protected readonly selectedDossierIds = signal<string[]>(
+    this.initialDossierSelection()
+  );
 
   protected readonly vehicules = httpResource<
     PageResponse<VoyageLookupVehicule>
@@ -85,8 +95,10 @@ export class VoyageCreatePage {
     () => this.vehicules.value()?.content ?? []
   );
 
-  protected readonly dossierOptions = computed(
-    () => this.dossiers.value()?.content ?? []
+  protected readonly dossierOptions = computed(() =>
+    (this.dossiers.value()?.content ?? []).filter(
+      (dossier) => dossier.statut === "CREE"
+    )
   );
 
   protected readonly chauffeurOptions = computed(
@@ -103,7 +115,6 @@ export class VoyageCreatePage {
       message: "L'arrivée prévue est obligatoire.",
     });
     required(path.vehiculeId, { message: "Le véhicule est obligatoire." });
-    required(path.dossierId, { message: "Le dossier est obligatoire." });
     required(path.chauffeurId, { message: "Le chauffeur est obligatoire." });
     min(path.distanceTotaleKm, 0, {
       message: "La distance ne peut pas être négative.",
@@ -111,25 +122,53 @@ export class VoyageCreatePage {
     min(path.dureeConduiteMin, 0, {
       message: "La durée de conduite ne peut pas être négative.",
     });
+    validateTimeWindowEndAfterStart(
+      path.arriveePrevue,
+      path.departPrevu,
+      "L'arrivée prévue doit être postérieure au départ prévu."
+    );
   });
+
+  protected isDossierSelected(id: string): boolean {
+    return this.selectedDossierIds().includes(id);
+  }
+
+  protected toggleDossier(id: string, checked: boolean): void {
+    this.dossierSelectionError.set(null);
+    this.selectedDossierIds.update((current) => {
+      if (checked) {
+        return current.includes(id) ? current : [...current, id];
+      }
+      return current.filter((value) => value !== id);
+    });
+  }
 
   protected async onSubmit(event: SubmitEvent): Promise<void> {
     event.preventDefault();
     this.formError.set(null);
+    this.dossierSelectionError.set(null);
+
+    if (this.selectedDossierIds().length === 0) {
+      this.dossierSelectionError.set(
+        "Sélectionnez au moins un dossier au statut Créé."
+      );
+      return;
+    }
+
     await submit(this.createForm, async () => {
-      const draft = this.draft();
-      if (new Date(draft.arriveePrevue) <= new Date(draft.departPrevu)) {
-        this.formError.set(
-          "L'arrivée prévue doit être postérieure au départ prévu."
-        );
-        return;
-      }
       try {
-        const created = await this.api.create(draftToWrite(draft));
+        const created = await this.api.create(
+          draftToWrite(this.draft(), this.selectedDossierIds())
+        );
         await this.router.navigate(["/voyages", created.id]);
       } catch (error) {
         this.formError.set(httpErrorMessage(error));
       }
     });
+  }
+
+  private initialDossierSelection(): string[] {
+    const dossierId = this.route.snapshot.queryParamMap.get("dossierId");
+    return dossierId && dossierId.length > 0 ? [dossierId] : [];
   }
 }

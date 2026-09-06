@@ -3,6 +3,7 @@ import { Component, computed, inject, input, signal } from "@angular/core";
 import { RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
+import type { PageResponse } from "../core/api/page-response";
 import {
   type EvenementVoyage,
   formatInstant,
@@ -20,6 +21,11 @@ import {
   type Voyage,
 } from "./voyage";
 import { VoyageApi } from "./voyage-api";
+
+interface DossierLink {
+  id: string;
+  reference: string;
+}
 
 @Component({
   imports: [RouterLink],
@@ -50,6 +56,19 @@ export class VoyageDetailPage {
     url: `${environment.apiBaseUrl}/voyages/${this.id()}`,
   }));
 
+  protected readonly dossiers = httpResource<PageResponse<DossierLink>>(() => ({
+    params: { page: 0, size: 50 },
+    url: `${environment.apiBaseUrl}/dossiers`,
+  }));
+
+  protected readonly dossiersById = computed(() => {
+    const map = new Map<string, DossierLink>();
+    for (const dossier of this.dossiers.value()?.content ?? []) {
+      map.set(dossier.id, dossier);
+    }
+    return map;
+  });
+
   protected readonly evenements = httpResource<EvenementVoyage[]>(() => ({
     url: `${environment.apiBaseUrl}/voyages/${this.id()}/evenements`,
   }));
@@ -62,6 +81,10 @@ export class VoyageDetailPage {
     const error = this.evenements.error();
     return error ? httpErrorMessage(error) : null;
   });
+
+  protected dossierLabel(dossierId: string): string {
+    return this.dossiersById().get(dossierId)?.reference ?? dossierId;
+  }
 
   protected onEventType(event: Event): void {
     const { target } = event;

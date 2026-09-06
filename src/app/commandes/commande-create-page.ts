@@ -3,6 +3,7 @@ import { FormField, form, min, required, submit } from "@angular/forms/signals";
 import { Router, RouterLink } from "@angular/router";
 import { httpErrorMessage } from "../core/api/http-error";
 import { firstFieldError } from "../core/forms/first-field-error";
+import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
 import {
   type CommandeDraft,
   draftToWrite,
@@ -20,11 +21,25 @@ export class CommandeCreatePage {
   private readonly router = inject(Router);
 
   protected readonly firstFieldError = firstFieldError;
+  protected readonly showFieldError = showFieldError;
+  protected readonly fieldClasses = fieldClasses;
   protected readonly formError = signal<string | null>(null);
 
   protected readonly draft = signal(emptyCommandeDraft());
 
   protected readonly createForm = form(this.draft, (path) => {
+    required(path.clientId, {
+      message: "L'identifiant client est obligatoire.",
+      when: ({ valueOf }) => !valueOf(path.nouveauClient),
+    });
+    required(path.clientCode, {
+      message: "Le code client est obligatoire.",
+      when: ({ valueOf }) => valueOf(path.nouveauClient),
+    });
+    required(path.clientRaisonSociale, {
+      message: "La raison sociale est obligatoire.",
+      when: ({ valueOf }) => valueOf(path.nouveauClient),
+    });
     required(path.dateSouhaitee, {
       message: "La date souhaitée est obligatoire.",
     });
@@ -58,20 +73,12 @@ export class CommandeCreatePage {
 
   private async resolveClientId(draft: CommandeDraft): Promise<string> {
     if (!draft.nouveauClient) {
-      const existing = draft.clientId.trim();
-      if (existing.length === 0) {
-        throw new Error("L'identifiant client est obligatoire.");
-      }
-      return existing;
+      return draft.clientId.trim();
     }
-    const code = draft.clientCode.trim().toUpperCase();
-    const raisonSociale = draft.clientRaisonSociale.trim();
-    if (code.length === 0 || raisonSociale.length === 0) {
-      throw new Error(
-        "Le code et la raison sociale du client sont obligatoires."
-      );
-    }
-    const client = await this.api.createClient({ code, raisonSociale });
+    const client = await this.api.createClient({
+      code: draft.clientCode.trim().toUpperCase(),
+      raisonSociale: draft.clientRaisonSociale.trim(),
+    });
     return client.id;
   }
 }

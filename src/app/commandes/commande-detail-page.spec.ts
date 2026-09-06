@@ -38,6 +38,20 @@ describe("CommandeDetailPage", () => {
         reference: "CMD-2026-000001",
         statut: "RECUE",
       });
+    http
+      .expectOne(
+        (req) =>
+          req.url === "/api/v1/dossiers" &&
+          req.params.get("commandeId") ===
+            "77777777-7777-7777-7777-777777777777"
+      )
+      .flush({
+        content: [],
+        pageNumber: 0,
+        pageSize: 1,
+        totalElements: 0,
+        totalPages: 0,
+      });
 
     await fixture.whenStable();
     fixture.detectChanges();

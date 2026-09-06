@@ -21,19 +21,33 @@
     <p>{{ lookupsError() }}</p>
   </div>
   } @else if (vehicules.hasValue()) {
-  <form (submit)="onSubmit($event)" class="flex flex-col gap-5">
+  <form (submit)="onSubmit($event)" class="flex flex-col gap-5" novalidate>
+    @if (createForm().touched() && createForm().invalid()) {
+    <div
+      class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
+      role="alert"
+    >
+      <p class="font-medium">Certains champs sont à corriger.</p>
+      <p class="mt-1 text-xs text-brake/90">
+        Consultez les messages sous chaque champ en surbrillance.
+      </p>
+    </div>
+    }
     <div class="flex flex-col gap-1.5">
       <label class="text-xs font-medium text-muted" for="vehiculeId">
         Véhicule
       </label>
-      <select [formField]="createForm.vehiculeId" class="field" id="vehiculeId">
+      <select
+        [formField]="createForm.vehiculeId"
+        [class]="fieldClasses(createForm.vehiculeId())"
+        id="vehiculeId"
+      >
         <option value="">Choisir un véhicule…</option>
         @for (vehicule of vehiculeOptions(); track vehicule.id) {
         <option [value]="vehicule.id">{{ vehicule.immatriculation }}</option>
         }
       </select>
-      @if ( createForm.vehiculeId().touched() &&
-      createForm.vehiculeId().invalid() ) {
+      @if (showFieldError(createForm.vehiculeId())) {
       <p class="text-xs text-brake" role="alert">
         {{ firstFieldError(createForm.vehiculeId().errors()) }}
       </p>
@@ -42,11 +56,20 @@
 
     <div class="flex flex-col gap-1.5">
       <label class="text-xs font-medium text-muted" for="type">Type</label>
-      <select [formField]="createForm.type" class="field" id="type">
+      <select
+        [formField]="createForm.type"
+        [class]="fieldClasses(createForm.type())"
+        id="type"
+      >
         @for (type of types; track type) {
         <option [value]="type">{{ typeInterventionLabel(type) }}</option>
         }
       </select>
+      @if (showFieldError(createForm.type())) {
+      <p class="text-xs text-brake" role="alert">
+        {{ firstFieldError(createForm.type().errors()) }}
+      </p>
+      }
     </div>
 
     <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -56,12 +79,11 @@
         </label>
         <input
           [formField]="createForm.datePlanifiee"
-          class="field"
+          [class]="fieldClasses(createForm.datePlanifiee())"
           id="datePlanifiee"
           type="datetime-local"
         >
-        @if ( createForm.datePlanifiee().touched() &&
-        createForm.datePlanifiee().invalid() ) {
+        @if (showFieldError(createForm.datePlanifiee())) {
         <p class="text-xs text-brake" role="alert">
           {{ firstFieldError(createForm.datePlanifiee().errors()) }}
         </p>
@@ -73,12 +95,12 @@
         </label>
         <input
           [formField]="createForm.montant"
-          class="field"
+          [class]="fieldClasses(createForm.montant())"
           id="montant"
           step="0.01"
           type="number"
         >
-        @if (createForm.montant().touched() && createForm.montant().invalid()) {
+        @if (showFieldError(createForm.montant())) {
         <p class="text-xs text-brake" role="alert">
           {{ firstFieldError(createForm.montant().errors()) }}
         </p>

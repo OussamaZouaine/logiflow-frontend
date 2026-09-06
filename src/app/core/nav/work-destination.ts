@@ -1,11 +1,16 @@
-import { type Role, SITES_ALLOWED_ROLES } from "../auth/role";
+import {
+  type Role,
+  DOSSIERS_ALLOWED_ROLES,
+  SITES_ALLOWED_ROLES,
+} from "../auth/role";
 
 export const WORK_DESTINATION_IDS = [
   "sites",
   "vehicules",
+  "commandes",
+  "dossiers",
   "voyages",
   "maintenance",
-  "commandes",
   "utilisateurs",
 ] as const;
 
@@ -37,6 +42,16 @@ export const WORK_DESTINATIONS: Record<WorkDestinationId, WorkDestination> = {
       "COMMERCIAL",
     ],
     section: "Commercial",
+  },
+  dossiers: {
+    apiHint: "/api/v1/dossiers",
+    blurb: "Fiches transport issues des commandes confirmées.",
+    id: "dossiers",
+    label: "Dossiers",
+    live: true,
+    path: "dossiers",
+    roles: DOSSIERS_ALLOWED_ROLES,
+    section: "Exploitation",
   },
   maintenance: {
     apiHint: "/api/v1/ordres-travail",

@@ -11,38 +11,110 @@
     <p class="mt-1 max-w-lg text-pretty text-sm text-muted">
       @if (login()) {
       <span class="font-mono text-ink">{{ login() }}</span>
-      — {{ roleName() }}. Les modules de ce rôle. } @else { Les modules de la
-      vacation. }
+      — {{ roleName() }}. Aperçu des listes, puis les modules de ce rôle. }
+      @else { Les modules de la vacation. }
     </p>
   </div>
 
-  <ul class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-    @for (destination of destinations(); track destination.id) {
-    <li>
-      <a
-        [routerLink]="'/' + destination.path"
-        class="pressable pressable-border flex min-h-28 flex-col border border-line bg-surface px-4 py-4"
-      >
-        <p
-          class="text-[0.7rem] font-medium tracking-[0.14em] text-muted uppercase"
+  @if (tiles().length > 0) {
+  <section aria-label="Aperçu" class="flex flex-col gap-3">
+    <h2
+      class="text-[0.7rem] font-medium tracking-[0.18em] text-muted uppercase"
+    >
+      Aperçu
+    </h2>
+    <ul class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      @for (tile of tiles(); track tile.path) {
+      <li>
+        <a
+          [attr.aria-label]="tileAriaLabel(tile)"
+          [routerLink]="'/' + tile.path"
+          class="pressable pressable-border flex h-full flex-col border border-line bg-surface px-4 py-3"
         >
-          {{ destination.section }}
-        </p>
-        <p
-          class="font-display mt-1 text-xl font-medium tracking-tight text-ink"
+          <p
+            class="text-[0.65rem] font-medium tracking-[0.14em] text-muted uppercase"
+          >
+            {{ tile.section }}
+          </p>
+          <p class="mt-1 text-sm text-ink">{{ tile.label }}</p>
+          <p
+            class="font-display mt-2 text-3xl font-medium tracking-tight text-ink tabular-nums"
+          >
+            @if (tile.loading) {
+            <span class="text-muted">…</span>
+            } @else if (tile.count === null) {
+            <span class="text-muted">—</span>
+            } @else {
+            {{ tile.count }}
+            }
+          </p>
+          @if (tile.slices; as slices) {
+          <div class="mt-3 flex flex-col gap-2">
+            <div
+              aria-hidden="true"
+              class="flex h-1.5 w-full overflow-hidden bg-line"
+            >
+              @for (slice of slices; track slice.key) {
+              <span
+                [class]="apercuToneClass(slice.tone)"
+                [style.flex-grow]="slice.count"
+                class="min-w-0.5"
+              ></span>
+              }
+            </div>
+            <ul class="flex flex-col gap-0.5">
+              @for (slice of slices; track slice.key) {
+              <li
+                class="flex justify-between gap-3 font-mono text-[0.65rem] tracking-wide text-muted"
+              >
+                <span>{{ slice.label }}</span>
+                <span class="tabular-nums text-ink">{{ slice.count }}</span>
+              </li>
+              }
+            </ul>
+          </div>
+          }
+        </a>
+      </li>
+      }
+    </ul>
+  </section>
+  }
+
+  <section aria-label="Modules de ce rôle" class="flex flex-col gap-3">
+    <h2
+      class="text-[0.7rem] font-medium tracking-[0.18em] text-muted uppercase"
+    >
+      Modules
+    </h2>
+    <ul class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      @for (destination of destinations(); track destination.id) {
+      <li>
+        <a
+          [routerLink]="'/' + destination.path"
+          class="pressable pressable-border flex min-h-28 flex-col border border-line bg-surface px-4 py-4"
         >
-          {{ destination.label }}
-        </p>
-        <p class="mt-1 flex-1 text-sm text-muted">{{ destination.blurb }}</p>
-        <p
-          [class.text-muted]="!destination.live"
-          [class.text-pine]="destination.live"
-          class="mt-3 font-mono text-[0.7rem] tracking-wide"
-        >
-          {{ destination.live ? "Ouvert" : "À brancher" }}
-        </p>
-      </a>
-    </li>
-    }
-  </ul>
+          <p
+            class="text-[0.7rem] font-medium tracking-[0.14em] text-muted uppercase"
+          >
+            {{ destination.section }}
+          </p>
+          <p
+            class="font-display mt-1 text-xl font-medium tracking-tight text-ink"
+          >
+            {{ destination.label }}
+          </p>
+          <p class="mt-1 flex-1 text-sm text-muted">{{ destination.blurb }}</p>
+          <p
+            [class.text-muted]="!destination.live"
+            [class.text-pine]="destination.live"
+            class="mt-3 font-mono text-[0.7rem] tracking-wide"
+          >
+            {{ destination.live ? "Ouvert" : "À brancher" }}
+          </p>
+        </a>
+      </li>
+      }
+    </ul>
+  </section>
 </div>
