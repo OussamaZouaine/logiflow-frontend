@@ -3,11 +3,11 @@ import { Component, computed, inject } from "@angular/core";
 import { RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import type { Commande } from "../commandes/commande";
-import type { Dossier } from "../dossiers/dossier";
 import type { PageResponse } from "../core/api/page-response";
 import { DemoSessionService } from "../core/auth/demo-session";
 import { roleLabel } from "../core/auth/role";
 import { destinationsForRoles } from "../core/nav/work-destination";
+import type { Dossier } from "../dossiers/dossier";
 import type { Site } from "../sites/site";
 import type { Utilisateur } from "../utilisateurs/utilisateur";
 import type { Vehicule } from "../vehicules/vehicule";
@@ -38,6 +38,7 @@ export interface ApercuTile {
 @Component({
   imports: [RouterLink],
   selector: "app-tableau-de-bord-page",
+  styleUrl: "./tableau-de-bord-page.css",
   templateUrl: "./tableau-de-bord-page.html",
 })
 export class TableauDeBordPage {

@@ -1,6 +1,11 @@
+@layer ng-icon, theme, base, components, utilities;
 @import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap");
 @import "tailwindcss";
+@import "./app/shared/core/css/tailwind";
 @import "leaflet/dist/leaflet.css";
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:is(.dark *));
 
 /* Tailwind preflight sets img { max-width: 100% }, which breaks Leaflet tiles. */
 .leaflet-container img {
@@ -8,35 +13,163 @@
   max-height: none;
 }
 
-@theme {
+/* LogiFlow palette mapped onto Zard semantic tokens (light only). */
+:root {
+  --radius: 0.25rem;
+  --background: #f7f7f5;
+  --foreground: #171717;
+  --card: #ffffff;
+  --card-foreground: #171717;
+  --popover: #ffffff;
+  --popover-foreground: #171717;
+  --primary: #215544;
+  --primary-foreground: #ffffff;
+  --secondary: #efefed;
+  --secondary-foreground: #171717;
+  --muted: #efefed;
+  --muted-foreground: #737373;
+  --accent: #efefed;
+  --accent-foreground: #171717;
+  --destructive: #b42318;
+  --destructive-foreground: #ffffff;
+  --border: #e5e5e5;
+  --input: #e5e5e5;
+  --ring: #215544;
+  --chart-1: #215544;
+  --chart-2: #3d7a66;
+  --chart-3: #737373;
+  --chart-4: #b42318;
+  --chart-5: #171717;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #171717;
+  --sidebar-primary: #215544;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #efefed;
+  --sidebar-accent-foreground: #171717;
+  --sidebar-border: #e5e5e5;
+  --sidebar-ring: #215544;
+}
+
+/* Unused (app is light-only) but kept for Zard component compatibility. */
+.dark {
+  --background: #171717;
+  --foreground: #f7f7f5;
+  --card: #262626;
+  --card-foreground: #f7f7f5;
+  --popover: #262626;
+  --popover-foreground: #f7f7f5;
+  --primary: #3d7a66;
+  --primary-foreground: #f7f7f5;
+  --secondary: #333333;
+  --secondary-foreground: #f7f7f5;
+  --muted: #333333;
+  --muted-foreground: #a3a3a3;
+  --accent: #333333;
+  --accent-foreground: #f7f7f5;
+  --destructive: #b42318;
+  --destructive-foreground: #f7f7f5;
+  --border: #404040;
+  --input: #404040;
+  --ring: #3d7a66;
+  --chart-1: #3d7a66;
+  --chart-2: #215544;
+  --chart-3: #a3a3a3;
+  --chart-4: #b42318;
+  --chart-5: #f7f7f5;
+  --sidebar: #262626;
+  --sidebar-foreground: #f7f7f5;
+  --sidebar-primary: #3d7a66;
+  --sidebar-primary-foreground: #f7f7f5;
+  --sidebar-accent: #333333;
+  --sidebar-accent-foreground: #f7f7f5;
+  --sidebar-border: #404040;
+  --sidebar-ring: #3d7a66;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  /* LogiFlow uses text-muted for secondary text (#737373).
+     Zard surface "muted" maps to secondary / --muted for bg-*. */
+  --color-muted: var(--muted-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* LogiFlow brand tokens — keep unmigrated pages working. */
   --font-display: "Fraunces", ui-serif, Georgia, serif;
   --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
   --color-canvas: #f7f7f5;
   --color-surface: #ffffff;
   --color-ink: #171717;
-  --color-muted: #737373;
   --color-line: #e5e5e5;
   --color-pine: #215544;
   --color-brake: #b42318;
   --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-html {
-  color-scheme: light;
-}
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
 
-body {
-  min-height: 100dvh;
-  margin: 0;
-  font-family: var(--font-sans);
-  color: var(--color-ink);
-  background: var(--color-canvas);
-}
+  html {
+    color-scheme: light;
+  }
 
-:focus-visible {
-  outline: 2px solid var(--color-pine);
-  outline-offset: 2px;
+  body {
+    min-height: 100dvh;
+    margin: 0;
+    font-family: var(--font-sans);
+    @apply bg-background text-foreground;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
 }
 
 .pressable {
@@ -93,4 +226,19 @@ body {
   .pressable:active {
     transform: none;
   }
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-track {
+  border-radius: 5px;
+  background: var(--muted);
 }

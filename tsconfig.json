@@ -13,7 +13,10 @@
     "importHelpers": true,
     "target": "ES2022",
     "module": "preserve",
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "paths": {
+      "@/*": ["./src/app/*"]
+    }
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

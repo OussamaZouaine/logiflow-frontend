@@ -85,7 +85,7 @@ export function apercuToneClass(tone: ApercuTone): string {
     case "ink":
       return "bg-ink";
     case "muted":
-      return "bg-muted";
+      return "bg-secondary";
     case "brake":
       return "bg-brake";
     default: {

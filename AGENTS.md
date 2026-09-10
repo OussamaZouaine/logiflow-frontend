@@ -36,6 +36,18 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Do NOT use `ngStyle`, use `style` bindings instead
 - When using external templates/styles, use paths relative to the component TS file.
 
+## UI components (Zard UI)
+
+LogiFlow uses [Zard UI](https://zardui.com/) (shadcn-style Angular components copied into the repo).
+
+- Config: `components.json` at the frontend root
+- Source: `src/app/shared/components/` (do not edit unless customizing; re-add via CLI when upgrading)
+- Theme tokens: `src/styles.css` — Zard semantic vars (`--primary`, etc.) are mapped to the LogiFlow palette (pine/canvas/ink). Brand utilities (`bg-pine`, `text-ink`, …) remain for unmigrated pages
+- Add components: `pnpm dlx zard-cli@latest add <name>`
+- Prefer `z-button`, `z-input`, `z-alert`, etc. on new or migrated UI
+- Keep Signal Forms (`[formField]`) with `z-input` on native `<input>` elements
+- Reference migration: `src/app/sites/site-create-page`
+
 ## State Management
 
 - Use signals for local component state
