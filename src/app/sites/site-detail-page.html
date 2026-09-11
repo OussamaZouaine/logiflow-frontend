@@ -2,7 +2,7 @@
   <div>
     <!-- biome-ignore lint/a11y/useValidAnchor: <it's an angular router link> -->
     <a
-      class="text-xs font-medium tracking-wide text-muted underline-offset-2 hover:text-ink hover:underline"
+      class="pressable pressable-border inline-flex items-center border border-line px-2.5 py-1.5 text-xs font-medium text-ink"
       routerLink="/sites"
     >
       ← Sites
@@ -24,16 +24,14 @@
       </button>
     </div>
     } @else if (site.hasValue()) {
-    <p
-      class="mt-4 text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase"
-    >
-      Référentiel
-    </p>
-    <h1 class="font-display mt-1 text-3xl font-medium tracking-tight text-ink">
+    <h1 class="mt-4 text-3xl font-medium tracking-tight text-ink">
       {{ site.value().code }}
     </h1>
-    <p class="mt-1 text-sm text-muted">
-      {{ site.value().actif ? "Actif" : "Inactif" }}
+    <p class="mt-2">
+      <app-statut-chip
+        [label]="actifLabel(site.value().actif)"
+        [tone]="actifTone(site.value().actif)"
+      />
     </p>
     }
   </div>
@@ -51,8 +49,52 @@
       </p>
     </div>
     }
+
+    <app-site-localisation-map
+      (coordinatesChange)="onLocalisationChange($event)"
+      [latitude]="draft().latitude"
+      [longitude]="draft().longitude"
+    />
+
+    <div class="grid max-w-lg grid-cols-1 gap-5 sm:grid-cols-2">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="latitude">
+          Latitude
+        </label>
+        <input
+          [formField]="editForm.latitude"
+          [class]="fieldClasses(editForm.latitude())"
+          id="latitude"
+          step="0.0001"
+          type="number"
+        >
+        @if (showFieldError(editForm.latitude())) {
+        <p class="text-xs text-brake" role="alert">
+          {{ firstFieldError(editForm.latitude().errors()) }}
+        </p>
+        }
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="longitude">
+          Longitude
+        </label>
+        <input
+          [formField]="editForm.longitude"
+          [class]="fieldClasses(editForm.longitude())"
+          id="longitude"
+          step="0.0001"
+          type="number"
+        >
+        @if (showFieldError(editForm.longitude())) {
+        <p class="text-xs text-brake" role="alert">
+          {{ firstFieldError(editForm.longitude().errors()) }}
+        </p>
+        }
+      </div>
+    </div>
+
     <div class="flex max-w-lg flex-col gap-5 border border-line bg-surface p-5">
-      <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+      <h2 class="text-xl font-medium tracking-tight text-ink">
         Fiche
       </h2>
       <p class="text-sm text-muted">Le code n'est pas modifiable.</p>
@@ -86,51 +128,6 @@
         >
       </div>
 
-      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-medium text-muted" for="latitude">
-            Latitude
-          </label>
-          <input
-            [formField]="editForm.latitude"
-            [class]="fieldClasses(editForm.latitude())"
-            id="latitude"
-            step="0.0001"
-            type="number"
-          >
-          @if (showFieldError(editForm.latitude())) {
-          <p class="text-xs text-brake" role="alert">
-            {{ firstFieldError(editForm.latitude().errors()) }}
-          </p>
-          }
-        </div>
-        <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-medium text-muted" for="longitude">
-            Longitude
-          </label>
-          <input
-            [formField]="editForm.longitude"
-            [class]="fieldClasses(editForm.longitude())"
-            id="longitude"
-            step="0.0001"
-            type="number"
-          >
-          @if (showFieldError(editForm.longitude())) {
-          <p class="text-xs text-brake" role="alert">
-            {{ firstFieldError(editForm.longitude().errors()) }}
-          </p>
-          }
-        </div>
-      </div>
-    </div>
-
-    <app-site-localisation-map
-      (coordinatesChange)="onLocalisationChange($event)"
-      [latitude]="draft().latitude"
-      [longitude]="draft().longitude"
-    />
-
-    <div class="flex max-w-lg flex-col gap-5 border border-line bg-surface p-5">
       <label class="flex items-center gap-2 text-sm text-ink">
         <input
           (change)="onPoidsLourd($event)"
@@ -161,7 +158,7 @@
 
   @if (site.value().actif) {
   <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+    <h2 class="text-xl font-medium tracking-tight text-ink">
       Désactivation
     </h2>
     <p class="mt-1 text-sm text-muted">

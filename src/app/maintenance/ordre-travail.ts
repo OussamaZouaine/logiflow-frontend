@@ -114,6 +114,25 @@ export function statutOtLabel(statut: StatutOT): string {
   }
 }
 
+export function statutOtTone(
+  statut: StatutOT
+): "pine" | "ink" | "muted" | "brake" {
+  switch (statut) {
+    case "PLANIFIE":
+      return "muted";
+    case "EN_COURS":
+      return "pine";
+    case "TERMINE":
+      return "ink";
+    case "ANNULE":
+      return "brake";
+    default: {
+      const _exhaustive: never = statut;
+      return _exhaustive;
+    }
+  }
+}
+
 export function formatMoney(money: Money): string {
   return `${money.montant.toLocaleString("fr-FR")} ${money.devise}`;
 }

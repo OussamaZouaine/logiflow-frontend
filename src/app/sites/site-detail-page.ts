@@ -20,6 +20,11 @@ import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import { firstFieldError } from "../core/forms/first-field-error";
 import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
+import {
+  actifLabel,
+  actifTone,
+  StatutChip,
+} from "../shared/ui/statut-chip";
 import { draftToWrite, emptySiteDraft, type Site, siteToDraft } from "./site";
 import { SiteApi } from "./site-api";
 import {
@@ -28,7 +33,7 @@ import {
 } from "./site-localisation-map";
 
 @Component({
-  imports: [FormField, RouterLink, SiteLocalisationMap],
+  imports: [FormField, RouterLink, SiteLocalisationMap, StatutChip],
   selector: "app-site-detail-page",
   templateUrl: "./site-detail-page.html",
 })
@@ -37,6 +42,8 @@ export class SiteDetailPage {
 
   readonly id = input.required<string>();
 
+  protected readonly actifLabel = actifLabel;
+  protected readonly actifTone = actifTone;
   protected readonly firstFieldError = firstFieldError;
   protected readonly showFieldError = showFieldError;
   protected readonly fieldClasses = fieldClasses;

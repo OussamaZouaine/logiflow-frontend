@@ -1,6 +1,6 @@
 import {
-  type Role,
   DOSSIERS_ALLOWED_ROLES,
+  type Role,
   SITES_ALLOWED_ROLES,
 } from "../auth/role";
 
@@ -126,3 +126,4 @@ export function destinationsForRoles(
     (destination) => roles.some((role) => destination.roles.includes(role))
   );
 }
+

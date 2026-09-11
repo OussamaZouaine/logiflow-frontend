@@ -10,13 +10,8 @@ import {
   selector: "app-module-placeholder-page",
   template: `
     <div class="flex max-w-lg flex-col gap-4">
-      <p
-        class="text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase"
-      >
-        {{ destination().section }}
-      </p>
       <h1
-        class="font-display text-balance text-3xl font-medium tracking-tight text-ink"
+        class="text-balance text-3xl font-medium tracking-tight text-ink"
       >
         {{ destination().label }}
       </h1>

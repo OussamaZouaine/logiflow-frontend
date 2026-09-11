@@ -1,6 +1,7 @@
 import { httpResource } from "@angular/common/http";
 import { Component, computed, inject, input, signal } from "@angular/core";
 import { RouterLink } from "@angular/router";
+import { OpsTimeline } from "../shared/ui/ops-timeline";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
@@ -26,6 +27,7 @@ import {
   typeTransportLabel,
 } from "./dossier";
 import { DossierApi } from "./dossier-api";
+import { dossierTimelineEntries } from "./dossier-timeline";
 
 const SITE_LOOKUP_PAGE_SIZE = 50;
 const COMMANDE_LOOKUP_PAGE_SIZE = 50;
@@ -36,7 +38,7 @@ interface VoyageLink {
 }
 
 @Component({
-  imports: [RouterLink],
+  imports: [RouterLink, OpsTimeline],
   selector: "app-dossier-detail-page",
   templateUrl: "./dossier-detail-page.html",
 })
@@ -109,6 +111,14 @@ export class DossierDetailPage {
   protected readonly voyagesPorteursList = computed(
     () => this.voyagesPorteurs.value()?.content ?? []
   );
+
+  protected readonly timelineEntries = computed(() => {
+    const dossier = this.dossier.value();
+    if (!dossier) {
+      return [];
+    }
+    return dossierTimelineEntries(dossier);
+  });
 
   protected readonly loadError = computed(() =>
     httpErrorMessage(this.dossier.error())

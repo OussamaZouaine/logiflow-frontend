@@ -7,6 +7,24 @@ import { TestBed } from "@angular/core/testing";
 import { provideRouter } from "@angular/router";
 import { VoyagesPage } from "./voyages-page";
 
+const EMPTY_PAGE = {
+  content: [],
+  pageNumber: 0,
+  pageSize: 100,
+  totalElements: 0,
+  totalPages: 0,
+};
+
+function flushLookups(http: HttpTestingController): void {
+  for (const req of http.match(() => true)) {
+    if (req.request.url.includes("/dossiers")) {
+      req.flush(EMPTY_PAGE);
+    } else if (req.request.url.includes("/sites")) {
+      req.flush(EMPTY_PAGE);
+    }
+  }
+}
+
 describe("VoyagesPage", () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -54,6 +72,7 @@ describe("VoyagesPage", () => {
         totalElements: 1,
         totalPages: 1,
       });
+    flushLookups(http);
 
     await fixture.whenStable();
     fixture.detectChanges();
@@ -61,6 +80,7 @@ describe("VoyagesPage", () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain("VOY-2026-00001");
     expect(compiled.textContent).toContain("Brouillon");
+    expect(compiled.textContent).toContain("Carte des sites");
     http.verify();
   });
 
@@ -72,6 +92,7 @@ describe("VoyagesPage", () => {
     http
       .expectOne((req) => req.url === "/api/v1/voyages")
       .error(new ProgressEvent("error"));
+    flushLookups(http);
 
     await fixture.whenStable();
     fixture.detectChanges();

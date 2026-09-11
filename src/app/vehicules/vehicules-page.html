@@ -1,16 +1,7 @@
 <div class="flex flex-col gap-6">
   <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
     <div>
-      <p
-        class="text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase"
-      >
-        Flotte
-      </p>
-      <h1
-        class="font-display mt-1 text-3xl font-medium tracking-tight text-ink"
-      >
-        Véhicules
-      </h1>
+      <h1 class="text-3xl font-medium tracking-tight text-ink">Véhicules</h1>
       <p class="mt-1 text-sm text-muted">
         Parc motorisé — plaque SIV
         <span class="font-mono text-ink">AA-123-AA</span>
@@ -24,23 +15,18 @@
     </a>
   </div>
 
-  <form (submit)="applySearch($event)" class="flex gap-2">
-    <label class="sr-only" for="vehicule-search">Rechercher</label>
-    <input
-      (input)="onSearchInput($event)"
-      [value]="searchDraft()"
-      class="field min-w-0 flex-1"
-      id="vehicule-search"
+  <div class="flex flex-col gap-3">
+    <app-list-search-bar
+      [(draft)]="searchDraft"
+      [(query)]="search"
+      inputId="vehicule-search"
       placeholder="Immatriculation…"
-      type="search"
-    >
-    <button
-      class="pressable pressable-border shrink-0 border border-line px-4 py-2 text-sm font-medium text-ink"
-      type="submit"
-    >
-      Chercher
-    </button>
-  </form>
+    />
+    <app-list-statut-filter
+      [(selected)]="statutFilter"
+      [options]="statutOptions"
+    />
+  </div>
 
   @if (vehicules.isLoading()) {
   <p class="text-sm text-muted" role="status">Chargement des véhicules…</p>
@@ -59,7 +45,28 @@
     </button>
   </div>
   } @else if (vehicules.hasValue() && vehicules.value().content.length === 0) {
-  <p class="text-sm text-muted">Aucun véhicule.</p>
+  @if (search()) {
+  <app-list-empty-state
+    (action)="clearFilters()"
+    actionLabel="Effacer la recherche"
+    description="Aucun véhicule ne correspond à « {{ search() }} »."
+    title="Aucun résultat"
+  />
+  } @else {
+  <app-list-empty-state
+    actionLabel="Nouveau véhicule"
+    actionLink="/vehicules/nouveau"
+    description="Enregistrez le premier véhicule du parc."
+    title="Aucun véhicule en base"
+  />
+  }
+  } @else if (vehicules.hasValue() && visibleVehicules().length === 0) {
+  <app-list-empty-state
+    (action)="clearFilters()"
+    actionLabel="Réinitialiser les filtres"
+    description="Élargissez le filtre de statut pour revoir la liste."
+    title="Aucun véhicule pour ce filtre"
+  />
   } @else if (vehicules.hasValue()) {
   <div class="overflow-x-auto border border-line bg-surface">
     <table class="w-full min-w-xl text-left text-sm">
@@ -72,11 +79,14 @@
           <th class="px-4 py-3 font-medium" scope="col">PTAC</th>
           <th class="px-4 py-3 font-medium" scope="col">Km</th>
           <th class="px-4 py-3 font-medium" scope="col">Statut</th>
+          <th class="px-4 py-3 font-medium" scope="col">
+            <span class="sr-only">Actions</span>
+          </th>
         </tr>
       </thead>
       <tbody>
-        @for (vehicule of vehicules.value().content; track vehicule.id) {
-        <tr class="border-b border-line last:border-0">
+        @for (vehicule of visibleVehicules(); track vehicule.id) {
+        <tr class="list-row border-b border-line last:border-0 hover:bg-canvas">
           <td class="px-4 py-3">
             <a
               [routerLink]="['/vehicules', vehicule.id]"
@@ -87,13 +97,25 @@
           </td>
           <td class="px-4 py-3 text-ink">{{ typeLabel(vehicule.type) }}</td>
           <td class="px-4 py-3 font-mono tabular-nums text-muted">
-            {{ vehicule.ptacKg }}
-            kg
+            {{ vehicule.ptacKg }} kg
           </td>
           <td class="px-4 py-3 font-mono tabular-nums text-muted">
             {{ vehicule.kilometrage }}
           </td>
-          <td class="px-4 py-3 text-ink">{{ statutLabel(vehicule.statut) }}</td>
+          <td class="px-4 py-3">
+            <app-statut-chip
+              [label]="statutLabel(vehicule.statut)"
+              [tone]="vehiculeStatutTone(vehicule.statut)"
+            />
+          </td>
+          <td class="px-4 py-3 text-right">
+            <a
+              [routerLink]="['/vehicules', vehicule.id]"
+              class="list-row-action text-sm font-medium text-pine underline-offset-2 hover:underline"
+            >
+              Ouvrir
+            </a>
+          </td>
         </tr>
         }
       </tbody>
@@ -101,8 +123,15 @@
   </div>
   @if (vehicules.value().totalElements) {
   <p class="font-mono text-sm tabular-nums text-muted">
+    {{ visibleVehicules().length }}
+    affiché(s) /
     {{ vehicules.value().totalElements }}
     véhicule(s)
   </p>
-  } }
+  }
+  <app-list-pagination
+    [(page)]="page"
+    [totalPages]="vehicules.value().totalPages"
+  />
+  }
 </div>

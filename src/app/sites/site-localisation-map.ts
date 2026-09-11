@@ -44,7 +44,7 @@ export interface SiteLocalisationCoordinates {
     }
 
     .map-host {
-      height: 20rem;
+      height: 28rem;
       width: 100%;
       z-index: 0;
     }

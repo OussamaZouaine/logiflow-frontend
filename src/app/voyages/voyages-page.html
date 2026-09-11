@@ -1,16 +1,7 @@
 <div class="flex flex-col gap-6">
   <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
     <div>
-      <p
-        class="text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase"
-      >
-        Planning
-      </p>
-      <h1
-        class="font-display mt-1 text-3xl font-medium tracking-tight text-ink"
-      >
-        Voyages
-      </h1>
+      <h1 class="text-3xl font-medium tracking-tight text-ink">Voyages</h1>
       <p class="mt-1 text-sm text-muted">
         Exécution physique des dossiers — véhicule, chauffeur, trajet.
       </p>
@@ -24,6 +15,11 @@
     </a>
     }
   </div>
+
+  <app-list-statut-filter
+    [(selected)]="statutFilter"
+    [options]="statutOptions"
+  />
 
   @if (voyages.isLoading()) {
   <p class="text-sm text-muted" role="status">Chargement des voyages…</p>
@@ -42,53 +38,122 @@
     </button>
   </div>
   } @else if (voyages.hasValue() && voyages.value().content.length === 0) {
-  <p class="text-sm text-muted">Aucun voyage en base.</p>
+  @if (canPlan()) {
+  <app-list-empty-state
+    actionLabel="Nouveau voyage"
+    actionLink="/voyages/nouveau"
+    description="Planifiez le premier départ avec véhicule et chauffeur."
+    title="Aucun voyage en base"
+  />
+  } @else {
+  <app-list-empty-state
+    description="Aucun voyage n'est encore planifié."
+    title="Aucun voyage en base"
+  />
+  }
+  } @else if (voyages.hasValue() && visibleVoyages().length === 0) {
+  <app-list-empty-state
+    (action)="clearFilters()"
+    actionLabel="Réinitialiser les filtres"
+    description="Élargissez le filtre de statut pour revoir la liste."
+    title="Aucun voyage pour ce filtre"
+  />
   } @else if (voyages.hasValue()) {
-  <div class="overflow-x-auto border border-line bg-surface">
-    <table class="w-full min-w-xl text-left text-sm">
-      <thead
-        class="border-b border-line text-[0.7rem] font-medium tracking-[0.12em] text-muted uppercase"
-      >
-        <tr>
-          <th class="px-4 py-3 font-medium" scope="col">Référence</th>
-          <th class="px-4 py-3 font-medium" scope="col">Type</th>
-          <th class="px-4 py-3 font-medium" scope="col">Portée</th>
-          <th class="px-4 py-3 font-medium" scope="col">Départ prévu</th>
-          <th class="px-4 py-3 font-medium" scope="col">Statut</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (voyage of voyages.value().content; track voyage.id) {
-        <tr class="border-b border-line last:border-0">
-          <td class="px-4 py-3">
-            <a
-              [routerLink]="['/voyages', voyage.id]"
-              class="font-mono text-xs text-pine underline-offset-2 hover:underline"
+  <div class="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+    <div class="flex min-w-0 flex-col gap-3">
+      <div class="overflow-x-auto border border-line bg-surface">
+        <table class="w-full min-w-xl text-left text-sm">
+          <thead
+            class="border-b border-line text-[0.7rem] font-medium tracking-[0.12em] text-muted uppercase"
+          >
+            <tr>
+              <th class="px-4 py-3 font-medium" scope="col">Référence</th>
+              <th class="px-4 py-3 font-medium" scope="col">Type</th>
+              <th class="px-4 py-3 font-medium" scope="col">Portée</th>
+              <th class="px-4 py-3 font-medium" scope="col">Départ prévu</th>
+              <th class="px-4 py-3 font-medium" scope="col">Statut</th>
+              <th class="px-4 py-3 font-medium" scope="col">
+                <span class="sr-only">Actions</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (voyage of visibleVoyages(); track voyage.id) {
+            <tr
+              (click)="selectVoyage(voyage.id)"
+              [attr.aria-selected]="selectedVoyageId() === voyage.id"
+              [class.bg-pine/5]="selectedVoyageId() === voyage.id"
+              class="list-row cursor-pointer border-b border-line last:border-0 hover:bg-canvas"
             >
-              {{ voyage.reference }}
-            </a>
-          </td>
-          <td class="px-4 py-3 text-ink">
-            {{ typeVoyageLabel(voyage.typeVoyage) }}
-          </td>
-          <td class="px-4 py-3 text-muted">
-            {{ porteeLabel(voyage.portee) }}
-          </td>
-          <td class="px-4 py-3 font-mono tabular-nums text-muted">
-            {{ formatInstant(voyage.departPrevu) }}
-          </td>
-          <td class="px-4 py-3 text-ink">
-            {{ statutVoyageLabel(voyage.statut) }}
-          </td>
-        </tr>
-        }
-      </tbody>
-    </table>
+              <td class="px-4 py-3">
+                <a
+                  (click)="$event.stopPropagation()"
+                  [routerLink]="['/voyages', voyage.id]"
+                  class="font-mono text-xs text-pine underline-offset-2 hover:underline"
+                >
+                  {{ voyage.reference }}
+                </a>
+              </td>
+              <td class="px-4 py-3 text-ink">
+                {{ typeVoyageLabel(voyage.typeVoyage) }}
+              </td>
+              <td class="px-4 py-3 text-muted">
+                {{ porteeLabel(voyage.portee) }}
+              </td>
+              <td class="px-4 py-3 font-mono tabular-nums text-muted">
+                {{ formatInstant(voyage.departPrevu) }}
+              </td>
+              <td class="px-4 py-3">
+                <app-statut-chip
+                  [label]="statutVoyageLabel(voyage.statut)"
+                  [tone]="voyageStatutTone(voyage.statut)"
+                />
+              </td>
+              <td class="px-4 py-3 text-right">
+                <a
+                  (click)="$event.stopPropagation()"
+                  [routerLink]="['/voyages', voyage.id]"
+                  class="list-row-action text-sm font-medium text-pine underline-offset-2 hover:underline"
+                >
+                  Ouvrir
+                </a>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (voyages.value().totalElements) {
+      <p class="font-mono text-sm tabular-nums text-muted">
+        {{ visibleVoyages().length }}
+        affiché(s) /
+        {{ voyages.value().totalElements }}
+        voyage(s)
+      </p>
+      }
+      <app-list-pagination
+        [(page)]="page"
+        [totalPages]="voyages.value().totalPages"
+      />
+    </div>
+
+    <aside class="flex min-h-80 flex-col gap-2 border border-line bg-surface">
+      <div class="border-b border-line px-4 py-3">
+        <h2 class="text-sm font-medium text-ink">Carte des sites</h2>
+        <p class="mt-0.5 text-xs text-muted">{{ mapHint() }}</p>
+      </div>
+      <div class="min-h-0 flex-1 p-2">
+        <app-geo-markers-map
+          [ariaLabel]="
+            selectedVoyage()
+              ? 'Sites du voyage ' + selectedVoyage()!.reference
+              : 'Carte des sites du voyage'
+          "
+          [markers]="mapMarkers()"
+          class="block h-full min-h-72"
+        />
+      </div>
+    </aside>
   </div>
-  @if (voyages.value().totalElements) {
-  <p class="font-mono text-sm tabular-nums text-muted">
-    {{ voyages.value().totalElements }}
-    voyage(s)
-  </p>
-  } }
+  }
 </div>

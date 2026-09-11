@@ -1,15 +1,18 @@
 import { Component, inject, signal } from "@angular/core";
 import { Router, RouterLink } from "@angular/router";
+import { ListEmptyState } from "../shared/ui/list-empty-state";
+import { StatutChip } from "../shared/ui/statut-chip";
 import {
   formatDateTime,
   formatMoney,
   rememberedOrdres,
   statutOtLabel,
+  statutOtTone,
   typeInterventionLabel,
 } from "./ordre-travail";
 
 @Component({
-  imports: [RouterLink],
+  imports: [RouterLink, StatutChip, ListEmptyState],
   selector: "app-maintenance-page",
   templateUrl: "./maintenance-page.html",
 })
@@ -19,6 +22,7 @@ export class MaintenancePage {
   protected readonly formatDateTime = formatDateTime;
   protected readonly formatMoney = formatMoney;
   protected readonly statutOtLabel = statutOtLabel;
+  protected readonly statutOtTone = statutOtTone;
   protected readonly typeInterventionLabel = typeInterventionLabel;
 
   protected readonly lookupDraft = signal("");

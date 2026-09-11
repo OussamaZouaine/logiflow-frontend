@@ -159,7 +159,7 @@ function slicesFor<S extends string>(
     .filter((slice) => slice.count > 0);
 }
 
-function vehiculeStatutTone(statut: VehiculeStatut): ApercuTone {
+export function vehiculeStatutTone(statut: VehiculeStatut): ApercuTone {
   switch (statut) {
     case "DISPONIBLE":
       return "pine";
@@ -178,7 +178,7 @@ function vehiculeStatutTone(statut: VehiculeStatut): ApercuTone {
   }
 }
 
-function voyageStatutTone(statut: StatutVoyage): ApercuTone {
+export function voyageStatutTone(statut: StatutVoyage): ApercuTone {
   switch (statut) {
     case "BROUILLON":
     case "CLOTURE":
@@ -198,7 +198,7 @@ function voyageStatutTone(statut: StatutVoyage): ApercuTone {
   }
 }
 
-function commandeStatutTone(statut: StatutCommande): ApercuTone {
+export function commandeStatutTone(statut: StatutCommande): ApercuTone {
   switch (statut) {
     case "RECUE":
       return "muted";
@@ -213,7 +213,7 @@ function commandeStatutTone(statut: StatutCommande): ApercuTone {
   }
 }
 
-function dossierStatutTone(statut: StatutDossier): ApercuTone {
+export function dossierStatutTone(statut: StatutDossier): ApercuTone {
   switch (statut) {
     case "CREE":
     case "PLANIFIE":

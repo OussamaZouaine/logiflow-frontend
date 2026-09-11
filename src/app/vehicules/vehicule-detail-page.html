@@ -1,7 +1,7 @@
 <div class="flex flex-col gap-8">
   <div>
     <a
-      class="text-xs font-medium tracking-wide text-muted underline-offset-2 hover:text-ink hover:underline"
+      class="pressable pressable-border inline-flex items-center border border-line px-2.5 py-1.5 text-xs font-medium text-ink"
       routerLink="/vehicules"
     >
       ← Véhicules
@@ -23,13 +23,8 @@
       </button>
     </div>
     } @else if (vehicule.hasValue()) {
-    <p
-      class="mt-4 text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase"
-    >
-      Flotte
-    </p>
     <h1
-      class="font-display mt-1 font-mono text-3xl font-medium tracking-tight text-ink"
+      class="mt-4 font-mono text-3xl font-medium tracking-tight text-ink"
     >
       {{ vehicule.value().immatriculation }}
     </h1>
@@ -48,7 +43,7 @@
 
   @if (vehicule.hasValue()) {
   <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+    <h2 class="text-xl font-medium tracking-tight text-ink">
       Compteurs
     </h2>
     <p class="mt-1 text-sm text-muted">Le relevé ne peut pas reculer.</p>
@@ -99,7 +94,7 @@
   <section class="border border-line bg-surface p-5">
     <div class="flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+        <h2 class="text-xl font-medium tracking-tight text-ink">
           Documents
         </h2>
         <p class="mt-1 text-sm text-muted">

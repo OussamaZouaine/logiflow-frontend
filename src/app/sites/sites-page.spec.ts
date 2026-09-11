@@ -68,4 +68,72 @@ describe("SitesPage", () => {
     expect(compiled.textContent).toContain("Backend injoignable");
     http.verify();
   });
+
+  it("shows pagination controls when the API reports multiple pages", async () => {
+    const fixture = TestBed.createComponent(SitesPage);
+    fixture.detectChanges();
+
+    const http = TestBed.inject(HttpTestingController);
+    http.expectOne((req) => req.url === "/api/v1/sites").flush({
+      content: [
+        {
+          actif: true,
+          adresse: null,
+          clientId: null,
+          code: "SITE-A",
+          id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+          libelle: "Site A",
+          localisation: { latitude: 48.8, longitude: 2.3 },
+        },
+      ],
+      pageNumber: 0,
+      pageSize: 20,
+      totalElements: 25,
+      totalPages: 2,
+    });
+
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain("Page 1 / 2");
+    expect(compiled.textContent).toContain("Précédent");
+    expect(compiled.textContent).toContain("Suivant");
+
+    const next = compiled.querySelector(
+      'nav[aria-label="Pagination"] button:last-of-type'
+    ) as HTMLButtonElement | null;
+    expect(next?.disabled).toBe(false);
+    next?.click();
+    fixture.detectChanges();
+
+    const page2 = http.expectOne(
+      (req) =>
+        req.url === "/api/v1/sites" && req.params.get("page") === "1"
+    );
+    page2.flush({
+      content: [
+        {
+          actif: true,
+          adresse: null,
+          clientId: null,
+          code: "SITE-B",
+          id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+          libelle: "Site B",
+          localisation: { latitude: 45.7, longitude: 4.8 },
+        },
+      ],
+      pageNumber: 1,
+      pageSize: 20,
+      totalElements: 25,
+      totalPages: 2,
+    });
+
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(compiled.textContent).toContain("Page 2 / 2");
+    expect(compiled.textContent).toContain("Site B");
+    http.verify();
+  });
 });

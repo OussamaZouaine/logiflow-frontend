@@ -4,6 +4,7 @@ import { RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
+import { OpsTimeline } from "../shared/ui/ops-timeline";
 import {
   type EvenementVoyage,
   formatInstant,
@@ -21,6 +22,7 @@ import {
   type Voyage,
 } from "./voyage";
 import { VoyageApi } from "./voyage-api";
+import { voyageTimelineEntries } from "./voyage-timeline";
 
 interface DossierLink {
   id: string;
@@ -28,7 +30,7 @@ interface DossierLink {
 }
 
 @Component({
-  imports: [RouterLink],
+  imports: [RouterLink, OpsTimeline],
   selector: "app-voyage-detail-page",
   templateUrl: "./voyage-detail-page.html",
 })
@@ -72,6 +74,14 @@ export class VoyageDetailPage {
   protected readonly evenements = httpResource<EvenementVoyage[]>(() => ({
     url: `${environment.apiBaseUrl}/voyages/${this.id()}/evenements`,
   }));
+
+  protected readonly timelineEntries = computed(() => {
+    const voyage = this.voyage.value();
+    if (!voyage) {
+      return [];
+    }
+    return voyageTimelineEntries(voyage, this.evenements.value() ?? []);
+  });
 
   protected readonly loadError = computed(() =>
     httpErrorMessage(this.voyage.error())

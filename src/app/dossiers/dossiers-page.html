@@ -1,16 +1,7 @@
 <div class="flex flex-col gap-6">
   <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
     <div>
-      <p
-        class="text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase"
-      >
-        Exploitation
-      </p>
-      <h1
-        class="font-display mt-1 text-3xl font-medium tracking-tight text-ink"
-      >
-        Dossiers
-      </h1>
+      <h1 class="text-3xl font-medium tracking-tight text-ink">Dossiers</h1>
       <p class="mt-1 text-sm text-muted">
         Fiches transport issues des commandes confirmées — marchandise, sites,
         cycle de vie.
@@ -25,6 +16,11 @@
     </a>
     }
   </div>
+
+  <app-list-statut-filter
+    [(selected)]="statutFilter"
+    [options]="statutOptions"
+  />
 
   @if (dossiers.isLoading()) {
   <p class="text-sm text-muted" role="status">Chargement des dossiers…</p>
@@ -43,7 +39,26 @@
     </button>
   </div>
   } @else if (dossiers.hasValue() && dossiers.value().content.length === 0) {
-  <p class="text-sm text-muted">Aucun dossier en base.</p>
+  @if (canPlan()) {
+  <app-list-empty-state
+    actionLabel="Nouveau dossier"
+    actionLink="/dossiers/nouveau"
+    description="Créez un dossier à partir d'une commande confirmée."
+    title="Aucun dossier en base"
+  />
+  } @else {
+  <app-list-empty-state
+    description="Aucun dossier de transport n'est encore enregistré."
+    title="Aucun dossier en base"
+  />
+  }
+  } @else if (dossiers.hasValue() && visibleDossiers().length === 0) {
+  <app-list-empty-state
+    (action)="clearFilters()"
+    actionLabel="Réinitialiser les filtres"
+    description="Élargissez le filtre de statut pour revoir la liste."
+    title="Aucun dossier pour ce filtre"
+  />
   } @else if (dossiers.hasValue()) {
   <div class="overflow-x-auto border border-line bg-surface">
     <table class="w-full min-w-xl text-left text-sm">
@@ -56,11 +71,14 @@
           <th class="px-4 py-3 font-medium" scope="col">Famille</th>
           <th class="px-4 py-3 font-medium" scope="col">Poids</th>
           <th class="px-4 py-3 font-medium" scope="col">Statut</th>
+          <th class="px-4 py-3 font-medium" scope="col">
+            <span class="sr-only">Actions</span>
+          </th>
         </tr>
       </thead>
       <tbody>
-        @for (dossier of dossiers.value().content; track dossier.id) {
-        <tr class="border-b border-line last:border-0">
+        @for (dossier of visibleDossiers(); track dossier.id) {
+        <tr class="list-row border-b border-line last:border-0 hover:bg-canvas">
           <td class="px-4 py-3">
             <a
               [routerLink]="['/dossiers', dossier.id]"
@@ -78,8 +96,19 @@
           <td class="px-4 py-3 font-mono tabular-nums text-muted">
             {{ dossier.poidsBrutKg }} kg
           </td>
-          <td class="px-4 py-3 text-ink">
-            {{ statutDossierLabel(dossier.statut) }}
+          <td class="px-4 py-3">
+            <app-statut-chip
+              [label]="statutDossierLabel(dossier.statut)"
+              [tone]="dossierStatutTone(dossier.statut)"
+            />
+          </td>
+          <td class="px-4 py-3 text-right">
+            <a
+              [routerLink]="['/dossiers', dossier.id]"
+              class="list-row-action text-sm font-medium text-pine underline-offset-2 hover:underline"
+            >
+              Ouvrir
+            </a>
           </td>
         </tr>
         }
@@ -88,8 +117,15 @@
   </div>
   @if (dossiers.value().totalElements) {
   <p class="font-mono text-sm tabular-nums text-muted">
+    {{ visibleDossiers().length }}
+    affiché(s) /
     {{ dossiers.value().totalElements }}
     dossier(s)
   </p>
-  } }
+  }
+  <app-list-pagination
+    [(page)]="page"
+    [totalPages]="dossiers.value().totalPages"
+  />
+  }
 </div>

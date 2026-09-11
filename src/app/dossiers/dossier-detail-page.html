@@ -1,7 +1,7 @@
 <div class="flex flex-col gap-8">
   <div>
     <a
-      class="text-xs font-medium tracking-wide text-muted underline-offset-2 hover:text-ink hover:underline"
+      class="pressable pressable-border inline-flex items-center border border-line px-2.5 py-1.5 text-xs font-medium text-ink"
       routerLink="/dossiers"
     >
       ← Dossiers
@@ -23,13 +23,8 @@
       </button>
     </div>
     } @else if (dossier.hasValue()) {
-    <p
-      class="mt-4 text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase"
-    >
-      Exploitation
-    </p>
     <h1
-      class="font-display mt-1 font-mono text-3xl font-medium tracking-tight text-ink"
+      class="mt-4 font-mono text-3xl font-medium tracking-tight text-ink"
     >
       {{ dossier.value().reference }}
     </h1>
@@ -49,7 +44,7 @@
 
   @if (dossier.hasValue()) {
   <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+    <h2 class="text-xl font-medium tracking-tight text-ink">
       Fiche
     </h2>
     <dl class="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
@@ -106,7 +101,7 @@
   </section>
 
   <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+    <h2 class="text-xl font-medium tracking-tight text-ink">
       Marchandise
     </h2>
     <ul class="mt-4 flex flex-col gap-3 text-sm">
@@ -126,7 +121,7 @@
   </section>
 
   <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+    <h2 class="text-xl font-medium tracking-tight text-ink">
       Segments
     </h2>
     <ol class="mt-4 flex flex-col gap-3 text-sm">
@@ -152,9 +147,21 @@
     </ol>
   </section>
 
+  <section class="max-w-lg border border-line bg-surface p-5">
+    <h2 class="text-xl font-medium tracking-tight text-ink">
+      Chronologie
+    </h2>
+    <p class="mt-1 text-sm text-muted">
+      Fenêtres de segments et réalisations. Pas d'historique de statut en v1.
+    </p>
+    <div class="mt-4">
+      <app-ops-timeline [entries]="timelineEntries()" />
+    </div>
+  </section>
+
   @if (dossier.value().statut === "CREE" && canPlan()) {
   <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+    <h2 class="text-xl font-medium tracking-tight text-ink">
       Planification
     </h2>
     <p class="mt-1 text-sm text-muted">
@@ -173,7 +180,7 @@
 
   @if (dossier.value().statut === "PLANIFIE") {
   <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+    <h2 class="text-xl font-medium tracking-tight text-ink">
       Planification
     </h2>
     @if (canOpenVoyages()) {
@@ -203,7 +210,7 @@
 
   @if (canPlan() && manualNextStatuts(dossier.value().statut).length > 0) {
   <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="font-display text-xl font-medium tracking-tight text-ink">
+    <h2 class="text-xl font-medium tracking-tight text-ink">
       Cycle de vie
     </h2>
     <p class="mt-1 text-sm text-muted">

@@ -63,7 +63,7 @@ describe("TableauDeBordPage", () => {
     const apercu = compiled.querySelector('[aria-label="Aperçu"]');
     expect(apercu?.textContent).toContain("Sites");
     expect(apercu?.textContent).not.toContain("Maintenance");
-    expect(compiled.textContent).toContain("Ouvert");
+    expect(compiled.textContent).not.toContain("Ouvert");
     expect(compiled.textContent).not.toContain("Maintenance");
     http.verify();
   });
@@ -85,7 +85,7 @@ describe("TableauDeBordPage", () => {
     http.verify();
   });
 
-  it("keeps Maintenance in the directory but not in the Aperçu", async () => {
+  it("omits Maintenance from the Aperçu even for admin", async () => {
     TestBed.inject(DemoSessionService).signIn("admin", DEMO_PASSWORD);
     const fixture = TestBed.createComponent(TableauDeBordPage);
     fixture.detectChanges();
@@ -103,9 +103,10 @@ describe("TableauDeBordPage", () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
     const apercu = compiled.querySelector('[aria-label="Aperçu"]');
-    const modules = compiled.querySelector('[aria-label="Modules de ce rôle"]');
     expect(apercu?.textContent).not.toContain("Maintenance");
-    expect(modules?.textContent).toContain("Maintenance");
+    expect(
+      compiled.querySelector('[aria-label="Modules de ce rôle"]')
+    ).toBeNull();
     http.verify();
   });
 

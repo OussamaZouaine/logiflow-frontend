@@ -1,7 +1,7 @@
 <div class="tableau">
   <header class="max-w-xl">
     <h1
-      class="font-display text-balance text-3xl font-medium tracking-tight text-ink sm:text-4xl"
+      class="text-balance text-3xl font-medium tracking-tight text-ink sm:text-4xl"
     >
       Tableau de bord
     </h1>
@@ -11,17 +11,69 @@
       —
       {{ roleName() }}.
       <span class="mt-1 block"
-        >Voir les totaux, puis ouvrir un module.</span
+        >File du jour puis totaux issus des listes disponibles pour ce
+        rôle.</span
       >
-      } @else { Les modules de la vacation. }
+      } @else { Aperçu des modules autorisés. }
     </p>
   </header>
 
+  <section aria-label="File du jour" class="flex flex-col gap-3">
+    <div class="flex flex-col gap-1">
+      <h2 class="text-lg font-medium tracking-tight text-ink">File du jour</h2>
+      <p class="text-sm text-muted">
+        Exceptions et prochaines actions pour ce rôle.
+      </p>
+    </div>
+
+    @if (fileDuJourLoading()) {
+    <p class="text-sm text-muted" role="status">Chargement de la file…</p>
+    } @else if (fileDuJour().length === 0) {
+    <p
+      class="border border-line bg-surface px-4 py-3 text-sm text-muted"
+      role="status"
+    >
+      Rien à traiter pour le moment. L’Aperçu ci-dessous reste disponible.
+    </p>
+    } @else {
+    <ul class="flex flex-col gap-2">
+      @for (item of fileDuJour(); track item.id) {
+      <li>
+        <a
+          [routerLink]="item.path"
+          class="pressable flex items-center gap-3 border border-line border-l-4 bg-surface px-4 py-3 hover:border-pine"
+          [class.border-l-brake]="item.tone === 'brake'"
+          [class.border-l-ink]="item.tone === 'ink'"
+          [class.border-l-pine]="item.tone === 'pine'"
+          [class.border-l-secondary]="item.tone === 'muted'"
+        >
+          <span
+            class="font-mono text-2xl font-medium tracking-tight text-ink tabular-nums"
+          >
+            {{ item.count }}
+          </span>
+          <span class="min-w-0 flex-1">
+            <span class="block text-sm font-medium text-ink">{{
+              item.title
+            }}</span>
+            <span class="mt-0.5 block text-xs text-muted">{{
+              item.detail
+            }}</span>
+          </span>
+          <app-statut-chip
+            [label]="priorityLabel(item.tone)"
+            [tone]="item.tone"
+          />
+        </a>
+      </li>
+      }
+    </ul>
+    }
+  </section>
+
   @if (tiles().length > 0) {
   <section aria-label="Aperçu" class="tableau-board flex flex-col gap-3">
-    <h2 class="font-display text-lg font-medium tracking-tight text-ink">
-      Présence
-    </h2>
+    <h2 class="text-lg font-medium tracking-tight text-ink">Aperçu</h2>
 
     <ul class="metric-grid">
       @for (tile of tiles(); track tile.path) {
@@ -35,7 +87,7 @@
             <p class="text-sm font-medium text-ink">{{ tile.label }}</p>
             <p class="text-xs text-muted">{{ tile.section }}</p>
             <p
-              class="font-display mt-2 text-4xl leading-none font-medium tracking-tight text-ink tabular-nums"
+              class="mt-2 text-4xl leading-none font-medium tracking-tight text-ink tabular-nums"
             >
               @if (tile.loading) {
               <span class="text-muted">…</span>
@@ -61,7 +113,9 @@
               ></span>
               }
             </div>
-            <p class="truncate font-mono text-[0.65rem] tracking-wide text-muted">
+            <p
+              class="truncate font-mono text-[0.65rem] tracking-wide text-muted"
+            >
               @for (slice of slices; track slice.key; let last = $last) {
               <span
                 ><span class="text-ink tabular-nums">{{ slice.count }}</span>
@@ -83,38 +137,4 @@
     </ul>
   </section>
   }
-
-  <section aria-label="Modules de ce rôle" class="tableau-board flex flex-col gap-3">
-    <h2 class="font-display text-lg font-medium tracking-tight text-ink">
-      Accès
-    </h2>
-
-    <ul class="module-grid">
-      @for (destination of destinations(); track destination.id) {
-      <li>
-        <a
-          [routerLink]="'/' + destination.path"
-          class="module-card pressable"
-        >
-          <p class="text-xs text-muted">{{ destination.section }}</p>
-          <p
-            class="font-display text-xl font-medium tracking-tight text-ink"
-          >
-            {{ destination.label }}
-          </p>
-          <p class="text-sm leading-snug text-muted">
-            {{ destination.blurb }}
-          </p>
-          <p
-            [class.text-muted]="!destination.live"
-            [class.text-pine]="destination.live"
-            class="module-card-status font-mono text-[0.7rem] tracking-wide"
-          >
-            {{ destination.live ? "Ouvert" : "À brancher" }}
-          </p>
-        </a>
-      </li>
-      }
-    </ul>
-  </section>
 </div>

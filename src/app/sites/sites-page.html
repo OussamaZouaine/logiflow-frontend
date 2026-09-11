@@ -1,21 +1,11 @@
 <div class="flex flex-col gap-6">
   <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
     <div>
-      <p
-        class="text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase"
-      >
-        Référentiel
-      </p>
-      <h1
-        class="font-display mt-1 text-3xl font-medium tracking-tight text-ink"
-      >
-        Sites
-      </h1>
+      <h1 class="text-3xl font-medium tracking-tight text-ink">Sites</h1>
       <p class="mt-1 text-sm text-muted">
         Quais de chargement et de déchargement.
       </p>
     </div>
-    <!-- biome-ignore lint/a11y/useValidAnchor: <it's an angular router link> -->
     <a
       class="pressable min-h-11 bg-pine px-4 py-2.5 text-center text-sm font-medium tracking-wide text-surface"
       routerLink="/sites/nouveau"
@@ -24,23 +14,19 @@
     </a>
   </div>
 
-  <form (submit)="applySearch($event)" class="flex gap-2">
-    <label class="sr-only" for="site-search">Rechercher</label>
-    <input
-      (input)="onSearchInput($event)"
-      [value]="searchDraft()"
-      class="field min-w-0 flex-1"
-      id="site-search"
+  <div class="flex flex-col gap-3">
+    <app-list-search-bar
+      [(draft)]="searchDraft"
+      [(query)]="search"
+      inputId="site-search"
       placeholder="Code ou libellé…"
-      type="search"
-    >
-    <button
-      class="pressable pressable-border shrink-0 border border-line px-4 py-2 text-sm font-medium text-ink"
-      type="submit"
-    >
-      Chercher
-    </button>
-  </form>
+    />
+    <app-list-statut-filter
+      [(selected)]="actifFilter"
+      [options]="actifOptions"
+      ariaLabel="Filtrer par activité"
+    />
+  </div>
 
   @if (sites.isLoading()) {
   <p class="text-sm text-muted" role="status">Chargement des sites…</p>
@@ -59,46 +45,113 @@
     </button>
   </div>
   } @else if (sites.hasValue() && sites.value().content.length === 0) {
-  <p class="text-sm text-muted">Aucun site en base.</p>
+  @if (search()) {
+  <app-list-empty-state
+    (action)="clearFilters()"
+    actionLabel="Effacer la recherche"
+    description="Aucun site ne correspond à « {{ search() }} »."
+    title="Aucun résultat"
+  />
+  } @else {
+  <app-list-empty-state
+    actionLabel="Nouveau site"
+    actionLink="/sites/nouveau"
+    description="Créez le premier quai de chargement ou de déchargement."
+    title="Aucun site en base"
+  />
+  }
+  } @else if (sites.hasValue() && visibleSites().length === 0) {
+  <app-list-empty-state
+    (action)="clearFilters()"
+    actionLabel="Réinitialiser les filtres"
+    description="Élargissez le filtre d'activité pour revoir la liste."
+    title="Aucun site pour ce filtre"
+  />
   } @else if (sites.hasValue()) {
-  <div class="overflow-x-auto border border-line bg-surface">
-    <table class="w-full min-w-xl text-left text-sm">
-      <thead
-        class="border-b border-line text-[0.7rem] font-medium tracking-[0.12em] text-muted uppercase"
-      >
-        <tr>
-          <th class="px-4 py-3 font-medium" scope="col">Code</th>
-          <th class="px-4 py-3 font-medium" scope="col">Libellé</th>
-          <th class="px-4 py-3 font-medium" scope="col">Adresse</th>
-          <th class="px-4 py-3 font-medium" scope="col">Statut</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (site of sites.value().content; track site.id) {
-        <tr class="border-b border-line last:border-0">
-          <td class="px-4 py-3">
-            <!-- biome-ignore lint/a11y/useValidAnchor: <it's an angular router link> -->
-            <a
-              [routerLink]="['/sites', site.id]"
-              class="font-mono text-xs text-pine underline-offset-2 hover:underline"
+  <div class="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+    <div class="flex min-w-0 flex-col gap-3">
+      <div class="overflow-x-auto border border-line bg-surface">
+        <table class="w-full min-w-xl text-left text-sm">
+          <thead
+            class="border-b border-line text-[0.7rem] font-medium tracking-[0.12em] text-muted uppercase"
+          >
+            <tr>
+              <th class="px-4 py-3 font-medium" scope="col">Code</th>
+              <th class="px-4 py-3 font-medium" scope="col">Libellé</th>
+              <th class="px-4 py-3 font-medium" scope="col">Adresse</th>
+              <th class="px-4 py-3 font-medium" scope="col">Statut</th>
+              <th class="px-4 py-3 font-medium" scope="col">
+                <span class="sr-only">Actions</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (site of visibleSites(); track site.id) {
+            <tr
+              (click)="selectSite(site.id)"
+              [attr.aria-selected]="selectedSiteId() === site.id"
+              [class.bg-pine/5]="selectedSiteId() === site.id"
+              class="list-row cursor-pointer border-b border-line last:border-0 hover:bg-canvas"
             >
-              {{ site.code }}
-            </a>
-          </td>
-          <td class="px-4 py-3 font-medium text-ink">{{ site.libelle }}</td>
-          <td class="px-4 py-3 text-muted">{{ site.adresse ?? "—" }}</td>
-          <td class="px-4 py-3 text-ink">
-            {{ site.actif ? "Actif" : "Inactif" }}
-          </td>
-        </tr>
-        }
-      </tbody>
-    </table>
+              <td class="px-4 py-3">
+                <a
+                  (click)="$event.stopPropagation()"
+                  [routerLink]="['/sites', site.id]"
+                  class="font-mono text-xs text-pine underline-offset-2 hover:underline"
+                >
+                  {{ site.code }}
+                </a>
+              </td>
+              <td class="px-4 py-3 font-medium text-ink">{{ site.libelle }}</td>
+              <td class="px-4 py-3 text-muted">{{ site.adresse ?? "—" }}</td>
+              <td class="px-4 py-3">
+                <app-statut-chip
+                  [label]="actifLabel(site.actif)"
+                  [tone]="actifTone(site.actif)"
+                />
+              </td>
+              <td class="px-4 py-3 text-right">
+                <a
+                  (click)="$event.stopPropagation()"
+                  [routerLink]="['/sites', site.id]"
+                  class="list-row-action text-sm font-medium text-pine underline-offset-2 hover:underline"
+                >
+                  Ouvrir
+                </a>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (sites.value().totalElements) {
+      <p class="font-mono text-sm tabular-nums text-muted">
+        {{ visibleSites().length }}
+        affiché(s) /
+        {{ sites.value().totalElements }}
+        site(s)
+      </p>
+      }
+      <app-list-pagination
+        [(page)]="page"
+        [totalPages]="sites.value().totalPages"
+      />
+    </div>
+
+    <aside class="flex min-h-80 flex-col border border-line bg-surface">
+      <div class="border-b border-line px-4 py-3">
+        <h2 class="text-sm font-medium text-ink">Carte des sites</h2>
+        <p class="mt-0.5 text-xs text-muted">{{ mapHint() }}</p>
+      </div>
+      <div class="min-h-0 flex-1 p-2">
+        <app-geo-markers-map
+          ariaLabel="Carte des sites de la page"
+          [focusId]="selectedSiteId()"
+          [markers]="mapMarkers()"
+          class="block h-full min-h-72"
+        />
+      </div>
+    </aside>
   </div>
-  @if (sites.value().totalElements) {
-  <p class="font-mono text-sm tabular-nums text-muted">
-    {{ sites.value().totalElements }}
-    site(s)
-  </p>
-  } }
+  }
 </div>

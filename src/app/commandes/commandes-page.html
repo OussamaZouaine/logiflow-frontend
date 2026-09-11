@@ -1,16 +1,7 @@
 <div class="flex flex-col gap-6">
   <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
     <div>
-      <p
-        class="text-[0.7rem] font-medium tracking-[0.18em] text-pine uppercase"
-      >
-        Commercial
-      </p>
-      <h1
-        class="font-display mt-1 text-3xl font-medium tracking-tight text-ink"
-      >
-        Commandes
-      </h1>
+      <h1 class="text-3xl font-medium tracking-tight text-ink">Commandes</h1>
       <p class="mt-1 text-sm text-muted">
         Demandes clients à transporter. Confirmation puis dossier.
       </p>
@@ -22,6 +13,11 @@
       Nouvelle commande
     </a>
   </div>
+
+  <app-list-statut-filter
+    [(selected)]="statutFilter"
+    [options]="statutOptions"
+  />
 
   @if (commandes.isLoading()) {
   <p class="text-sm text-muted" role="status">Chargement des commandes…</p>
@@ -40,7 +36,19 @@
     </button>
   </div>
   } @else if (commandes.hasValue() && commandes.value().content.length === 0) {
-  <p class="text-sm text-muted">Aucune commande en base.</p>
+  <app-list-empty-state
+    actionLabel="Nouvelle commande"
+    actionLink="/commandes/nouveau"
+    description="Saisissez la première demande client à transporter."
+    title="Aucune commande en base"
+  />
+  } @else if (commandes.hasValue() && visibleCommandes().length === 0) {
+  <app-list-empty-state
+    (action)="clearFilters()"
+    actionLabel="Réinitialiser les filtres"
+    description="Élargissez le filtre de statut pour revoir la liste."
+    title="Aucune commande pour ce filtre"
+  />
   } @else if (commandes.hasValue()) {
   <div class="overflow-x-auto border border-line bg-surface">
     <table class="w-full min-w-xl text-left text-sm">
@@ -52,11 +60,14 @@
           <th class="px-4 py-3 font-medium" scope="col">Date souhaitée</th>
           <th class="px-4 py-3 font-medium" scope="col">Prix</th>
           <th class="px-4 py-3 font-medium" scope="col">Statut</th>
+          <th class="px-4 py-3 font-medium" scope="col">
+            <span class="sr-only">Actions</span>
+          </th>
         </tr>
       </thead>
       <tbody>
-        @for (commande of commandes.value().content; track commande.id) {
-        <tr class="border-b border-line last:border-0">
+        @for (commande of visibleCommandes(); track commande.id) {
+        <tr class="list-row border-b border-line last:border-0 hover:bg-canvas">
           <td class="px-4 py-3">
             <a
               [routerLink]="['/commandes', commande.id]"
@@ -71,8 +82,19 @@
           <td class="px-4 py-3 font-mono tabular-nums text-ink">
             {{ formatMoney(commande.prixNegocie) }}
           </td>
-          <td class="px-4 py-3 text-ink">
-            {{ statutCommandeLabel(commande.statut) }}
+          <td class="px-4 py-3">
+            <app-statut-chip
+              [label]="statutCommandeLabel(commande.statut)"
+              [tone]="commandeStatutTone(commande.statut)"
+            />
+          </td>
+          <td class="px-4 py-3 text-right">
+            <a
+              [routerLink]="['/commandes', commande.id]"
+              class="list-row-action text-sm font-medium text-pine underline-offset-2 hover:underline"
+            >
+              Ouvrir
+            </a>
           </td>
         </tr>
         }
@@ -81,8 +103,15 @@
   </div>
   @if (commandes.value().totalElements) {
   <p class="font-mono text-sm tabular-nums text-muted">
+    {{ visibleCommandes().length }}
+    affichée(s) /
     {{ commandes.value().totalElements }}
     commande(s)
   </p>
-  } }
+  }
+  <app-list-pagination
+    [(page)]="page"
+    [totalPages]="commandes.value().totalPages"
+  />
+  }
 </div>

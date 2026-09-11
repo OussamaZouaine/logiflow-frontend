@@ -1,0 +1,150 @@
+import {
+  DOSSIERS_PLAN_ROLES,
+  type Role,
+  SITES_ALLOWED_ROLES,
+  VOYAGES_PLAN_ROLES,
+} from "../auth/role";
+import { DESTINATION_NAV_ICON, TABLEAU_NAV_ICON } from "./nav-icon";
+import {
+  destinationsForRoles,
+  workDestination,
+} from "./work-destination";
+
+export type PaletteItemKind = "module" | "action";
+export type PaletteSection = "Modules" | "Actions";
+
+export interface PaletteItem {
+  readonly icon: string;
+  readonly keywords: readonly string[];
+  readonly kind: PaletteItemKind;
+  readonly label: string;
+  readonly path: string;
+  readonly section: PaletteSection;
+}
+
+interface PaletteActionDef {
+  readonly icon: string;
+  readonly keywords: readonly string[];
+  readonly label: string;
+  readonly path: string;
+  readonly roles: readonly Role[];
+}
+
+const CREATE_ACTIONS: readonly PaletteActionDef[] = [
+  {
+    icon: DESTINATION_NAV_ICON.sites,
+    keywords: ["nouveau", "créer", "create", "site"],
+    label: "Nouveau site",
+    path: "/sites/nouveau",
+    roles: SITES_ALLOWED_ROLES,
+  },
+  {
+    icon: DESTINATION_NAV_ICON.vehicules,
+    keywords: ["nouveau", "créer", "véhicule", "vehicule"],
+    label: "Nouveau véhicule",
+    path: "/vehicules/nouveau",
+    roles: workDestination("vehicules").roles,
+  },
+  {
+    icon: DESTINATION_NAV_ICON.commandes,
+    keywords: ["nouvelle", "créer", "commande"],
+    label: "Nouvelle commande",
+    path: "/commandes/nouveau",
+    roles: workDestination("commandes").roles,
+  },
+  {
+    icon: DESTINATION_NAV_ICON.dossiers,
+    keywords: ["nouveau", "créer", "dossier"],
+    label: "Nouveau dossier",
+    path: "/dossiers/nouveau",
+    roles: DOSSIERS_PLAN_ROLES,
+  },
+  {
+    icon: DESTINATION_NAV_ICON.voyages,
+    keywords: ["nouveau", "créer", "voyage"],
+    label: "Nouveau voyage",
+    path: "/voyages/nouveau",
+    roles: VOYAGES_PLAN_ROLES,
+  },
+  {
+    icon: DESTINATION_NAV_ICON.maintenance,
+    keywords: ["nouvel", "créer", "ordre", "maintenance", "atelier"],
+    label: "Nouvel ordre de travail",
+    path: "/maintenance/nouveau",
+    roles: workDestination("maintenance").roles,
+  },
+  {
+    icon: DESTINATION_NAV_ICON.utilisateurs,
+    keywords: ["nouvel", "créer", "utilisateur", "compte"],
+    label: "Nouvel utilisateur",
+    path: "/utilisateurs/nouveau",
+    roles: workDestination("utilisateurs").roles,
+  },
+];
+
+function roleAllowed(
+  roles: readonly Role[],
+  allowed: readonly Role[]
+): boolean {
+  return roles.some((role) => allowed.includes(role));
+}
+
+/** Role-scoped modules + create actions for the App Shell palette (Ctrl/Cmd+K). */
+export function paletteItemsForRoles(
+  roles: readonly Role[]
+): PaletteItem[] {
+  const modules: PaletteItem[] = [
+    {
+      icon: TABLEAU_NAV_ICON,
+      keywords: ["accueil", "dashboard", "tableau"],
+      kind: "module",
+      label: "Tableau de bord",
+      path: "/",
+      section: "Modules",
+    },
+    ...destinationsForRoles(roles).map(
+      (destination): PaletteItem => ({
+        icon: DESTINATION_NAV_ICON[destination.id],
+        keywords: [destination.path, destination.section],
+        kind: "module",
+        label: destination.label,
+        path: `/${destination.path}`,
+        section: "Modules",
+      })
+    ),
+  ];
+
+  const actions: PaletteItem[] = CREATE_ACTIONS.filter((action) =>
+    roleAllowed(roles, action.roles)
+  ).map((action) => ({
+    icon: action.icon,
+    keywords: action.keywords,
+    kind: "action" as const,
+    label: action.label,
+    path: action.path,
+    section: "Actions" as const,
+  }));
+
+  return [...modules, ...actions];
+}
+
+/** Case-insensitive match on label or keywords (all query words must hit). */
+export function filterPaletteItems(
+  items: readonly PaletteItem[],
+  query: string
+): PaletteItem[] {
+  const tokens = query
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((token) => token.length > 0);
+  if (tokens.length === 0) {
+    return [...items];
+  }
+  return items.filter((item) => {
+    const haystack = [item.label, ...item.keywords]
+      .join(" ")
+      .toLowerCase();
+    return tokens.every((token) => haystack.includes(token));
+  });
+}

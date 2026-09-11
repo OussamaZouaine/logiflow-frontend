@@ -1,43 +1,179 @@
-<div class="flex min-h-dvh flex-col bg-canvas text-ink">
-  <header class="border-b border-line bg-surface">
-    <div class="mx-auto flex max-w-5xl flex-col gap-3 px-6 py-3">
-      <div class="flex items-center justify-between gap-4">
-        <a
-          class="font-display text-xl font-medium tracking-tight text-ink"
-          routerLink="/"
-        >
-          LogiFlow
-        </a>
-        <div class="flex items-center gap-4">
-          <p class="hidden text-right sm:block">
-            <span class="block font-mono text-xs text-ink">{{ login() }}</span>
-            <span class="block text-[0.7rem] text-muted">{{ roleName() }}</span>
-          </p>
-          <button
-            (click)="signOut()"
-            class="pressable pressable-border border border-line px-3 py-1.5 text-xs font-medium tracking-wide text-ink"
-            type="button"
-          >
-            Déconnexion
-          </button>
-        </div>
-      </div>
-      @if (navItems().length > 0) {
-      <nav aria-label="Modules" class="-mx-1 flex gap-1 overflow-x-auto">
-        @for (item of navItems(); track item.id) {
-        <a
-          [routerLink]="'/' + item.path"
-          class="pressable shrink-0 px-2 py-1 text-xs tracking-wide text-muted"
-          routerLinkActive="text-ink"
-        >
-          {{ item.label }}
-        </a>
-        }
-      </nav>
-      }
-    </div>
+<div class="flex h-dvh overflow-hidden bg-canvas text-ink">
+  <header
+    class="fixed inset-x-0 top-0 z-30 flex h-14 items-center gap-3 border-b border-line bg-surface px-4 md:hidden"
+  >
+    <button
+      (click)="openMobileNav()"
+      [attr.aria-expanded]="mobileNavOpen()"
+      aria-controls="app-shell-sidebar"
+      aria-label="Ouvrir le menu"
+      class="pressable inline-flex size-9 items-center justify-center border border-line text-ink"
+      type="button"
+    >
+      <ng-icon class="text-base" name="lucideMenu" />
+    </button>
+    <a
+      class="font-display text-lg font-medium tracking-tight text-ink"
+      routerLink="/"
+    >
+      LogiFlow
+    </a>
   </header>
-  <main class="mx-auto w-full max-w-5xl flex-1 px-6 py-8">
-    <router-outlet />
-  </main>
+
+  @if (mobileNavOpen()) {
+  <button
+    (click)="closeMobileNav()"
+    aria-label="Fermer le menu"
+    class="fixed inset-0 z-40 bg-ink/40 md:hidden"
+    type="button"
+  ></button>
+  }
+
+  <aside
+    [class.-translate-x-full]="!mobileNavOpen()"
+    [class.translate-x-0]="mobileNavOpen()"
+    aria-label="Navigation principale"
+    class="fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-line bg-surface transition-transform duration-200 ease-out md:static md:z-auto md:translate-x-0"
+    id="app-shell-sidebar"
+  >
+    <div
+      class="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-line px-4 md:h-16 md:px-5"
+    >
+      <a
+        class="font-display text-xl font-medium tracking-tight text-ink"
+        routerLink="/"
+      >
+        LogiFlow
+      </a>
+      <button
+        (click)="closeMobileNav()"
+        aria-label="Fermer le menu"
+        class="pressable inline-flex size-8 items-center justify-center border border-line text-ink md:hidden"
+        type="button"
+      >
+        <ng-icon class="text-sm" name="lucideX" />
+      </button>
+    </div>
+
+    <nav
+      aria-label="Modules"
+      class="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3 py-4"
+    >
+      <a
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="pressable flex items-center gap-2.5 border-l-2 border-transparent py-2 pr-2.5 pl-2 text-sm text-muted hover:bg-pine/5 hover:text-ink"
+        routerLink="/"
+        routerLinkActive="border-pine bg-pine/10 font-medium text-pine"
+      >
+        <ng-icon [name]="tableauIcon" class="shrink-0 text-base" />
+        <span>Tableau de bord</span>
+      </a>
+
+      @for (item of navItems(); track item.id) {
+      <a
+        [routerLink]="'/' + item.path"
+        class="pressable flex items-center gap-2.5 border-l-2 border-transparent py-2 pr-2.5 pl-2 text-sm text-muted hover:bg-pine/5 hover:text-ink"
+        routerLinkActive="border-pine bg-pine/10 font-medium text-pine"
+      >
+        <ng-icon [name]="iconFor(item.id)" class="shrink-0 text-base" />
+        <span>{{ item.label }}</span>
+      </a>
+      }
+    </nav>
+
+    <div class="shrink-0 border-t border-line px-4 py-3">
+      <p class="font-mono text-xs text-ink">{{ login() }}</p>
+      <p class="mt-0.5 text-[0.7rem] text-muted">{{ roleName() }}</p>
+      <button
+        (click)="signOut()"
+        class="pressable pressable-border mt-3 w-full border border-line px-3 py-1.5 text-xs font-medium tracking-wide text-ink"
+        type="button"
+      >
+        Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <div class="flex min-w-0 flex-1 flex-col pt-14 md:pt-0">
+    <div
+      class="sticky top-0 z-20 flex h-12 shrink-0 items-center gap-3 border-b border-line bg-surface/95 px-4 backdrop-blur-sm md:px-6"
+    >
+      <div class="relative min-w-0 flex-1 md:max-w-md">
+        <label class="sr-only" for="app-shell-jump"
+          >Aller à un module ou une action</label
+        >
+        <div
+          class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 text-muted"
+        >
+          <ng-icon class="text-sm" name="lucideSearch" />
+        </div>
+        <input
+          (blur)="onJumpBlur()"
+          (focus)="openJump()"
+          (input)="onJumpInput($event)"
+          (keydown)="onJumpKeydown($event)"
+          [value]="jumpQuery()"
+          autocomplete="off"
+          class="h-8 w-full border border-line bg-canvas pr-14 pl-8 text-sm text-ink outline-none placeholder:text-muted focus:border-pine"
+          id="app-shell-jump"
+          placeholder="Module ou action…"
+          role="combobox"
+          type="search"
+        />
+        <kbd
+          class="pointer-events-none absolute top-1/2 right-2 hidden -translate-y-1/2 border border-line px-1.5 py-0.5 font-mono text-[0.65rem] text-muted sm:inline"
+        >
+          Ctrl K
+        </kbd>
+
+        @if (jumpOpen()) {
+        <ul
+          (mousedown)="onJumpListPointerDown($event)"
+          class="absolute top-full right-0 left-0 z-30 mt-1 max-h-80 overflow-y-auto border border-line bg-surface py-1 shadow-sm"
+          role="listbox"
+        >
+          @for (
+            target of filteredJumpTargets();
+            track target.kind + ':' + target.path;
+            let i = $index
+          ) {
+          @if (jumpSectionLabel(filteredJumpTargets(), i); as section) {
+          <li
+            class="px-3 pt-2 pb-1 font-mono text-[0.65rem] tracking-wide text-muted uppercase"
+            role="presentation"
+          >
+            {{ section }}
+          </li>
+          }
+          <li role="option">
+            <a
+              (click)="goTo(target.path); $event.preventDefault()"
+              [class.bg-pine/10]="jumpActiveIndex() === i"
+              [class.text-pine]="jumpActiveIndex() === i"
+              [href]="target.path"
+              class="pressable flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-ink hover:bg-pine/5"
+            >
+              <ng-icon [name]="target.icon" class="shrink-0 text-base" />
+              <span class="min-w-0 flex-1 truncate">{{ target.label }}</span>
+              @if (target.kind === "action") {
+              <span class="shrink-0 font-mono text-[0.65rem] text-muted"
+                >Nouveau</span
+              >
+              }
+            </a>
+          </li>
+          } @empty {
+          <li class="px-3 py-2 text-sm text-muted">Aucun résultat.</li>
+          }
+        </ul>
+        }
+      </div>
+    </div>
+
+    <main class="min-h-0 flex-1 overflow-y-auto">
+      <div class="w-full px-6 py-8">
+        <router-outlet />
+      </div>
+    </main>
+  </div>
 </div>
