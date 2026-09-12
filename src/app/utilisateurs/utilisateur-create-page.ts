@@ -2,6 +2,7 @@ import { Component, inject, signal } from "@angular/core";
 import { FormField, form, required, submit } from "@angular/forms/signals";
 import { Router, RouterLink } from "@angular/router";
 import { httpErrorMessage } from "../core/api/http-error";
+import { ToastService } from "../shared/ui/toast";
 import { type Role, roleLabel } from "../core/auth/role";
 import { firstFieldError } from "../core/forms/first-field-error";
 import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
@@ -21,6 +22,7 @@ import { UtilisateurApi } from "./utilisateur-api";
 export class UtilisateurCreatePage {
   private readonly api = inject(UtilisateurApi);
   private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
 
   protected readonly roles = UTILISATEUR_ROLES;
   protected readonly roleLabel = roleLabel;
@@ -56,6 +58,7 @@ export class UtilisateurCreatePage {
       }
       try {
         const created = await this.api.create(draftToWrite(this.draft()));
+        this.toast.success("Utilisateur créé.");
         await this.router.navigate(["/utilisateurs", created.id]);
       } catch (error) {
         this.formError.set(httpErrorMessage(error));

@@ -1,12 +1,26 @@
 import { httpResource } from "@angular/common/http";
-import { Component, computed, effect, signal } from "@angular/core";
-import { RouterLink } from "@angular/router";
+import {
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  signal,
+} from "@angular/core";
+import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
 import { filterByStatut, statutOptionsFrom } from "../shared/ui/list-filter";
 import { ListEmptyState } from "../shared/ui/list-empty-state";
+import { ListTableSkeleton } from "../shared/ui/list-table-skeleton";
 import { ListPagination } from "../shared/ui/list-pagination";
+import { connectListQueryState } from "../shared/ui/list-query-state";
+import {
+  listKeyboardRows,
+  ListRowKeyboard,
+  syncListKeyboardActiveId,
+} from "../shared/ui/list-row-keyboard";
 import { ListSearchBar } from "../shared/ui/list-search-bar";
 import { ListStatutFilter } from "../shared/ui/list-statut-filter";
 import { StatutChip } from "../shared/ui/statut-chip";
@@ -28,11 +42,17 @@ const VEHICULES_PAGE_SIZE = 20;
     ListStatutFilter,
     ListPagination,
     ListEmptyState,
+    ListRowKeyboard,
+    ListTableSkeleton,
   ],
   selector: "app-vehicules-page",
   templateUrl: "./vehicules-page.html",
 })
 export class VehiculesPage {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+
   protected readonly typeLabel = typeLabel;
   protected readonly statutLabel = statutLabel;
   protected readonly vehiculeStatutTone = vehiculeStatutTone;
@@ -45,6 +65,7 @@ export class VehiculesPage {
   protected readonly search = signal("");
   protected readonly statutFilter = signal<string | null>(null);
   protected readonly page = signal(0);
+  protected readonly activeRowId = signal<string | null>(null);
 
   protected readonly vehicules = httpResource<PageResponse<Vehicule>>(() => ({
     params: {
@@ -56,12 +77,11 @@ export class VehiculesPage {
   }));
 
   protected readonly visibleVehicules = computed(() => {
-    const page = this.vehicules.value();
-    if (!page) {
+    if (!this.vehicules.hasValue()) {
       return [];
     }
     return filterByStatut(
-      page.content,
+      this.vehicules.value().content,
       this.statutFilter(),
       (vehicule) => vehicule.statut
     );
@@ -71,10 +91,29 @@ export class VehiculesPage {
     httpErrorMessage(this.vehicules.error())
   );
 
+  protected readonly keyboardRows = computed(() =>
+    listKeyboardRows(
+      this.visibleVehicules(),
+      (vehicule) => `/vehicules/${vehicule.id}`
+    )
+  );
+
   constructor() {
+    connectListQueryState(
+      this.route,
+      this.router,
+      this.destroyRef,
+      {
+        page: this.page,
+        q: this.search,
+        searchDraft: this.searchDraft,
+        statut: this.statutFilter,
+      },
+      { searchResetsPage: true, statutValues: VEHICULE_STATUTS }
+    );
+
     effect(() => {
-      this.search();
-      this.page.set(0);
+      syncListKeyboardActiveId(this.keyboardRows(), this.activeRowId);
     });
   }
 

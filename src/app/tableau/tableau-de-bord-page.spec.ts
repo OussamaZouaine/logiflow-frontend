@@ -85,7 +85,7 @@ describe("TableauDeBordPage", () => {
     http.verify();
   });
 
-  it("omits Maintenance from the Aperçu even for admin", async () => {
+  it("shows Maintenance in the Aperçu for admin", async () => {
     TestBed.inject(DemoSessionService).signIn("admin", DEMO_PASSWORD);
     const fixture = TestBed.createComponent(TableauDeBordPage);
     fixture.detectChanges();
@@ -96,6 +96,7 @@ describe("TableauDeBordPage", () => {
     flushUrl(http, "/api/v1/commandes", pageOf([]));
     flushUrl(http, "/api/v1/dossiers", pageOf([]));
     flushUrl(http, "/api/v1/voyages", pageOf([]));
+    flushUrl(http, "/api/v1/ordres-travail", pageOf([], 2));
     flushUrl(http, "/api/v1/utilisateurs", pageOf([]));
 
     await fixture.whenStable();
@@ -103,7 +104,8 @@ describe("TableauDeBordPage", () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
     const apercu = compiled.querySelector('[aria-label="Aperçu"]');
-    expect(apercu?.textContent).not.toContain("Maintenance");
+    expect(apercu?.textContent).toContain("Maintenance");
+    expect(apercu?.textContent).toContain("2");
     expect(
       compiled.querySelector('[aria-label="Modules de ce rôle"]')
     ).toBeNull();
@@ -116,6 +118,7 @@ describe("TableauDeBordPage", () => {
     fixture.detectChanges();
 
     const http = TestBed.inject(HttpTestingController);
+    flushUrl(http, "/api/v1/ordres-travail", pageOf([]));
     flushUrl(
       http,
       "/api/v1/vehicules",
@@ -166,6 +169,7 @@ describe("TableauDeBordPage", () => {
     fixture.detectChanges();
 
     const http = TestBed.inject(HttpTestingController);
+    flushUrl(http, "/api/v1/ordres-travail", pageOf([]));
     flushUrl(
       http,
       "/api/v1/vehicules",

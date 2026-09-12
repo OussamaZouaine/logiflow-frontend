@@ -8,27 +8,37 @@ import { DemoSessionService } from "../core/auth/demo-session";
 import { DOSSIERS_PLAN_ROLES } from "../core/auth/role";
 import { statutDossierLabel, type Dossier } from "../dossiers/dossier";
 import {
+  marchandiseLabelFromLookup,
+  type Marchandise,
+} from "../marchandises/marchandise";
+import {
   type Commande,
   formatDate,
   formatMoney,
   statutCommandeLabel,
 } from "./commande";
+import { FicheHeader } from "../shared/ui/fiche-header";
+import { ToastService } from "../shared/ui/toast";
+import { StatutChip } from "../shared/ui/statut-chip";
+import { commandeStatutTone } from "../tableau/apercu";
 import { CommandeApi } from "./commande-api";
 
 @Component({
-  imports: [RouterLink],
+  imports: [RouterLink, FicheHeader, StatutChip],
   selector: "app-commande-detail-page",
   templateUrl: "./commande-detail-page.html",
 })
 export class CommandeDetailPage {
   private readonly api = inject(CommandeApi);
   private readonly session = inject(DemoSessionService);
+  private readonly toast = inject(ToastService);
 
   readonly id = input.required<string>();
 
   protected readonly formatDate = formatDate;
   protected readonly formatMoney = formatMoney;
   protected readonly statutCommandeLabel = statutCommandeLabel;
+  protected readonly commandeStatutTone = commandeStatutTone;
   protected readonly statutDossierLabel = statutDossierLabel;
 
   protected readonly actionError = signal<string | null>(null);
@@ -40,6 +50,22 @@ export class CommandeDetailPage {
   protected readonly commande = httpResource<Commande>(() => ({
     url: `${environment.apiBaseUrl}/commandes/${this.id()}`,
   }));
+
+  protected readonly marchandises = httpResource<PageResponse<Marchandise>>(() => ({
+    params: { page: 0, size: 50 },
+    url: `${environment.apiBaseUrl}/marchandises`,
+  }));
+
+  protected readonly marchandisesById = computed(() => {
+    const map = new Map<string, Pick<Marchandise, "code" | "libelle">>();
+    for (const marchandise of this.marchandises.value()?.content ?? []) {
+      map.set(marchandise.id, marchandise);
+    }
+    return map;
+  });
+
+  protected readonly marchandiseLabel = (marchandiseId: string): string =>
+    marchandiseLabelFromLookup(marchandiseId, this.marchandisesById());
 
   protected readonly dossiersLiees = httpResource<PageResponse<Dossier>>(() => ({
     params: { commandeId: this.id() },
@@ -59,6 +85,7 @@ export class CommandeDetailPage {
     try {
       await this.api.confirmer(this.id());
       this.commande.reload();
+      this.toast.success("Commande confirmée.");
     } catch (error) {
       // Second save 500s until CommandeRepositoryAdapter updates in place.
       this.actionError.set(httpErrorMessage(error));
@@ -70,6 +97,7 @@ export class CommandeDetailPage {
     try {
       await this.api.annuler(this.id());
       this.commande.reload();
+      this.toast.success("Commande annulée.");
     } catch (error) {
       // Annuler also save()s — same optimistic-lock 500 after an earlier
       // confirmer. Backend: in-place update in CommandeRepositoryAdapter.

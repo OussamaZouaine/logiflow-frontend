@@ -1,7 +1,7 @@
 <div class="flex flex-col gap-6">
   <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
     <div>
-      <h1 class="text-3xl font-medium tracking-tight text-ink">Sites</h1>
+      <h1 class="module-page-title">Sites</h1>
       <p class="mt-1 text-sm text-muted">
         Quais de chargement et de déchargement.
       </p>
@@ -29,7 +29,10 @@
   </div>
 
   @if (sites.isLoading()) {
-  <p class="text-sm text-muted" role="status">Chargement des sites…</p>
+  <div class="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+    <app-list-table-skeleton [columns]="5" label="Chargement des sites" />
+    <app-map-aside-skeleton />
+  </div>
   } @else if (sites.error()) {
   <div
     class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
@@ -70,10 +73,16 @@
   } @else if (sites.hasValue()) {
   <div class="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
     <div class="flex min-w-0 flex-col gap-3">
-      <div class="overflow-x-auto border border-line bg-surface">
+      <div
+        appListRowKeyboard
+        [(activeId)]="selectedSiteId"
+        [rows]="keyboardRows()"
+        aria-label="Liste des sites — flèches pour naviguer, Entrée pour ouvrir"
+        class="overflow-x-auto border border-line bg-surface"
+      >
         <table class="w-full min-w-xl text-left text-sm">
           <thead
-            class="border-b border-line text-[0.7rem] font-medium tracking-[0.12em] text-muted uppercase"
+            class="list-table-head"
           >
             <tr>
               <th class="px-4 py-3 font-medium" scope="col">Code</th>

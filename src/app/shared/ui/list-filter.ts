@@ -21,3 +21,23 @@ export function statutOptionsFrom<T extends string>(
     value,
   }));
 }
+
+/** Client-side multi-token match when the list API has no `q` parameter. */
+export function filterByQuery<T>(
+  rows: readonly T[],
+  query: string,
+  searchableText: (row: T) => string
+): T[] {
+  const tokens = query
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((token) => token.length > 0);
+  if (tokens.length === 0) {
+    return [...rows];
+  }
+  return rows.filter((row) => {
+    const text = searchableText(row).toLowerCase();
+    return tokens.every((token) => text.includes(token));
+  });
+}

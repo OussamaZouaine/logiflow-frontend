@@ -1,7 +1,7 @@
 <div class="flex flex-col gap-6">
   <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
     <div>
-      <h1 class="text-3xl font-medium tracking-tight text-ink">Voyages</h1>
+      <h1 class="module-page-title">Voyages</h1>
       <p class="mt-1 text-sm text-muted">
         Exécution physique des dossiers — véhicule, chauffeur, trajet.
       </p>
@@ -16,13 +16,24 @@
     }
   </div>
 
-  <app-list-statut-filter
-    [(selected)]="statutFilter"
-    [options]="statutOptions"
-  />
+  <div class="flex flex-col gap-3">
+    <app-list-search-bar
+      [(draft)]="searchDraft"
+      [(query)]="search"
+      inputId="voyage-search"
+      placeholder="Référence…"
+    />
+    <app-list-statut-filter
+      [(selected)]="statutFilter"
+      [options]="statutOptions"
+    />
+  </div>
 
   @if (voyages.isLoading()) {
-  <p class="text-sm text-muted" role="status">Chargement des voyages…</p>
+  <div class="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+    <app-list-table-skeleton label="Chargement des voyages" />
+    <app-map-aside-skeleton />
+  </div>
   } @else if (voyages.error()) {
   <div
     class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
@@ -38,7 +49,14 @@
     </button>
   </div>
   } @else if (voyages.hasValue() && voyages.value().content.length === 0) {
-  @if (canPlan()) {
+  @if (search()) {
+  <app-list-empty-state
+    (action)="clearFilters()"
+    actionLabel="Effacer la recherche"
+    description="Aucun voyage ne correspond à « {{ search() }} »."
+    title="Aucun résultat"
+  />
+  } @else if (canPlan()) {
   <app-list-empty-state
     actionLabel="Nouveau voyage"
     actionLink="/voyages/nouveau"
@@ -55,16 +73,22 @@
   <app-list-empty-state
     (action)="clearFilters()"
     actionLabel="Réinitialiser les filtres"
-    description="Élargissez le filtre de statut pour revoir la liste."
+    description="Réinitialisez la recherche ou le filtre de statut pour revoir la liste."
     title="Aucun voyage pour ce filtre"
   />
   } @else if (voyages.hasValue()) {
   <div class="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
     <div class="flex min-w-0 flex-col gap-3">
-      <div class="overflow-x-auto border border-line bg-surface">
+      <div
+        appListRowKeyboard
+        [(activeId)]="selectedVoyageId"
+        [rows]="keyboardRows()"
+        aria-label="Liste des voyages — flèches pour naviguer, Entrée pour ouvrir"
+        class="overflow-x-auto border border-line bg-surface"
+      >
         <table class="w-full min-w-xl text-left text-sm">
           <thead
-            class="border-b border-line text-[0.7rem] font-medium tracking-[0.12em] text-muted uppercase"
+            class="list-table-head"
           >
             <tr>
               <th class="px-4 py-3 font-medium" scope="col">Référence</th>

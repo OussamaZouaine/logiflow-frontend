@@ -9,6 +9,7 @@ import {
 } from "@angular/forms/signals";
 import { Router, RouterLink } from "@angular/router";
 import { httpErrorMessage } from "../core/api/http-error";
+import { ToastService } from "../shared/ui/toast";
 import { firstFieldError } from "../core/forms/first-field-error";
 import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
 import { typeLabel, VEHICULE_TYPES, type VehiculeType } from "./vehicule";
@@ -24,6 +25,7 @@ const IMMAT_PATTERN = /^[A-Za-z]{2}-\d{3}-[A-Za-z]{2}$/;
 export class VehiculeCreatePage {
   private readonly api = inject(VehiculeApi);
   private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
 
   protected readonly types = VEHICULE_TYPES;
   protected readonly typeLabel = typeLabel;
@@ -66,6 +68,7 @@ export class VehiculeCreatePage {
           ptacKg: draft.ptacKg,
           type: draft.type,
         });
+        this.toast.success("Véhicule créé.");
         await this.router.navigate(["/vehicules", created.id]);
       } catch (error) {
         this.formError.set(httpErrorMessage(error));

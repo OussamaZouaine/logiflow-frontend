@@ -1,3 +1,5 @@
+import type { ApercuTone } from "../tableau/apercu";
+
 export const TYPE_INTERVENTIONS = [
   "ENTRETIEN_PREVENTIF",
   "REPARATION",
@@ -50,8 +52,6 @@ const TRANSITIONS: Record<StatutOT, readonly StatutOT[]> = {
   PLANIFIE: ["EN_COURS", "ANNULE"],
   TERMINE: [],
 };
-
-const SESSION_KEY = "logiflow.ordres-travail";
 
 export function emptyOrdreDraft(): OrdreDraft {
   const date = new Date();
@@ -114,12 +114,10 @@ export function statutOtLabel(statut: StatutOT): string {
   }
 }
 
-export function statutOtTone(
-  statut: StatutOT
-): "pine" | "ink" | "muted" | "brake" {
+export function statutOtTone(statut: StatutOT): ApercuTone {
   switch (statut) {
     case "PLANIFIE":
-      return "muted";
+      return "amber";
     case "EN_COURS":
       return "pine";
     case "TERMINE":
@@ -148,33 +146,6 @@ export function formatDateTime(value: string): string {
   });
 }
 
-export function rememberOrdre(ordre: OrdreTravail): void {
-  if (typeof sessionStorage === "undefined") {
-    return;
-  }
-  const current = rememberedOrdres().filter((item) => item.id !== ordre.id);
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify([ordre, ...current]));
-}
-
-export function rememberedOrdres(): OrdreTravail[] {
-  if (typeof sessionStorage === "undefined") {
-    return [];
-  }
-  const raw = sessionStorage.getItem(SESSION_KEY);
-  if (!raw) {
-    return [];
-  }
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-    return parsed.filter(isOrdreTravail);
-  } catch {
-    return [];
-  }
-}
-
 export function toDatetimeLocal(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -186,30 +157,4 @@ export function toDatetimeLocal(date: Date): string {
 
 function toLocalDateTime(value: string): string {
   return value.length === 16 ? `${value}:00` : value;
-}
-
-function isOrdreTravail(value: unknown): value is OrdreTravail {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-  if (
-    !(
-      "id" in value &&
-      "vehiculeId" in value &&
-      "type" in value &&
-      "statut" in value &&
-      "datePlanifiee" in value &&
-      "dureeReelleMin" in value
-    )
-  ) {
-    return false;
-  }
-  return (
-    typeof value.id === "string" &&
-    typeof value.vehiculeId === "string" &&
-    typeof value.type === "string" &&
-    typeof value.statut === "string" &&
-    typeof value.datePlanifiee === "string" &&
-    typeof value.dureeReelleMin === "number"
-  );
 }

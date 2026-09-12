@@ -4,7 +4,11 @@ import { RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
+import { FicheHeader } from "../shared/ui/fiche-header";
+import { ToastService } from "../shared/ui/toast";
 import { OpsTimeline } from "../shared/ui/ops-timeline";
+import { StatutChip } from "../shared/ui/statut-chip";
+import { voyageStatutTone } from "../tableau/apercu";
 import {
   type EvenementVoyage,
   formatInstant,
@@ -30,12 +34,13 @@ interface DossierLink {
 }
 
 @Component({
-  imports: [RouterLink, OpsTimeline],
+  imports: [RouterLink, FicheHeader, OpsTimeline, StatutChip],
   selector: "app-voyage-detail-page",
   templateUrl: "./voyage-detail-page.html",
 })
 export class VoyageDetailPage {
   private readonly api = inject(VoyageApi);
+  private readonly toast = inject(ToastService);
 
   readonly id = input.required<string>();
 
@@ -44,6 +49,7 @@ export class VoyageDetailPage {
   protected readonly porteeLabel = porteeLabel;
   protected readonly remplissageLabel = remplissageLabel;
   protected readonly statutVoyageLabel = statutVoyageLabel;
+  protected readonly voyageStatutTone = voyageStatutTone;
   protected readonly typeEtapeLabel = typeEtapeLabel;
   protected readonly typeEvenementLabel = typeEvenementLabel;
   protected readonly typeVoyageLabel = typeVoyageLabel;
@@ -115,6 +121,7 @@ export class VoyageDetailPage {
     try {
       await this.api.changerStatut(this.id(), valeur);
       this.voyage.reload();
+      this.toast.success("Statut du voyage mis à jour.");
     } catch (error) {
       // Second statut change 500s until VoyageRepositoryAdapter updates
       // in place (same pattern as VehiculeRepositoryAdapter).
@@ -135,6 +142,7 @@ export class VoyageDetailPage {
       });
       this.eventComment.set("");
       this.evenements.reload();
+      this.toast.success("Événement enregistré.");
     } catch (error) {
       this.eventError.set(httpErrorMessage(error));
     }

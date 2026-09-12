@@ -1,10 +1,9 @@
 <div class="flex flex-col gap-6">
   <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
     <div>
-      <h1 class="text-3xl font-medium tracking-tight text-ink">Maintenance</h1>
+      <h1 class="module-page-title">Maintenance</h1>
       <p class="mt-1 text-sm text-muted">
-        Ordres de travail. Pas de GET collection : cette liste est la session en
-        cours.
+        Ordres de travail — atelier et flotte.
       </p>
     </div>
     <a
@@ -15,48 +14,69 @@
     </a>
   </div>
 
-  <form (submit)="openById($event)" class="flex gap-2">
-    <label class="sr-only" for="ot-lookup">Ouvrir par identifiant</label>
-    <input
-      (input)="onLookupInput($event)"
-      [value]="lookupDraft()"
-      class="field min-w-0 flex-1"
-      id="ot-lookup"
-      placeholder="Identifiant d'ordre…"
-      type="search"
-    />
-    <button
-      class="pressable pressable-border shrink-0 border border-line px-4 py-2 text-sm font-medium text-ink"
-      type="submit"
-    >
-      Ouvrir
-    </button>
-  </form>
+  <app-list-statut-filter
+    [(selected)]="statutFilter"
+    [options]="statutOptions"
+  />
 
-  @if (ordres().length === 0) {
+  @if (ordres.isLoading()) {
+  <app-list-table-skeleton label="Chargement des ordres" />
+  } @else if (ordres.error()) {
+  <div
+    class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
+    role="alert"
+  >
+    <p>{{ errorMessage() }}</p>
+    <button
+      (click)="ordres.reload()"
+      class="pressable mt-2 font-medium text-ink underline underline-offset-2"
+      type="button"
+    >
+      Réessayer
+    </button>
+  </div>
+  } @else if (ordres.hasValue() && ordres.value().content.length === 0) {
   <app-list-empty-state
     actionLabel="Nouvel ordre"
     actionLink="/maintenance/nouveau"
-    description="Créez un ordre, ou ouvrez un identifiant connu ci-dessus."
-    title="Aucun ordre dans cette session"
+    description="Créez le premier ordre de travail."
+    title="Aucun ordre en base"
   />
-  } @else {
-  <div class="overflow-x-auto border border-line bg-surface">
+  } @else if (ordres.hasValue() && visibleOrdres().length === 0) {
+  <app-list-empty-state
+    (action)="clearFilters()"
+    actionLabel="Réinitialiser les filtres"
+    description="Élargissez le filtre de statut pour revoir la liste."
+    title="Aucun ordre pour ce filtre"
+  />
+  } @else if (ordres.hasValue()) {
+  <div
+    appListRowKeyboard
+    [(activeId)]="activeRowId"
+    [rows]="keyboardRows()"
+    aria-label="Liste des ordres — flèches pour naviguer, Entrée pour ouvrir"
+    class="overflow-x-auto border border-line bg-surface"
+  >
     <table class="w-full min-w-xl text-left text-sm">
-      <thead
-        class="border-b border-line text-[0.7rem] font-medium tracking-[0.12em] text-muted uppercase"
-      >
+      <thead class="list-table-head">
         <tr>
           <th class="px-4 py-3 font-medium" scope="col">Identifiant</th>
           <th class="px-4 py-3 font-medium" scope="col">Type</th>
           <th class="px-4 py-3 font-medium" scope="col">Planifié</th>
           <th class="px-4 py-3 font-medium" scope="col">Coût</th>
           <th class="px-4 py-3 font-medium" scope="col">Statut</th>
+          <th class="px-4 py-3 font-medium" scope="col">
+            <span class="sr-only">Actions</span>
+          </th>
         </tr>
       </thead>
       <tbody>
-        @for (ordre of ordres(); track ordre.id) {
-        <tr class="border-b border-line last:border-0">
+        @for (ordre of visibleOrdres(); track ordre.id) {
+        <tr
+          [attr.aria-selected]="activeRowId() === ordre.id"
+          [class.bg-pine/5]="activeRowId() === ordre.id"
+          class="list-row border-b border-line last:border-0 hover:bg-canvas"
+        >
           <td class="px-4 py-3">
             <a
               [routerLink]="['/maintenance', ordre.id]"
@@ -80,14 +100,30 @@
               [tone]="statutOtTone(ordre.statut)"
             />
           </td>
+          <td class="px-4 py-3 text-right">
+            <a
+              [routerLink]="['/maintenance', ordre.id]"
+              class="list-row-action text-sm font-medium text-pine underline-offset-2 hover:underline"
+            >
+              Ouvrir
+            </a>
+          </td>
         </tr>
         }
       </tbody>
     </table>
   </div>
+  @if (ordres.value().totalElements) {
   <p class="font-mono text-sm tabular-nums text-muted">
-    {{ ordres().length }}
+    {{ visibleOrdres().length }}
+    affiché(s) /
+    {{ ordres.value().totalElements }}
     ordre(s)
   </p>
+  }
+  <app-list-pagination
+    [(page)]="page"
+    [totalPages]="ordres.value().totalPages"
+  />
   }
 </div>

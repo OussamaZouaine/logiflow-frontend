@@ -6,6 +6,7 @@ import type { Client, Commande, CommandeWrite } from "./commande";
 
 /**
  * Commande HTTP surface: POST create, GET list/detail, PUT confirmer, PUT annuler.
+ * Create requires at least one ligne (marchandiseId + poids/volume/colis).
  * No DELETE — cancel via PUT .../annuler.
  *
  * Backend next: CommandeRepositoryAdapter still save()s a new JPA row (version 0).

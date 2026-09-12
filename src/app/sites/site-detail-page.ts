@@ -15,9 +15,10 @@ import {
   required,
   submit,
 } from "@angular/forms/signals";
-import { RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
+import { FicheHeader } from "../shared/ui/fiche-header";
+import { ToastService } from "../shared/ui/toast";
 import { firstFieldError } from "../core/forms/first-field-error";
 import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
 import {
@@ -33,12 +34,13 @@ import {
 } from "./site-localisation-map";
 
 @Component({
-  imports: [FormField, RouterLink, SiteLocalisationMap, StatutChip],
+  imports: [FicheHeader, FormField, SiteLocalisationMap, StatutChip],
   selector: "app-site-detail-page",
   templateUrl: "./site-detail-page.html",
 })
 export class SiteDetailPage {
   private readonly api = inject(SiteApi);
+  private readonly toast = inject(ToastService);
 
   readonly id = input.required<string>();
 
@@ -111,6 +113,7 @@ export class SiteDetailPage {
         );
         this.draft.set(siteToDraft(updated));
         this.site.reload();
+        this.toast.success("Site enregistré.");
       } catch (error) {
         // Second save 500s until SiteRepositoryAdapter updates in place
         // (same pattern as VehiculeRepositoryAdapter).
@@ -125,6 +128,7 @@ export class SiteDetailPage {
       await this.api.desactiver(this.id());
       this.seededForId = "";
       this.site.reload();
+      this.toast.success("Site désactivé.");
     } catch (error) {
       // DELETE also save()s the aggregate — same optimistic-lock 500 after
       // an earlier PUT. Backend: in-place update in SiteRepositoryAdapter.

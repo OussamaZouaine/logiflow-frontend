@@ -47,9 +47,7 @@ const KIND_DOT: Record<OpsTimelineKind, string> = {
         <div class="min-w-0 flex-1">
           <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
             <p class="text-sm font-medium text-ink">{{ entry.label }}</p>
-            <span
-              class="text-[0.65rem] font-medium tracking-wide text-muted uppercase"
-            >
+            <span class="text-xs font-medium text-muted">
               {{ kindLabel(entry.kind) }}
             </span>
           </div>

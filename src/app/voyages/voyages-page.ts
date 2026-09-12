@@ -1,6 +1,13 @@
 import { httpResource } from "@angular/common/http";
-import { Component, computed, effect, inject, signal } from "@angular/core";
-import { RouterLink } from "@angular/router";
+import {
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  signal,
+} from "@angular/core";
+import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
@@ -9,7 +16,18 @@ import { VOYAGES_PLAN_ROLES } from "../core/auth/role";
 import type { Dossier } from "../dossiers/dossier";
 import { filterByStatut, statutOptionsFrom } from "../shared/ui/list-filter";
 import { ListEmptyState } from "../shared/ui/list-empty-state";
+import {
+  ListTableSkeleton,
+  MapAsideSkeleton,
+} from "../shared/ui/list-table-skeleton";
+import { connectListQueryState } from "../shared/ui/list-query-state";
+import {
+  listKeyboardRows,
+  ListRowKeyboard,
+  syncListKeyboardActiveId,
+} from "../shared/ui/list-row-keyboard";
 import { ListPagination } from "../shared/ui/list-pagination";
+import { ListSearchBar } from "../shared/ui/list-search-bar";
 import { ListStatutFilter } from "../shared/ui/list-statut-filter";
 import type { Site } from "../sites/site";
 import { StatutChip } from "../shared/ui/statut-chip";
@@ -32,9 +50,13 @@ const LOOKUP_PAGE_SIZE = 100;
   imports: [
     RouterLink,
     StatutChip,
+    ListSearchBar,
     ListStatutFilter,
     ListPagination,
     ListEmptyState,
+    ListRowKeyboard,
+    ListTableSkeleton,
+    MapAsideSkeleton,
     GeoMarkersMap,
   ],
   selector: "app-voyages-page",
@@ -42,6 +64,9 @@ const LOOKUP_PAGE_SIZE = 100;
 })
 export class VoyagesPage {
   private readonly session = inject(DemoSessionService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly formatInstant = formatInstant;
   protected readonly porteeLabel = porteeLabel;
@@ -52,6 +77,8 @@ export class VoyagesPage {
     STATUT_VOYAGES,
     statutVoyageLabel
   );
+  protected readonly searchDraft = signal("");
+  protected readonly search = signal("");
   protected readonly statutFilter = signal<string | null>(null);
   protected readonly page = signal(0);
   protected readonly selectedVoyageId = signal<string | null>(null);
@@ -63,6 +90,7 @@ export class VoyagesPage {
   protected readonly voyages = httpResource<PageResponse<Voyage>>(() => ({
     params: {
       page: this.page(),
+      q: this.search().trim(),
       size: VOYAGES_PAGE_SIZE,
     },
     url: `${environment.apiBaseUrl}/voyages`,
@@ -130,22 +158,37 @@ export class VoyagesPage {
     httpErrorMessage(this.voyages.error())
   );
 
+  protected readonly keyboardRows = computed(() =>
+    listKeyboardRows(
+      this.visibleVoyages(),
+      (voyage) => `/voyages/${voyage.id}`
+    )
+  );
+
   constructor() {
+    connectListQueryState(
+      this.route,
+      this.router,
+      this.destroyRef,
+      {
+        page: this.page,
+        q: this.search,
+        searchDraft: this.searchDraft,
+        statut: this.statutFilter,
+      },
+      { searchResetsPage: true, statutValues: STATUT_VOYAGES }
+    );
+
     effect(() => {
-      const rows = this.visibleVoyages();
-      const selected = this.selectedVoyageId();
-      if (rows.length === 0) {
-        this.selectedVoyageId.set(null);
-        return;
-      }
-      if (selected === null || !rows.some((voyage) => voyage.id === selected)) {
-        this.selectedVoyageId.set(rows[0]?.id ?? null);
-      }
+      syncListKeyboardActiveId(this.keyboardRows(), this.selectedVoyageId);
     });
   }
 
   protected clearFilters(): void {
+    this.searchDraft.set("");
+    this.search.set("");
     this.statutFilter.set(null);
+    this.page.set(0);
   }
 
   protected selectVoyage(voyageId: string): void {

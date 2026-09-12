@@ -32,6 +32,7 @@ describe("CommandesPage", () => {
             clientId: "11111111-1111-1111-1111-111111111111",
             dateSouhaitee: "2026-09-10",
             id: "77777777-7777-7777-7777-777777777777",
+            lignes: [],
             prixNegocie: { devise: "EUR", montant: 2000 },
             reference: "CMD-2026-000001",
             statut: "RECUE",

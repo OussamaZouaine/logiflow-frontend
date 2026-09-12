@@ -1,7 +1,11 @@
-import { buildFileDuJour } from "./file-du-jour";
+import {
+  buildFileDuJour,
+  fileDuJourBadgeLabel,
+  fileDuJourSummary,
+} from "./file-du-jour";
 
 describe("buildFileDuJour", () => {
-  it("puts brake exceptions before muted waiting work", () => {
+  it("puts brake exceptions before amber at-risk work", () => {
     const items = buildFileDuJour({
       allowedIds: new Set(["dossiers", "commandes"]),
       commandes: [{ statut: "RECUE" }, { statut: "RECUE" }],
@@ -17,6 +21,7 @@ describe("buildFileDuJour", () => {
     ]);
     expect(items[0]?.tone).toBe("brake");
     expect(items[0]?.count).toBe(1);
+    expect(items[1]?.tone).toBe("amber");
   });
 
   it("omits modules the role cannot open", () => {
@@ -41,5 +46,43 @@ describe("buildFileDuJour", () => {
     });
 
     expect(items).toEqual([]);
+  });
+});
+
+describe("fileDuJourSummary", () => {
+  it("sums counts and keeps the highest-priority tone", () => {
+    const items = buildFileDuJour({
+      allowedIds: new Set(["dossiers", "commandes"]),
+      commandes: [{ statut: "RECUE" }, { statut: "RECUE" }],
+      dossiers: [{ statut: "INCIDENT" }],
+      vehicules: null,
+      voyages: null,
+    });
+
+    expect(fileDuJourSummary(items)).toEqual({
+      categoryCount: 2,
+      topTone: "brake",
+      totalCount: 3,
+    });
+  });
+
+  it("returns zeros for an empty queue", () => {
+    expect(fileDuJourSummary([])).toEqual({
+      categoryCount: 0,
+      topTone: null,
+      totalCount: 0,
+    });
+  });
+});
+
+describe("fileDuJourBadgeLabel", () => {
+  it("describes the total for screen readers", () => {
+    expect(
+      fileDuJourBadgeLabel({
+        categoryCount: 2,
+        topTone: "brake",
+        totalCount: 3,
+      })
+    ).toBe("3 éléments dans la file du jour — ouvrir le tableau de bord");
   });
 });

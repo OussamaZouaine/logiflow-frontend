@@ -4,6 +4,7 @@ import { FormField, form, min, required, submit } from "@angular/forms/signals";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
+import { ToastService } from "../shared/ui/toast";
 import type { PageResponse } from "../core/api/page-response";
 import { firstFieldError } from "../core/forms/first-field-error";
 import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
@@ -31,6 +32,7 @@ export class DossierCreatePage {
   private readonly api = inject(DossierApi);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
 
   protected readonly types = TYPE_TRANSPORTS;
   protected readonly carrosseries = CARROSSERIES_REQUISES;
@@ -152,6 +154,7 @@ export class DossierCreatePage {
     await submit(this.createForm, async () => {
       try {
         const created = await this.api.create(draftToWrite(this.draft()));
+        this.toast.success("Dossier créé.");
         await this.router.navigate(["/dossiers", created.id]);
       } catch (error) {
         this.formError.set(httpErrorMessage(error));

@@ -6,8 +6,14 @@ import { WORK_DESTINATIONS } from "../core/nav/work-destination";
 import type { Vehicule } from "../vehicules/vehicule";
 import type { Voyage } from "../voyages/voyage";
 import {
+  apercuApiPath,
   apercuDestinations,
+  apercuToneBorderClass,
   apercuToneClass,
+  apercuToneOnFillClass,
+  commandeStatutTone,
+  vehiculeStatutTone,
+  voyageStatutTone,
   commandeStatutSlices,
   dossierStatutSlices,
   isCompleteCollection,
@@ -17,7 +23,7 @@ import {
 } from "./apercu";
 
 describe("apercuDestinations", () => {
-  it("drops Maintenance and keeps countable modules", () => {
+  it("keeps countable modules including maintenance", () => {
     const destinations: WorkDestination[] = [
       WORK_DESTINATIONS.vehicules,
       WORK_DESTINATIONS.maintenance,
@@ -25,8 +31,16 @@ describe("apercuDestinations", () => {
     ];
     expect(apercuDestinations(destinations).map((item) => item.id)).toEqual([
       "vehicules",
+      "maintenance",
       "voyages",
     ]);
+  });
+});
+
+describe("apercuApiPath", () => {
+  it("maps maintenance to ordres-travail", () => {
+    expect(apercuApiPath("maintenance")).toBe("ordres-travail");
+    expect(apercuApiPath("sites")).toBe("sites");
   });
 });
 
@@ -116,7 +130,31 @@ describe("statut slices", () => {
 
 describe("apercuToneClass", () => {
   it("maps each tone to a surface class", () => {
+    expect(apercuToneClass("amber")).toBe("bg-amber");
     expect(apercuToneClass("pine")).toBe("bg-pine");
     expect(apercuToneClass("brake")).toBe("bg-brake");
+  });
+});
+
+describe("apercuToneBorderClass", () => {
+  it("maps each tone to a left border class", () => {
+    expect(apercuToneBorderClass("amber")).toBe("border-l-amber");
+    expect(apercuToneBorderClass("brake")).toBe("border-l-brake");
+  });
+});
+
+describe("apercuToneOnFillClass", () => {
+  it("uses muted text only on muted fills", () => {
+    expect(apercuToneOnFillClass("amber")).toBe("text-surface");
+    expect(apercuToneOnFillClass("muted")).toBe("text-muted");
+  });
+});
+
+describe("statut tone mapping", () => {
+  it("marks at-risk statuts with amber", () => {
+    expect(commandeStatutTone("RECUE")).toBe("amber");
+    expect(voyageStatutTone("PLANIFIE")).toBe("amber");
+    expect(voyageStatutTone("EN_COURS")).toBe("pine");
+    expect(vehiculeStatutTone("EN_MAINTENANCE")).toBe("amber");
   });
 });

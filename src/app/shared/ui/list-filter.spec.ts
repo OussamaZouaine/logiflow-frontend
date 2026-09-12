@@ -1,4 +1,8 @@
-import { filterByStatut, statutOptionsFrom } from "./list-filter";
+import {
+  filterByQuery,
+  filterByStatut,
+  statutOptionsFrom,
+} from "./list-filter";
 
 describe("filterByStatut", () => {
   const rows = [
@@ -15,6 +19,24 @@ describe("filterByStatut", () => {
     expect(filterByStatut(rows, "CREE", (row) => row.statut)).toEqual([
       { id: "1", statut: "CREE" },
       { id: "3", statut: "CREE" },
+    ]);
+  });
+});
+
+describe("filterByQuery", () => {
+  const rows = [
+    { id: "1", reference: "DOS-2024-001" },
+    { id: "2", reference: "DOS-2024-LYON" },
+  ];
+
+  it("returns all rows when query is empty", () => {
+    expect(filterByQuery(rows, "", (row) => row.reference)).toEqual(rows);
+    expect(filterByQuery(rows, "   ", (row) => row.reference)).toEqual(rows);
+  });
+
+  it("matches every whitespace-separated token", () => {
+    expect(filterByQuery(rows, "dos lyon", (row) => row.reference)).toEqual([
+      { id: "2", reference: "DOS-2024-LYON" },
     ]);
   });
 });

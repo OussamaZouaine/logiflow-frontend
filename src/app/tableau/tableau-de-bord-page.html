@@ -1,8 +1,6 @@
 <div class="tableau">
   <header class="max-w-xl">
-    <h1
-      class="text-balance text-3xl font-medium tracking-tight text-ink sm:text-4xl"
-    >
+    <h1 class="module-page-title module-page-title--hero">
       Tableau de bord
     </h1>
     <p class="mt-2 text-pretty text-sm leading-relaxed text-muted">
@@ -18,7 +16,11 @@
     </p>
   </header>
 
-  <section aria-label="File du jour" class="flex flex-col gap-3">
+  <section
+    aria-label="File du jour"
+    class="flex flex-col gap-3 scroll-mt-24"
+    id="file-du-jour"
+  >
     <div class="flex flex-col gap-1">
       <h2 class="text-lg font-medium tracking-tight text-ink">File du jour</h2>
       <p class="text-sm text-muted">
@@ -41,11 +43,10 @@
       <li>
         <a
           [routerLink]="item.path"
-          class="pressable flex items-center gap-3 border border-line border-l-4 bg-surface px-4 py-3 hover:border-pine"
-          [class.border-l-brake]="item.tone === 'brake'"
-          [class.border-l-ink]="item.tone === 'ink'"
-          [class.border-l-pine]="item.tone === 'pine'"
-          [class.border-l-secondary]="item.tone === 'muted'"
+          [class]="
+            'pressable flex items-center gap-3 border border-line border-l-4 bg-surface px-4 py-3 hover:border-pine ' +
+            apercuToneBorderClass(item.tone)
+          "
         >
           <span
             class="font-mono text-2xl font-medium tracking-tight text-ink tabular-nums"

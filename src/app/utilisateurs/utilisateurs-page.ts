@@ -1,17 +1,31 @@
 import { httpResource } from "@angular/common/http";
-import { Component, computed, effect, signal } from "@angular/core";
-import { RouterLink } from "@angular/router";
+import {
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  signal,
+} from "@angular/core";
+import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
 import { filterByStatut } from "../shared/ui/list-filter";
 import { ListEmptyState } from "../shared/ui/list-empty-state";
+import { ListTableSkeleton } from "../shared/ui/list-table-skeleton";
 import { ListPagination } from "../shared/ui/list-pagination";
 import { ListSearchBar } from "../shared/ui/list-search-bar";
 import {
   ListStatutFilter,
   type ListStatutOption,
 } from "../shared/ui/list-statut-filter";
+import { connectListQueryState } from "../shared/ui/list-query-state";
+import {
+  listKeyboardRows,
+  ListRowKeyboard,
+  syncListKeyboardActiveId,
+} from "../shared/ui/list-row-keyboard";
 import {
   actifLabel,
   actifTone,
@@ -34,11 +48,17 @@ const ACTIF_OPTIONS: readonly ListStatutOption[] = [
     ListStatutFilter,
     ListPagination,
     ListEmptyState,
+    ListRowKeyboard,
+    ListTableSkeleton,
   ],
   selector: "app-utilisateurs-page",
   templateUrl: "./utilisateurs-page.html",
 })
 export class UtilisateursPage {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+
   protected readonly actifLabel = actifLabel;
   protected readonly actifTone = actifTone;
   protected readonly formatRoles = formatRoles;
@@ -47,6 +67,7 @@ export class UtilisateursPage {
   protected readonly search = signal("");
   protected readonly actifFilter = signal<string | null>(null);
   protected readonly page = signal(0);
+  protected readonly activeRowId = signal<string | null>(null);
 
   protected readonly utilisateurs = httpResource<PageResponse<Utilisateur>>(
     () => ({
@@ -60,12 +81,13 @@ export class UtilisateursPage {
   );
 
   protected readonly visibleUtilisateurs = computed(() => {
-    const page = this.utilisateurs.value();
-    if (!page) {
+    if (!this.utilisateurs.hasValue()) {
       return [];
     }
-    return filterByStatut(page.content, this.actifFilter(), (utilisateur) =>
-      utilisateur.actif ? "true" : "false"
+    return filterByStatut(
+      this.utilisateurs.value().content,
+      this.actifFilter(),
+      (utilisateur) => (utilisateur.actif ? "true" : "false")
     );
   });
 
@@ -73,10 +95,29 @@ export class UtilisateursPage {
     httpErrorMessage(this.utilisateurs.error())
   );
 
+  protected readonly keyboardRows = computed(() =>
+    listKeyboardRows(
+      this.visibleUtilisateurs(),
+      (utilisateur) => `/utilisateurs/${utilisateur.id}`
+    )
+  );
+
   constructor() {
+    connectListQueryState(
+      this.route,
+      this.router,
+      this.destroyRef,
+      {
+        page: this.page,
+        q: this.search,
+        searchDraft: this.searchDraft,
+        statut: this.actifFilter,
+      },
+      { searchResetsPage: true, statutValues: ["true", "false"] }
+    );
+
     effect(() => {
-      this.search();
-      this.page.set(0);
+      syncListKeyboardActiveId(this.keyboardRows(), this.activeRowId);
     });
   }
 

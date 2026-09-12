@@ -4,13 +4,13 @@ import { FormField, form, min, required, submit } from "@angular/forms/signals";
 import { Router, RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
+import { ToastService } from "../shared/ui/toast";
 import type { PageResponse } from "../core/api/page-response";
 import { firstFieldError } from "../core/forms/first-field-error";
 import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
 import {
   draftToWrite,
   emptyOrdreDraft,
-  rememberOrdre,
   TYPE_INTERVENTIONS,
   typeInterventionLabel,
   type VehiculeLookup,
@@ -27,6 +27,7 @@ const LOOKUP_PAGE_SIZE = 50;
 export class OrdreCreatePage {
   private readonly api = inject(OrdreTravailApi);
   private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
 
   protected readonly types = TYPE_INTERVENTIONS;
   protected readonly typeInterventionLabel = typeInterventionLabel;
@@ -68,7 +69,7 @@ export class OrdreCreatePage {
     await submit(this.createForm, async () => {
       try {
         const created = await this.api.create(draftToWrite(this.draft()));
-        rememberOrdre(created);
+        this.toast.success("Ordre de travail créé.");
         await this.router.navigate(["/maintenance", created.id]);
       } catch (error) {
         this.formError.set(httpErrorMessage(error));

@@ -6,15 +6,26 @@
     >
       ← Commandes
     </a>
-    <h1 class="mt-4 text-3xl font-medium tracking-tight text-ink">
+    <h1 class="module-page-title mt-4">
       Nouvelle commande
     </h1>
     <p class="mt-1 text-sm text-muted">
       Pas de liste clients côté API : créer un client ici, ou coller un
-      identifiant existant.
+      identifiant existant. Chaque commande embarque au moins une ligne liée au
+      catalogue marchandises.
     </p>
   </div>
 
+  @if (marchandises.isLoading()) {
+  <p class="text-sm text-muted" role="status">Chargement du catalogue…</p>
+  } @else if (marchandisesError()) {
+  <div
+    class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
+    role="alert"
+  >
+    <p>{{ marchandisesError() }}</p>
+  </div>
+  } @else if (marchandises.hasValue()) {
   <form (submit)="onSubmit($event)" class="flex flex-col gap-5" novalidate>
     @if (createForm().touched() && createForm().invalid()) {
     <div
@@ -128,6 +139,118 @@
       </div>
     </div>
 
+    <section class="flex flex-col gap-4 border border-line p-4">
+      <div class="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 class="text-sm font-medium text-ink">Lignes de marchandise</h2>
+        <button
+          (click)="addLigne()"
+          class="pressable pressable-border border border-line px-2.5 py-1.5 text-xs font-medium text-ink"
+          type="button"
+        >
+          Ajouter une ligne
+        </button>
+      </div>
+      @if (marchandiseOptions().length === 0) {
+      <p class="text-sm text-muted">
+        Aucune marchandise active dans le catalogue — créez-en une côté API
+        avant d'enregistrer la commande.
+      </p>
+      }
+      @for (ligne of draft().lignes; track $index) {
+      <fieldset class="flex flex-col gap-4 border border-line/70 p-4">
+        <legend class="px-1 text-xs font-medium text-muted">
+          Ligne {{ $index + 1 }}
+        </legend>
+        <div class="flex flex-col gap-1.5">
+          <label
+            class="text-xs font-medium text-muted"
+            [for]="'marchandiseId-' + $index"
+          >
+            Marchandise
+          </label>
+          <select
+            (change)="updateLigneMarchandise($index, $event)"
+            [id]="'marchandiseId-' + $index"
+            [value]="ligne.marchandiseId"
+            class="min-h-11 border border-line bg-surface px-3 py-2 text-sm text-ink"
+          >
+            <option disabled value="">Choisir…</option>
+            @for (marchandise of marchandiseOptions(); track marchandise.id) {
+            <option [value]="marchandise.id">
+              {{ formatMarchandiseLabel(marchandise) }}
+            </option>
+            }
+          </select>
+        </div>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div class="flex flex-col gap-1.5">
+            <label
+              class="text-xs font-medium text-muted"
+              [for]="'poidsKg-' + $index"
+            >
+              Poids kg
+            </label>
+            <input
+              (input)="updateLigneNumber($index, 'poidsKg', $event)"
+              [id]="'poidsKg-' + $index"
+              [value]="ligne.poidsKg"
+              class="min-h-11 border border-line bg-surface px-3 py-2 text-sm text-ink tabular-nums"
+              inputmode="decimal"
+              step="0.01"
+              type="number"
+            >
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label
+              class="text-xs font-medium text-muted"
+              [for]="'volumeM3-' + $index"
+            >
+              Volume m³
+            </label>
+            <input
+              (input)="updateLigneNumber($index, 'volumeM3', $event)"
+              [id]="'volumeM3-' + $index"
+              [value]="ligne.volumeM3"
+              class="min-h-11 border border-line bg-surface px-3 py-2 text-sm text-ink tabular-nums"
+              inputmode="decimal"
+              step="0.01"
+              type="number"
+            >
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label
+              class="text-xs font-medium text-muted"
+              [for]="'nbColis-' + $index"
+            >
+              Colis
+            </label>
+            <input
+              (input)="updateLigneNumber($index, 'nbColis', $event)"
+              [id]="'nbColis-' + $index"
+              [value]="ligne.nbColis"
+              class="min-h-11 border border-line bg-surface px-3 py-2 text-sm text-ink tabular-nums"
+              inputmode="numeric"
+              step="1"
+              type="number"
+            >
+          </div>
+        </div>
+        @if (draft().lignes.length > 1) {
+        <button
+          (click)="removeLigne($index)"
+          class="pressable self-start text-xs font-medium text-brake underline underline-offset-2"
+          type="button"
+        >
+          Retirer la ligne
+        </button>
+        }
+      </fieldset>
+      }
+      @if (lignesError()) {
+      <p class="text-xs text-brake" role="alert">{{ lignesError() }}</p>
+      }
+    </section>
+
     @if (formError()) {
     <p
       class="border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
@@ -152,4 +275,5 @@
       </a>
     </div>
   </form>
+  }
 </div>

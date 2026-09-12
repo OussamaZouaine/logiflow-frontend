@@ -1,7 +1,7 @@
 <div class="flex flex-col gap-6">
   <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
     <div>
-      <h1 class="text-3xl font-medium tracking-tight text-ink">Commandes</h1>
+      <h1 class="module-page-title">Commandes</h1>
       <p class="mt-1 text-sm text-muted">
         Demandes clients à transporter. Confirmation puis dossier.
       </p>
@@ -14,13 +14,21 @@
     </a>
   </div>
 
-  <app-list-statut-filter
-    [(selected)]="statutFilter"
-    [options]="statutOptions"
-  />
+  <div class="flex flex-col gap-3">
+    <app-list-search-bar
+      [(draft)]="searchDraft"
+      [(query)]="search"
+      inputId="commande-search"
+      placeholder="Référence…"
+    />
+    <app-list-statut-filter
+      [(selected)]="statutFilter"
+      [options]="statutOptions"
+    />
+  </div>
 
   @if (commandes.isLoading()) {
-  <p class="text-sm text-muted" role="status">Chargement des commandes…</p>
+  <app-list-table-skeleton [columns]="5" label="Chargement des commandes" />
   } @else if (commandes.error()) {
   <div
     class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
@@ -36,24 +44,39 @@
     </button>
   </div>
   } @else if (commandes.hasValue() && commandes.value().content.length === 0) {
+  @if (search()) {
+  <app-list-empty-state
+    (action)="clearFilters()"
+    actionLabel="Effacer la recherche"
+    description="Aucune commande ne correspond à « {{ search() }} »."
+    title="Aucun résultat"
+  />
+  } @else {
   <app-list-empty-state
     actionLabel="Nouvelle commande"
     actionLink="/commandes/nouveau"
     description="Saisissez la première demande client à transporter."
     title="Aucune commande en base"
   />
+  }
   } @else if (commandes.hasValue() && visibleCommandes().length === 0) {
   <app-list-empty-state
     (action)="clearFilters()"
     actionLabel="Réinitialiser les filtres"
-    description="Élargissez le filtre de statut pour revoir la liste."
+    description="Réinitialisez la recherche ou le filtre de statut pour revoir la liste."
     title="Aucune commande pour ce filtre"
   />
   } @else if (commandes.hasValue()) {
-  <div class="overflow-x-auto border border-line bg-surface">
+  <div
+    appListRowKeyboard
+    [(activeId)]="activeRowId"
+    [rows]="keyboardRows()"
+    aria-label="Liste des commandes — flèches pour naviguer, Entrée pour ouvrir"
+    class="overflow-x-auto border border-line bg-surface"
+  >
     <table class="w-full min-w-xl text-left text-sm">
       <thead
-        class="border-b border-line text-[0.7rem] font-medium tracking-[0.12em] text-muted uppercase"
+        class="list-table-head"
       >
         <tr>
           <th class="px-4 py-3 font-medium" scope="col">Référence</th>
@@ -67,7 +90,11 @@
       </thead>
       <tbody>
         @for (commande of visibleCommandes(); track commande.id) {
-        <tr class="list-row border-b border-line last:border-0 hover:bg-canvas">
+        <tr
+          [attr.aria-selected]="activeRowId() === commande.id"
+          [class.bg-pine/5]="activeRowId() === commande.id"
+          class="list-row border-b border-line last:border-0 hover:bg-canvas"
+        >
           <td class="px-4 py-3">
             <a
               [routerLink]="['/commandes', commande.id]"

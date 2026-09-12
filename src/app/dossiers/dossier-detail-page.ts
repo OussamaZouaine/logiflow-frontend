@@ -1,7 +1,11 @@
 import { httpResource } from "@angular/common/http";
 import { Component, computed, inject, input, signal } from "@angular/core";
 import { RouterLink } from "@angular/router";
+import { FicheHeader } from "../shared/ui/fiche-header";
+import { ToastService } from "../shared/ui/toast";
 import { OpsTimeline } from "../shared/ui/ops-timeline";
+import { StatutChip } from "../shared/ui/statut-chip";
+import { dossierStatutTone } from "../tableau/apercu";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
@@ -38,12 +42,13 @@ interface VoyageLink {
 }
 
 @Component({
-  imports: [RouterLink, OpsTimeline],
+  imports: [RouterLink, FicheHeader, OpsTimeline, StatutChip],
   selector: "app-dossier-detail-page",
   templateUrl: "./dossier-detail-page.html",
 })
 export class DossierDetailPage {
   private readonly api = inject(DossierApi);
+  private readonly toast = inject(ToastService);
   private readonly session = inject(DemoSessionService);
 
   readonly id = input.required<string>();
@@ -51,6 +56,7 @@ export class DossierDetailPage {
   protected readonly formatWindow = formatWindow;
   protected readonly manualNextStatuts = manualNextStatuts;
   protected readonly statutDossierLabel = statutDossierLabel;
+  protected readonly dossierStatutTone = dossierStatutTone;
   protected readonly statutVoyageLabel = statutVoyageLabel;
   protected readonly typeSegmentLabel = typeSegmentLabel;
   protected readonly typeTransportLabel = typeTransportLabel;
@@ -137,6 +143,7 @@ export class DossierDetailPage {
     try {
       await this.api.changerStatut(this.id(), valeur);
       this.dossier.reload();
+      this.toast.success("Statut du dossier mis à jour.");
     } catch (error) {
       this.statutError.set(httpErrorMessage(error));
     }

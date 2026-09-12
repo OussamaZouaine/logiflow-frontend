@@ -1,17 +1,10 @@
 <div class="flex flex-col gap-8">
-  <div>
-    <!-- biome-ignore lint/a11y/useValidAnchor: <it's an angular router link> -->
-    <a
-      class="pressable pressable-border inline-flex items-center border border-line px-2.5 py-1.5 text-xs font-medium text-ink"
-      routerLink="/sites"
-    >
-      ← Sites
-    </a>
+  <app-fiche-header listLabel="Sites" listLink="/sites">
     @if (site.isLoading()) {
-    <p class="mt-4 text-sm text-muted" role="status">Chargement…</p>
+    <p class="text-sm text-muted" role="status">Chargement…</p>
     } @else if (site.error()) {
     <div
-      class="mt-4 border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
+      class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
       role="alert"
     >
       <p>{{ loadError() }}</p>
@@ -24,17 +17,17 @@
       </button>
     </div>
     } @else if (site.hasValue()) {
-    <h1 class="mt-4 text-3xl font-medium tracking-tight text-ink">
-      {{ site.value().code }}
-    </h1>
-    <p class="mt-2">
+    <div class="flex flex-wrap items-center gap-3">
+      <h1 class="fiche-page-title">
+        {{ site.value().code }}
+      </h1>
       <app-statut-chip
         [label]="actifLabel(site.value().actif)"
         [tone]="actifTone(site.value().actif)"
       />
-    </p>
+    </div>
     }
-  </div>
+  </app-fiche-header>
 
   @if (site.hasValue()) {
   <form (submit)="onSubmit($event)" class="flex flex-col gap-5" novalidate>

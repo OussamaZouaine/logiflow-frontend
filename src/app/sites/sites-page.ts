@@ -1,11 +1,28 @@
 import { httpResource } from "@angular/common/http";
-import { Component, computed, effect, signal } from "@angular/core";
-import { RouterLink } from "@angular/router";
+import {
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  signal,
+} from "@angular/core";
+import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
 import { filterByStatut } from "../shared/ui/list-filter";
 import { ListEmptyState } from "../shared/ui/list-empty-state";
+import {
+  ListTableSkeleton,
+  MapAsideSkeleton,
+} from "../shared/ui/list-table-skeleton";
+import { connectListQueryState } from "../shared/ui/list-query-state";
+import {
+  listKeyboardRows,
+  ListRowKeyboard,
+  syncListKeyboardActiveId,
+} from "../shared/ui/list-row-keyboard";
 import { ListPagination } from "../shared/ui/list-pagination";
 import { ListSearchBar } from "../shared/ui/list-search-bar";
 import {
@@ -36,12 +53,19 @@ const ACTIF_OPTIONS: readonly ListStatutOption[] = [
     ListStatutFilter,
     ListPagination,
     ListEmptyState,
+    ListRowKeyboard,
+    ListTableSkeleton,
+    MapAsideSkeleton,
     GeoMarkersMap,
   ],
   selector: "app-sites-page",
   templateUrl: "./sites-page.html",
 })
 export class SitesPage {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+
   protected readonly actifLabel = actifLabel;
   protected readonly actifTone = actifTone;
   protected readonly actifOptions = ACTIF_OPTIONS;
@@ -90,22 +114,26 @@ export class SitesPage {
     httpErrorMessage(this.sites.error())
   );
 
+  protected readonly keyboardRows = computed(() =>
+    listKeyboardRows(this.visibleSites(), (site) => `/sites/${site.id}`)
+  );
+
   constructor() {
-    effect(() => {
-      this.search();
-      this.page.set(0);
-    });
+    connectListQueryState(
+      this.route,
+      this.router,
+      this.destroyRef,
+      {
+        page: this.page,
+        q: this.search,
+        searchDraft: this.searchDraft,
+        statut: this.actifFilter,
+      },
+      { searchResetsPage: true, statutValues: ["true", "false"] }
+    );
 
     effect(() => {
-      const rows = this.visibleSites();
-      const selected = this.selectedSiteId();
-      if (rows.length === 0) {
-        this.selectedSiteId.set(null);
-        return;
-      }
-      if (selected === null || !rows.some((site) => site.id === selected)) {
-        this.selectedSiteId.set(rows[0]?.id ?? null);
-      }
+      syncListKeyboardActiveId(this.keyboardRows(), this.selectedSiteId);
     });
   }
 

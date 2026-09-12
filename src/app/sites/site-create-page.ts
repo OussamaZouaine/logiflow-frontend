@@ -12,6 +12,7 @@ import { ZardAlertComponent } from "@/shared/components/alert";
 import { ZardButtonComponent } from "@/shared/components/button";
 import { ZardInputComponent } from "@/shared/components/input";
 import { httpErrorMessage } from "../core/api/http-error";
+import { ToastService } from "../shared/ui/toast";
 import { firstFieldError } from "../core/forms/first-field-error";
 import { showFieldError } from "../core/forms/show-field-error";
 import { draftToWrite, emptySiteDraft } from "./site";
@@ -36,6 +37,7 @@ import {
 export class SiteCreatePage {
   private readonly api = inject(SiteApi);
   private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
 
   protected readonly firstFieldError = firstFieldError;
   protected readonly showFieldError = showFieldError;
@@ -76,6 +78,7 @@ export class SiteCreatePage {
     await submit(this.createForm, async () => {
       try {
         const created = await this.api.create(draftToWrite(this.draft()));
+        this.toast.success("Site créé.");
         await this.router.navigate(["/sites", created.id]);
       } catch (error) {
         this.formError.set(httpErrorMessage(error));

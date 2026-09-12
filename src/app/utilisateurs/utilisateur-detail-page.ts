@@ -8,11 +8,17 @@ import {
   signal,
 } from "@angular/core";
 import { FormField, form, required, submit } from "@angular/forms/signals";
-import { RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import { type Role, roleLabel } from "../core/auth/role";
+import { FicheHeader } from "../shared/ui/fiche-header";
+import { ToastService } from "../shared/ui/toast";
 import { firstFieldError } from "../core/forms/first-field-error";
+import {
+  actifLabel,
+  actifTone,
+  StatutChip,
+} from "../shared/ui/statut-chip";
 import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
 import {
   draftToWrite,
@@ -25,15 +31,18 @@ import {
 import { UtilisateurApi } from "./utilisateur-api";
 
 @Component({
-  imports: [FormField, RouterLink],
+  imports: [FormField, FicheHeader, StatutChip],
   selector: "app-utilisateur-detail-page",
   templateUrl: "./utilisateur-detail-page.html",
 })
 export class UtilisateurDetailPage {
   private readonly api = inject(UtilisateurApi);
+  private readonly toast = inject(ToastService);
 
   readonly id = input.required<string>();
 
+  protected readonly actifLabel = actifLabel;
+  protected readonly actifTone = actifTone;
   protected readonly roles = UTILISATEUR_ROLES;
   protected readonly roleLabel = roleLabel;
   protected readonly firstFieldError = firstFieldError;
@@ -95,6 +104,7 @@ export class UtilisateurDetailPage {
         );
         this.draft.set(utilisateurToDraft(updated));
         this.utilisateur.reload();
+        this.toast.success("Utilisateur enregistré.");
       } catch (error) {
         // Second save 500s until UtilisateurRepositoryAdapter updates in
         // place (same pattern as VehiculeRepositoryAdapter).
@@ -109,6 +119,7 @@ export class UtilisateurDetailPage {
       await this.api.desactiver(this.id());
       this.seededForId = "";
       this.utilisateur.reload();
+      this.toast.success("Utilisateur désactivé.");
     } catch (error) {
       // DELETE also save()s the aggregate — same optimistic-lock 500 after
       // an earlier PUT. Backend: in-place update in UtilisateurRepositoryAdapter.

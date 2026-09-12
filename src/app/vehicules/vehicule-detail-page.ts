@@ -8,9 +8,12 @@ import {
   signal,
 } from "@angular/core";
 import { FormField, form, min, required, submit } from "@angular/forms/signals";
-import { RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
+import { FicheHeader } from "../shared/ui/fiche-header";
+import { ToastService } from "../shared/ui/toast";
+import { StatutChip } from "../shared/ui/statut-chip";
+import { vehiculeStatutTone } from "../tableau/apercu";
 import {
   DOCUMENT_TYPES,
   documentTypeLabel,
@@ -23,12 +26,13 @@ import {
 import { VehiculeApi } from "./vehicule-api";
 
 @Component({
-  imports: [FormField, RouterLink],
+  imports: [FormField, FicheHeader, StatutChip],
   selector: "app-vehicule-detail-page",
   templateUrl: "./vehicule-detail-page.html",
 })
 export class VehiculeDetailPage {
   private readonly api = inject(VehiculeApi);
+  private readonly toast = inject(ToastService);
 
   readonly id = input.required<string>();
 
@@ -36,6 +40,7 @@ export class VehiculeDetailPage {
   protected readonly documentTypeLabel = documentTypeLabel;
   protected readonly typeLabel = typeLabel;
   protected readonly statutLabel = statutLabel;
+  protected readonly vehiculeStatutTone = vehiculeStatutTone;
 
   protected readonly compteursError = signal<string | null>(null);
   protected readonly documentsError = signal<string | null>(null);
@@ -142,6 +147,7 @@ export class VehiculeDetailPage {
         );
         this.applyVehicule(updated);
         this.vehicule.reload();
+        this.toast.success("Compteurs enregistrés.");
       } catch (error) {
         this.compteursError.set(httpErrorMessage(error));
       }
@@ -179,6 +185,7 @@ export class VehiculeDetailPage {
       });
       this.applyVehicule(updated);
       this.vehicule.reload();
+      this.toast.success("Documents enregistrés.");
     } catch (error) {
       this.documentsError.set(httpErrorMessage(error));
     }

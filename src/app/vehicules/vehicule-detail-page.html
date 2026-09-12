@@ -1,16 +1,10 @@
 <div class="flex flex-col gap-8">
-  <div>
-    <a
-      class="pressable pressable-border inline-flex items-center border border-line px-2.5 py-1.5 text-xs font-medium text-ink"
-      routerLink="/vehicules"
-    >
-      ← Véhicules
-    </a>
+  <app-fiche-header listLabel="Véhicules" listLink="/vehicules">
     @if (vehicule.isLoading()) {
-    <p class="mt-4 text-sm text-muted" role="status">Chargement…</p>
+    <p class="text-sm text-muted" role="status">Chargement…</p>
     } @else if (vehicule.error()) {
     <div
-      class="mt-4 border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
+      class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
       role="alert"
     >
       <p>{{ loadError() }}</p>
@@ -23,15 +17,17 @@
       </button>
     </div>
     } @else if (vehicule.hasValue()) {
-    <h1
-      class="mt-4 font-mono text-3xl font-medium tracking-tight text-ink"
-    >
-      {{ vehicule.value().immatriculation }}
-    </h1>
+    <div class="flex flex-wrap items-center gap-3">
+      <h1 class="fiche-page-title fiche-page-title--mono">
+        {{ vehicule.value().immatriculation }}
+      </h1>
+      <app-statut-chip
+        [label]="statutLabel(vehicule.value().statut)"
+        [tone]="vehiculeStatutTone(vehicule.value().statut)"
+      />
+    </div>
     <p class="mt-1 text-sm text-muted">
       {{ typeLabel(vehicule.value().type) }}
-      ·
-      {{ statutLabel(vehicule.value().statut) }}
       · PTAC
       {{ vehicule.value().ptacKg }}
       kg · utile
@@ -39,7 +35,7 @@
       kg
     </p>
     }
-  </div>
+  </app-fiche-header>
 
   @if (vehicule.hasValue()) {
   <section class="max-w-lg border border-line bg-surface p-5">

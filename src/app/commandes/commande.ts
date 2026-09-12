@@ -6,10 +6,18 @@ export interface Money {
   montant: number;
 }
 
+export interface LigneCommande {
+  marchandiseId: string;
+  nbColis: number;
+  poidsKg: number;
+  volumeM3: number;
+}
+
 export interface Commande {
   clientId: string;
   dateSouhaitee: string;
   id: string;
+  lignes: LigneCommande[];
   prixNegocie: Money;
   reference: string;
   statut: StatutCommande;
@@ -18,7 +26,15 @@ export interface Commande {
 export interface CommandeWrite {
   clientId: string;
   dateSouhaitee: string;
+  lignes: LigneCommande[];
   prixNegocie: Money;
+}
+
+export interface LigneCommandeDraft {
+  marchandiseId: string;
+  nbColis: number;
+  poidsKg: number;
+  volumeM3: number;
 }
 
 export interface Client {
@@ -33,8 +49,18 @@ export interface CommandeDraft {
   clientId: string;
   clientRaisonSociale: string;
   dateSouhaitee: string;
+  lignes: LigneCommandeDraft[];
   montant: number;
   nouveauClient: boolean;
+}
+
+export function emptyLigneCommandeDraft(): LigneCommandeDraft {
+  return {
+    marchandiseId: "",
+    nbColis: 12,
+    poidsKg: 1200,
+    volumeM3: 8,
+  };
 }
 
 export function emptyCommandeDraft(): CommandeDraft {
@@ -45,9 +71,33 @@ export function emptyCommandeDraft(): CommandeDraft {
     clientId: "",
     clientRaisonSociale: "",
     dateSouhaitee: toDateInput(date),
+    lignes: [emptyLigneCommandeDraft()],
     montant: 2000,
     nouveauClient: true,
   };
+}
+
+export function validateLignesCommande(
+  lignes: LigneCommandeDraft[]
+): string | null {
+  if (lignes.length === 0) {
+    return "Ajoutez au moins une ligne de marchandise.";
+  }
+  for (const [index, ligne] of lignes.entries()) {
+    if (!ligne.marchandiseId.trim()) {
+      return `Ligne ${index + 1} : choisissez une marchandise du catalogue.`;
+    }
+    if (ligne.poidsKg < 0) {
+      return `Ligne ${index + 1} : le poids ne peut pas être négatif.`;
+    }
+    if (ligne.volumeM3 < 0) {
+      return `Ligne ${index + 1} : le volume ne peut pas être négatif.`;
+    }
+    if (ligne.nbColis < 0) {
+      return `Ligne ${index + 1} : le nombre de colis ne peut pas être négatif.`;
+    }
+  }
+  return null;
 }
 
 export function draftToWrite(
@@ -57,6 +107,12 @@ export function draftToWrite(
   return {
     clientId,
     dateSouhaitee: draft.dateSouhaitee,
+    lignes: draft.lignes.map((ligne) => ({
+      marchandiseId: ligne.marchandiseId.trim(),
+      nbColis: ligne.nbColis,
+      poidsKg: ligne.poidsKg,
+      volumeM3: ligne.volumeM3,
+    })),
     prixNegocie: {
       devise: "EUR",
       montant: draft.montant,

@@ -1,16 +1,10 @@
 <div class="flex flex-col gap-8">
-  <div>
-    <a
-      class="pressable pressable-border inline-flex items-center border border-line px-2.5 py-1.5 text-xs font-medium text-ink"
-      routerLink="/commandes"
-    >
-      ← Commandes
-    </a>
+  <app-fiche-header listLabel="Commandes" listLink="/commandes">
     @if (commande.isLoading()) {
-    <p class="mt-4 text-sm text-muted" role="status">Chargement…</p>
+    <p class="text-sm text-muted" role="status">Chargement…</p>
     } @else if (commande.error()) {
     <div
-      class="mt-4 border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
+      class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
       role="alert"
     >
       <p>{{ loadError() }}</p>
@@ -23,16 +17,17 @@
       </button>
     </div>
     } @else if (commande.hasValue()) {
-    <h1
-      class="mt-4 font-mono text-3xl font-medium tracking-tight text-ink"
-    >
-      {{ commande.value().reference }}
-    </h1>
-    <p class="mt-1 text-sm text-muted">
-      {{ statutCommandeLabel(commande.value().statut) }}
-    </p>
+    <div class="flex flex-wrap items-center gap-3">
+      <h1 class="fiche-page-title fiche-page-title--mono">
+        {{ commande.value().reference }}
+      </h1>
+      <app-statut-chip
+        [label]="statutCommandeLabel(commande.value().statut)"
+        [tone]="commandeStatutTone(commande.value().statut)"
+      />
+    </div>
     }
-  </div>
+  </app-fiche-header>
 
   @if (commande.hasValue()) {
   <section class="max-w-lg border border-line bg-surface p-5">
@@ -59,6 +54,29 @@
         </dd>
       </div>
     </dl>
+  </section>
+
+  <section class="max-w-lg border border-line bg-surface p-5">
+    <h2 class="text-xl font-medium tracking-tight text-ink">
+      Lignes de marchandise
+    </h2>
+    @if (commande.value().lignes.length === 0) {
+    <p class="mt-4 text-sm text-muted">Aucune ligne enregistrée.</p>
+    } @else {
+    <ul class="mt-4 flex flex-col gap-2 text-sm">
+      @for (ligne of commande.value().lignes; track $index) {
+      <li class="border border-line px-3 py-2">
+        <p class="font-medium text-ink">
+          {{ marchandiseLabel(ligne.marchandiseId) }}
+        </p>
+        <p class="mt-1 font-mono text-xs tabular-nums text-muted">
+          {{ ligne.poidsKg }} kg · {{ ligne.volumeM3 }} m³ ·
+          {{ ligne.nbColis }} colis
+        </p>
+      </li>
+      }
+    </ul>
+    }
   </section>
 
   @if (commande.value().statut === "CONFIRMEE") {

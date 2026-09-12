@@ -1,7 +1,7 @@
 <div class="flex flex-col gap-6">
   <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
     <div>
-      <h1 class="text-3xl font-medium tracking-tight text-ink">Dossiers</h1>
+      <h1 class="module-page-title">Dossiers</h1>
       <p class="mt-1 text-sm text-muted">
         Fiches transport issues des commandes confirmées — marchandise, sites,
         cycle de vie.
@@ -17,13 +17,21 @@
     }
   </div>
 
-  <app-list-statut-filter
-    [(selected)]="statutFilter"
-    [options]="statutOptions"
-  />
+  <div class="flex flex-col gap-3">
+    <app-list-search-bar
+      [(draft)]="searchDraft"
+      [(query)]="search"
+      inputId="dossier-search"
+      placeholder="Référence…"
+    />
+    <app-list-statut-filter
+      [(selected)]="statutFilter"
+      [options]="statutOptions"
+    />
+  </div>
 
   @if (dossiers.isLoading()) {
-  <p class="text-sm text-muted" role="status">Chargement des dossiers…</p>
+  <app-list-table-skeleton label="Chargement des dossiers" />
   } @else if (dossiers.error()) {
   <div
     class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
@@ -39,7 +47,14 @@
     </button>
   </div>
   } @else if (dossiers.hasValue() && dossiers.value().content.length === 0) {
-  @if (canPlan()) {
+  @if (search()) {
+  <app-list-empty-state
+    (action)="clearFilters()"
+    actionLabel="Effacer la recherche"
+    description="Aucun dossier ne correspond à « {{ search() }} »."
+    title="Aucun résultat"
+  />
+  } @else if (canPlan()) {
   <app-list-empty-state
     actionLabel="Nouveau dossier"
     actionLink="/dossiers/nouveau"
@@ -56,14 +71,20 @@
   <app-list-empty-state
     (action)="clearFilters()"
     actionLabel="Réinitialiser les filtres"
-    description="Élargissez le filtre de statut pour revoir la liste."
+    description="Réinitialisez la recherche ou le filtre de statut pour revoir la liste."
     title="Aucun dossier pour ce filtre"
   />
   } @else if (dossiers.hasValue()) {
-  <div class="overflow-x-auto border border-line bg-surface">
+  <div
+    appListRowKeyboard
+    [(activeId)]="activeRowId"
+    [rows]="keyboardRows()"
+    aria-label="Liste des dossiers — flèches pour naviguer, Entrée pour ouvrir"
+    class="overflow-x-auto border border-line bg-surface"
+  >
     <table class="w-full min-w-xl text-left text-sm">
       <thead
-        class="border-b border-line text-[0.7rem] font-medium tracking-[0.12em] text-muted uppercase"
+        class="list-table-head"
       >
         <tr>
           <th class="px-4 py-3 font-medium" scope="col">Référence</th>
@@ -78,7 +99,11 @@
       </thead>
       <tbody>
         @for (dossier of visibleDossiers(); track dossier.id) {
-        <tr class="list-row border-b border-line last:border-0 hover:bg-canvas">
+        <tr
+          [attr.aria-selected]="activeRowId() === dossier.id"
+          [class.bg-pine/5]="activeRowId() === dossier.id"
+          class="list-row border-b border-line last:border-0 hover:bg-canvas"
+        >
           <td class="px-4 py-3">
             <a
               [routerLink]="['/dossiers', dossier.id]"

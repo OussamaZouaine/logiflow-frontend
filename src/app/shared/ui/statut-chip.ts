@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, input } from "@angular/core";
+import type { ApercuTone } from "../../tableau/apercu";
 
-export type StatutTone = "pine" | "ink" | "muted" | "brake";
+export type StatutTone = ApercuTone;
 
 const TONE_CLASSES: Record<StatutTone, string> = {
+  amber: "border-amber/25 bg-amber/10 text-amber",
   brake: "border-brake/20 bg-brake/10 text-brake",
   ink: "border-ink/15 bg-ink/5 text-ink",
   muted: "border-line bg-canvas text-muted",

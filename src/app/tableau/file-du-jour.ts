@@ -5,6 +5,8 @@ import type { Vehicule } from "../vehicules/vehicule";
 import type { Voyage } from "../voyages/voyage";
 import type { ApercuTone } from "./apercu";
 
+export const FILE_DU_JOUR_SECTION_ID = "file-du-jour";
+
 export interface FileDuJourItem {
   count: number;
   detail: string;
@@ -12,6 +14,12 @@ export interface FileDuJourItem {
   path: string;
   title: string;
   tone: ApercuTone;
+}
+
+export interface FileDuJourSummary {
+  categoryCount: number;
+  topTone: ApercuTone | null;
+  totalCount: number;
 }
 
 export interface FileDuJourInput {
@@ -24,9 +32,10 @@ export interface FileDuJourInput {
 
 const TONE_RANK: Record<ApercuTone, number> = {
   brake: 0,
-  ink: 1,
-  pine: 2,
-  muted: 3,
+  amber: 1,
+  ink: 2,
+  pine: 3,
+  muted: 4,
 };
 
 function countBy<T extends string>(
@@ -112,7 +121,7 @@ export function buildFileDuJour(input: FileDuJourInput): FileDuJourItem[] {
       "Voyages à démarrer",
       "Planifiés ou affectés",
       "/voyages",
-      "muted",
+      "amber",
       countBy(voyages.map((v) => v.statut), new Set(["PLANIFIE", "AFFECTE"]))
     );
     if (enCours) items.push(enCours);
@@ -125,7 +134,7 @@ export function buildFileDuJour(input: FileDuJourInput): FileDuJourItem[] {
       "Commandes à confirmer",
       "Reçues — pas encore confirmées",
       "/commandes",
-      "muted",
+      "amber",
       countBy(
         input.commandes.map((c) => c.statut),
         new Set(["RECUE"])
@@ -152,7 +161,7 @@ export function buildFileDuJour(input: FileDuJourInput): FileDuJourItem[] {
       "Véhicules en maintenance",
       "Indisponibles pour l’exploitation",
       "/vehicules",
-      "ink",
+      "amber",
       countBy(vehicules.map((v) => v.statut), new Set(["EN_MAINTENANCE"]))
     );
     if (bloque) items.push(bloque);
@@ -166,4 +175,27 @@ export function buildFileDuJour(input: FileDuJourInput): FileDuJourItem[] {
     }
     return b.count - a.count;
   });
+}
+
+/** Aggregate counts for the utility-bar badge. */
+export function fileDuJourSummary(
+  items: readonly FileDuJourItem[]
+): FileDuJourSummary {
+  if (items.length === 0) {
+    return { categoryCount: 0, topTone: null, totalCount: 0 };
+  }
+  return {
+    categoryCount: items.length,
+    topTone: items[0]?.tone ?? null,
+    totalCount: items.reduce((sum, item) => sum + item.count, 0),
+  };
+}
+
+/** Accessible label for the shell file-du-jour shortcut. */
+export function fileDuJourBadgeLabel(summary: FileDuJourSummary): string {
+  if (summary.totalCount <= 0) {
+    return "File du jour";
+  }
+  const plural = summary.totalCount === 1 ? "" : "s";
+  return `${summary.totalCount} élément${plural} dans la file du jour — ouvrir le tableau de bord`;
 }

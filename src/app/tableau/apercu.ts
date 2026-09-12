@@ -38,12 +38,13 @@ export const APERCU_COUNTABLE_IDS = [
   "commandes",
   "dossiers",
   "voyages",
+  "maintenance",
   "utilisateurs",
 ] as const satisfies readonly WorkDestinationId[];
 
 export type ApercuCountableId = (typeof APERCU_COUNTABLE_IDS)[number];
 
-export type ApercuTone = "pine" | "ink" | "muted" | "brake";
+export type ApercuTone = "amber" | "pine" | "ink" | "muted" | "brake";
 
 export interface StatutSlice {
   count: number;
@@ -70,6 +71,11 @@ export function apercuDestinations(
   );
 }
 
+/** List API segment (differs from sidebar path for maintenance). */
+export function apercuApiPath(id: ApercuCountableId): string {
+  return id === "maintenance" ? "ordres-travail" : id;
+}
+
 export function isCompleteCollection<T>(page: PageResponse<T>): boolean {
   return page.content.length === page.totalElements;
 }
@@ -80,6 +86,8 @@ export function shouldShowStatutBreakdown<T>(page: PageResponse<T>): boolean {
 
 export function apercuToneClass(tone: ApercuTone): string {
   switch (tone) {
+    case "amber":
+      return "bg-amber";
     case "pine":
       return "bg-pine";
     case "ink":
@@ -93,6 +101,31 @@ export function apercuToneClass(tone: ApercuTone): string {
       return _exhaustive;
     }
   }
+}
+
+/** Left accent for file-du-jour cards and similar surfaces. */
+export function apercuToneBorderClass(tone: ApercuTone): string {
+  switch (tone) {
+    case "amber":
+      return "border-l-amber";
+    case "pine":
+      return "border-l-pine";
+    case "ink":
+      return "border-l-ink";
+    case "muted":
+      return "border-l-secondary";
+    case "brake":
+      return "border-l-brake";
+    default: {
+      const _exhaustive: never = tone;
+      return _exhaustive;
+    }
+  }
+}
+
+/** Text on filled tone badges (utility bar, chart segments). */
+export function apercuToneOnFillClass(tone: ApercuTone): string {
+  return tone === "muted" ? "text-muted" : "text-surface";
 }
 
 export function vehiculeStatutSlices(
@@ -166,8 +199,9 @@ export function vehiculeStatutTone(statut: VehiculeStatut): ApercuTone {
     case "RESERVE":
       return "muted";
     case "EN_VOYAGE":
-    case "EN_MAINTENANCE":
       return "ink";
+    case "EN_MAINTENANCE":
+      return "amber";
     case "IMMOBILISE":
     case "HORS_SERVICE":
       return "brake";
@@ -183,10 +217,11 @@ export function voyageStatutTone(statut: StatutVoyage): ApercuTone {
     case "BROUILLON":
     case "CLOTURE":
       return "muted";
-    case "PLANIFIE":
-    case "AFFECTE":
     case "EN_COURS":
       return "pine";
+    case "PLANIFIE":
+    case "AFFECTE":
+      return "amber";
     case "TERMINE":
       return "ink";
     case "ANNULE":
@@ -201,7 +236,7 @@ export function voyageStatutTone(statut: StatutVoyage): ApercuTone {
 export function commandeStatutTone(statut: StatutCommande): ApercuTone {
   switch (statut) {
     case "RECUE":
-      return "muted";
+      return "amber";
     case "CONFIRMEE":
       return "pine";
     case "ANNULEE":

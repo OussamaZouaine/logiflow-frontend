@@ -10,10 +10,11 @@ import {
   workDestination,
 } from "./work-destination";
 
-export type PaletteItemKind = "module" | "action";
-export type PaletteSection = "Modules" | "Actions";
+export type PaletteItemKind = "module" | "action" | "entity";
+export type PaletteSection = "Modules" | "Actions" | "Références";
 
 export interface PaletteItem {
+  readonly badge?: string;
   readonly icon: string;
   readonly keywords: readonly string[];
   readonly kind: PaletteItemKind;
@@ -117,6 +118,7 @@ export function paletteItemsForRoles(
   const actions: PaletteItem[] = CREATE_ACTIONS.filter((action) =>
     roleAllowed(roles, action.roles)
   ).map((action) => ({
+    badge: "Nouveau",
     icon: action.icon,
     keywords: action.keywords,
     kind: "action" as const,

@@ -9,12 +9,8 @@ import type {
 } from "./ordre-travail";
 
 /**
- * Ordre de travail HTTP surface: POST create, GET by id, PUT statut.
+ * Ordre de travail HTTP surface: POST create, GET list, GET by id, PUT statut.
  * No DELETE — cancel via statut ANNULE.
- * No GET collection (adapter.rechercher exists but is not exposed).
- * The list page keeps this-session OTs in sessionStorage.
- *
- * Backend next: expose GET /ordres-travail (page + by vehiculeId).
  * Second statut change 500s until OrdreTravailRepositoryAdapter updates
  * in place like VehiculeRepositoryAdapter.
  */

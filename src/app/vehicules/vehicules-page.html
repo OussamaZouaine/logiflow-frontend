@@ -1,7 +1,7 @@
 <div class="flex flex-col gap-6">
   <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
     <div>
-      <h1 class="text-3xl font-medium tracking-tight text-ink">Véhicules</h1>
+      <h1 class="module-page-title">Véhicules</h1>
       <p class="mt-1 text-sm text-muted">
         Parc motorisé — plaque SIV
         <span class="font-mono text-ink">AA-123-AA</span>
@@ -29,7 +29,7 @@
   </div>
 
   @if (vehicules.isLoading()) {
-  <p class="text-sm text-muted" role="status">Chargement des véhicules…</p>
+  <app-list-table-skeleton label="Chargement des véhicules" />
   } @else if (vehicules.error()) {
   <div
     class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
@@ -68,10 +68,16 @@
     title="Aucun véhicule pour ce filtre"
   />
   } @else if (vehicules.hasValue()) {
-  <div class="overflow-x-auto border border-line bg-surface">
+  <div
+    appListRowKeyboard
+    [(activeId)]="activeRowId"
+    [rows]="keyboardRows()"
+    aria-label="Liste des véhicules — flèches pour naviguer, Entrée pour ouvrir"
+    class="overflow-x-auto border border-line bg-surface"
+  >
     <table class="w-full min-w-xl text-left text-sm">
       <thead
-        class="border-b border-line text-[0.7rem] font-medium tracking-[0.12em] text-muted uppercase"
+        class="list-table-head"
       >
         <tr>
           <th class="px-4 py-3 font-medium" scope="col">Immatriculation</th>
@@ -86,7 +92,11 @@
       </thead>
       <tbody>
         @for (vehicule of visibleVehicules(); track vehicule.id) {
-        <tr class="list-row border-b border-line last:border-0 hover:bg-canvas">
+        <tr
+          [attr.aria-selected]="activeRowId() === vehicule.id"
+          [class.bg-pine/5]="activeRowId() === vehicule.id"
+          class="list-row border-b border-line last:border-0 hover:bg-canvas"
+        >
           <td class="px-4 py-3">
             <a
               [routerLink]="['/vehicules', vehicule.id]"

@@ -18,6 +18,7 @@ import { NgIcon, provideIcons } from "@ng-icons/core";
 import {
   lucideClipboardList,
   lucideFolderOpen,
+  lucideInbox,
   lucideLayoutDashboard,
   lucideMapPin,
   lucideMenu,
@@ -32,6 +33,13 @@ import { filter } from "rxjs";
 import { DemoSessionService } from "../core/auth/demo-session";
 import { roleLabel } from "../core/auth/role";
 import { DESTINATION_NAV_ICON, TABLEAU_NAV_ICON } from "../core/nav/nav-icon";
+import { apercuToneClass, apercuToneOnFillClass } from "../tableau/apercu";
+import {
+  FILE_DU_JOUR_SECTION_ID,
+  fileDuJourBadgeLabel,
+} from "../tableau/file-du-jour";
+import { FileDuJourStore } from "../tableau/file-du-jour-store";
+import { PaletteEntitySearchStore } from "../core/nav/palette-entity-search-store";
 import {
   filterPaletteItems,
   type PaletteItem,
@@ -41,13 +49,15 @@ import {
   destinationsForRoles,
   type WorkDestinationId,
 } from "../core/nav/work-destination";
+import { ToastHost } from "../shared/ui/toast";
 
 @Component({
-  imports: [NgIcon, RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [NgIcon, RouterLink, RouterLinkActive, RouterOutlet, ToastHost],
   providers: [
     provideIcons({
       lucideClipboardList,
       lucideFolderOpen,
+      lucideInbox,
       lucideLayoutDashboard,
       lucideMapPin,
       lucideMenu,
@@ -64,6 +74,8 @@ import {
 })
 export class SignedInShell {
   private readonly session = inject(DemoSessionService);
+  private readonly fileDuJourStore = inject(FileDuJourStore);
+  private readonly paletteEntitySearch = inject(PaletteEntitySearchStore);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -92,8 +104,37 @@ export class SignedInShell {
     paletteItemsForRoles(this.session.session()?.roles ?? [])
   );
 
-  protected readonly filteredJumpTargets = computed(() =>
-    filterPaletteItems(this.jumpTargets(), this.jumpQuery())
+  protected readonly filteredJumpTargets = computed(() => [
+    ...filterPaletteItems(this.jumpTargets(), this.jumpQuery()),
+    ...this.paletteEntitySearch.items(),
+  ]);
+
+  protected readonly paletteEntityLoading = computed(() =>
+    this.paletteEntitySearch.loading()
+  );
+
+  protected readonly fileDuJourSectionId = FILE_DU_JOUR_SECTION_ID;
+
+  protected readonly showFileDuJourBadge = computed(
+    () =>
+      !this.fileDuJourStore.loading() &&
+      this.fileDuJourStore.summary().totalCount > 0
+  );
+
+  protected readonly fileDuJourBadgeCount = computed(
+    () => this.fileDuJourStore.summary().totalCount
+  );
+
+  protected readonly fileDuJourBadgeToneClass = computed(() => {
+    const tone = this.fileDuJourStore.summary().topTone;
+    if (!tone) {
+      return "bg-secondary text-muted";
+    }
+    return `${apercuToneClass(tone)} ${apercuToneOnFillClass(tone)}`;
+  });
+
+  protected readonly fileDuJourBadgeAriaLabel = computed(() =>
+    fileDuJourBadgeLabel(this.fileDuJourStore.summary())
   );
 
   /** Section label when the previous filtered item belongs to another section. */
@@ -152,6 +193,7 @@ export class SignedInShell {
     this.jumpOpen.set(false);
     this.jumpQuery.set("");
     this.jumpActiveIndex.set(0);
+    this.paletteEntitySearch.clear();
   }
 
   protected onJumpBlur(): void {
@@ -179,6 +221,7 @@ export class SignedInShell {
       return;
     }
     this.jumpQuery.set(target.value);
+    this.paletteEntitySearch.setQuery(target.value);
     this.jumpOpen.set(true);
     this.jumpActiveIndex.set(0);
   }
