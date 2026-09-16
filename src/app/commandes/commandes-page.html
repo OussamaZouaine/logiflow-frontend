@@ -6,10 +6,7 @@
         Demandes clients à transporter. Confirmation puis dossier.
       </p>
     </div>
-    <a
-      class="pressable min-h-11 bg-pine px-4 py-2.5 text-center text-sm font-medium tracking-wide text-surface"
-      routerLink="/commandes/nouveau"
-    >
+    <a class="btn-primary pressable" routerLink="/commandes/nouveau">
       Nouvelle commande
     </a>
   </div>
@@ -30,10 +27,7 @@
   @if (commandes.isLoading()) {
   <app-list-table-skeleton [columns]="5" label="Chargement des commandes" />
   } @else if (commandes.error()) {
-  <div
-    class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
-    role="alert"
-  >
+  <div class="alert-panel" role="alert">
     <p>{{ errorMessage() }}</p>
     <button
       (click)="commandes.reload()"
@@ -72,12 +66,10 @@
     [(activeId)]="activeRowId"
     [rows]="keyboardRows()"
     aria-label="Liste des commandes — flèches pour naviguer, Entrée pour ouvrir"
-    class="overflow-x-auto border border-line bg-surface"
+    class="list-table-panel"
   >
     <table class="w-full min-w-xl text-left text-sm">
-      <thead
-        class="list-table-head"
-      >
+      <thead class="list-table-head">
         <tr>
           <th class="px-4 py-3 font-medium" scope="col">Référence</th>
           <th class="px-4 py-3 font-medium" scope="col">Date souhaitée</th>

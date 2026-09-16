@@ -45,8 +45,8 @@ describe("DossierDetailPage", () => {
         lignesMarchandise: [
           {
             classeAdr: null,
-            designation: "Palettes",
             gerbable: true,
+            marchandiseId: "dddddddd-dddd-dddd-dddd-dddddddddddd",
             nbColis: 10,
             numeroOnu: null,
             poidsKg: 500,
@@ -106,6 +106,26 @@ describe("DossierDetailPage", () => {
         totalPages: 1,
       });
     http
+      .expectOne((req) => req.url === "/api/v1/marchandises")
+      .flush({
+        content: [
+          {
+            actif: true,
+            classeAdr: null,
+            code: "MARCH-PAL",
+            famille: "Palettes",
+            gerbable: true,
+            id: "dddddddd-dddd-dddd-dddd-dddddddddddd",
+            libelle: "Palettes",
+            numeroOnu: null,
+          },
+        ],
+        pageNumber: 0,
+        pageSize: 50,
+        totalElements: 1,
+        totalPages: 1,
+      });
+    http
       .expectOne((req) => req.url === "/api/v1/commandes")
       .flush({
         content: [
@@ -133,6 +153,7 @@ describe("DossierDetailPage", () => {
     expect(compiled.textContent).not.toContain(
       "11111111-1111-1111-1111-111111111111"
     );
+    expect(compiled.textContent).toContain("MARCH-PAL — Palettes");
     expect(compiled.textContent).toContain("SITE-PARIS — Paris Nord");
     expect(compiled.textContent).toContain("SITE-LYON — Lyon Sud");
     expect(compiled.textContent).not.toContain(

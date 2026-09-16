@@ -1,50 +1,30 @@
-<div class="flex max-w-lg flex-col gap-6">
-  <div>
-    <a
-      class="pressable pressable-border inline-flex items-center border border-line px-2.5 py-1.5 text-xs font-medium text-ink"
-      routerLink="/commandes"
-    >
-      ← Commandes
-    </a>
-    <h1 class="module-page-title mt-4">
-      Nouvelle commande
-    </h1>
-    <p class="mt-1 text-sm text-muted">
-      Pas de liste clients côté API : créer un client ici, ou coller un
-      identifiant existant. Chaque commande embarque au moins une ligne liée au
-      catalogue marchandises.
-    </p>
-  </div>
+<app-form-page-header
+  description="Pas de liste clients côté API : créer un client ici, ou coller un identifiant existant. Chaque commande embarque au moins une ligne liée au catalogue marchandises."
+  listLabel="Commandes"
+  listLink="/commandes"
+  title="Nouvelle commande"
+/>
 
-  @if (marchandises.isLoading()) {
-  <p class="text-sm text-muted" role="status">Chargement du catalogue…</p>
-  } @else if (marchandisesError()) {
-  <div
-    class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
-    role="alert"
-  >
-    <p>{{ marchandisesError() }}</p>
-  </div>
-  } @else if (marchandises.hasValue()) {
-  <form (submit)="onSubmit($event)" class="flex flex-col gap-5" novalidate>
-    @if (createForm().touched() && createForm().invalid()) {
-    <div
-      class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
-      role="alert"
-    >
-      <p class="font-medium">Certains champs sont à corriger.</p>
-      <p class="mt-1 text-xs text-brake/90">
-        Consultez les messages sous chaque champ en surbrillance.
-      </p>
-    </div>
-    }
+@if (marchandises.isLoading()) {
+<p class="text-sm text-muted" role="status">Chargement du catalogue…</p>
+} @else if (marchandisesError()) {
+<div class="alert-panel" role="alert">
+  <p>{{ marchandisesError() }}</p>
+</div>
+} @else if (marchandises.hasValue()) {
+<form (submit)="onSubmit($event)" class="form-page" novalidate>
+  <app-form-validation-summary
+    [show]="createForm().touched() && createForm().invalid()"
+  />
+
+  <app-form-section title="Commande">
     <label class="flex items-center gap-2 text-sm text-ink">
       <input
         (change)="onNouveauClient($event)"
         [checked]="draft().nouveauClient"
         class="size-4 accent-pine"
         type="checkbox"
-      >
+      />
       Nouveau client
     </label>
 
@@ -60,7 +40,7 @@
         id="clientCode"
         placeholder="CLI-LYON-01"
         type="text"
-      >
+      />
       @if (showFieldError(createForm.clientCode())) {
       <p class="text-xs text-brake" role="alert">
         {{ firstFieldError(createForm.clientCode().errors()) }}
@@ -76,7 +56,7 @@
         [class]="fieldClasses(createForm.clientRaisonSociale())"
         id="clientRaisonSociale"
         type="text"
-      >
+      />
       @if (showFieldError(createForm.clientRaisonSociale())) {
       <p class="text-xs text-brake" role="alert">
         {{ firstFieldError(createForm.clientRaisonSociale().errors()) }}
@@ -94,7 +74,7 @@
         autocomplete="off"
         id="clientId"
         type="text"
-      >
+      />
       @if (showFieldError(createForm.clientId())) {
       <p class="text-xs text-brake" role="alert">
         {{ firstFieldError(createForm.clientId().errors()) }}
@@ -103,7 +83,7 @@
     </div>
     }
 
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+    <div class="form-page__coords">
       <div class="flex flex-col gap-1.5">
         <label class="text-xs font-medium text-muted" for="dateSouhaitee">
           Date souhaitée
@@ -113,7 +93,7 @@
           [class]="fieldClasses(createForm.dateSouhaitee())"
           id="dateSouhaitee"
           type="date"
-        >
+        />
         @if (showFieldError(createForm.dateSouhaitee())) {
         <p class="text-xs text-brake" role="alert">
           {{ firstFieldError(createForm.dateSouhaitee().errors()) }}
@@ -130,7 +110,7 @@
           id="montant"
           step="0.01"
           type="number"
-        >
+        />
         @if (showFieldError(createForm.montant())) {
         <p class="text-xs text-brake" role="alert">
           {{ firstFieldError(createForm.montant().errors()) }}
@@ -138,142 +118,133 @@
         }
       </div>
     </div>
+  </app-form-section>
 
-    <section class="flex flex-col gap-4 border border-line p-4">
-      <div class="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 class="text-sm font-medium text-ink">Lignes de marchandise</h2>
-        <button
-          (click)="addLigne()"
-          class="pressable pressable-border border border-line px-2.5 py-1.5 text-xs font-medium text-ink"
-          type="button"
-        >
-          Ajouter une ligne
-        </button>
-      </div>
-      @if (marchandiseOptions().length === 0) {
+  <app-form-section title="Lignes de marchandise">
+    <div class="flex flex-wrap items-baseline justify-between gap-2">
       <p class="text-sm text-muted">
-        Aucune marchandise active dans le catalogue — créez-en une côté API
-        avant d'enregistrer la commande.
+        Au moins une ligne liée au catalogue marchandises.
       </p>
-      }
-      @for (ligne of draft().lignes; track $index) {
-      <fieldset class="flex flex-col gap-4 border border-line/70 p-4">
-        <legend class="px-1 text-xs font-medium text-muted">
-          Ligne {{ $index + 1 }}
-        </legend>
+      <button
+        (click)="addLigne()"
+        class="btn-outline pressable px-2.5 py-1.5 text-xs"
+        type="button"
+      >
+        Ajouter une ligne
+      </button>
+    </div>
+    @if (marchandiseOptions().length === 0) {
+    <p class="text-sm text-muted">
+      Aucune marchandise active dans le catalogue — créez-en une côté API
+      avant d'enregistrer la commande.
+    </p>
+    }
+    @for (ligne of draft().lignes; track $index) {
+    <fieldset class="fiche-inset flex flex-col gap-4 p-4">
+      <legend class="px-1 text-xs font-medium text-muted">
+        Ligne {{ $index + 1 }}
+      </legend>
+      <div class="flex flex-col gap-1.5">
+        <label
+          class="text-xs font-medium text-muted"
+          [for]="'marchandiseId-' + $index"
+        >
+          Marchandise
+        </label>
+        <select
+          (change)="updateLigneMarchandise($index, $event)"
+          [id]="'marchandiseId-' + $index"
+          [value]="ligne.marchandiseId"
+          class="field"
+        >
+          <option disabled value="">Choisir…</option>
+          @for (marchandise of marchandiseOptions(); track marchandise.id) {
+          <option [value]="marchandise.id">
+            {{ formatMarchandiseLabel(marchandise) }}
+          </option>
+          }
+        </select>
+      </div>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div class="flex flex-col gap-1.5">
           <label
             class="text-xs font-medium text-muted"
-            [for]="'marchandiseId-' + $index"
+            [for]="'poidsKg-' + $index"
           >
-            Marchandise
+            Poids kg
           </label>
-          <select
-            (change)="updateLigneMarchandise($index, $event)"
-            [id]="'marchandiseId-' + $index"
-            [value]="ligne.marchandiseId"
-            class="min-h-11 border border-line bg-surface px-3 py-2 text-sm text-ink"
+          <input
+            (input)="updateLigneNumber($index, 'poidsKg', $event)"
+            [id]="'poidsKg-' + $index"
+            [value]="ligne.poidsKg"
+            class="field tabular-nums"
+            inputmode="decimal"
+            step="0.01"
+            type="number"
+          />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label
+            class="text-xs font-medium text-muted"
+            [for]="'volumeM3-' + $index"
           >
-            <option disabled value="">Choisir…</option>
-            @for (marchandise of marchandiseOptions(); track marchandise.id) {
-            <option [value]="marchandise.id">
-              {{ formatMarchandiseLabel(marchandise) }}
-            </option>
-            }
-          </select>
+            Volume m³
+          </label>
+          <input
+            (input)="updateLigneNumber($index, 'volumeM3', $event)"
+            [id]="'volumeM3-' + $index"
+            [value]="ligne.volumeM3"
+            class="field tabular-nums"
+            inputmode="decimal"
+            step="0.01"
+            type="number"
+          />
         </div>
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div class="flex flex-col gap-1.5">
-            <label
-              class="text-xs font-medium text-muted"
-              [for]="'poidsKg-' + $index"
-            >
-              Poids kg
-            </label>
-            <input
-              (input)="updateLigneNumber($index, 'poidsKg', $event)"
-              [id]="'poidsKg-' + $index"
-              [value]="ligne.poidsKg"
-              class="min-h-11 border border-line bg-surface px-3 py-2 text-sm text-ink tabular-nums"
-              inputmode="decimal"
-              step="0.01"
-              type="number"
-            >
-          </div>
-          <div class="flex flex-col gap-1.5">
-            <label
-              class="text-xs font-medium text-muted"
-              [for]="'volumeM3-' + $index"
-            >
-              Volume m³
-            </label>
-            <input
-              (input)="updateLigneNumber($index, 'volumeM3', $event)"
-              [id]="'volumeM3-' + $index"
-              [value]="ligne.volumeM3"
-              class="min-h-11 border border-line bg-surface px-3 py-2 text-sm text-ink tabular-nums"
-              inputmode="decimal"
-              step="0.01"
-              type="number"
-            >
-          </div>
-          <div class="flex flex-col gap-1.5">
-            <label
-              class="text-xs font-medium text-muted"
-              [for]="'nbColis-' + $index"
-            >
-              Colis
-            </label>
-            <input
-              (input)="updateLigneNumber($index, 'nbColis', $event)"
-              [id]="'nbColis-' + $index"
-              [value]="ligne.nbColis"
-              class="min-h-11 border border-line bg-surface px-3 py-2 text-sm text-ink tabular-nums"
-              inputmode="numeric"
-              step="1"
-              type="number"
-            >
-          </div>
+        <div class="flex flex-col gap-1.5">
+          <label
+            class="text-xs font-medium text-muted"
+            [for]="'nbColis-' + $index"
+          >
+            Colis
+          </label>
+          <input
+            (input)="updateLigneNumber($index, 'nbColis', $event)"
+            [id]="'nbColis-' + $index"
+            [value]="ligne.nbColis"
+            class="field tabular-nums"
+            inputmode="numeric"
+            step="1"
+            type="number"
+          />
         </div>
-        @if (draft().lignes.length > 1) {
-        <button
-          (click)="removeLigne($index)"
-          class="pressable self-start text-xs font-medium text-brake underline underline-offset-2"
-          type="button"
-        >
-          Retirer la ligne
-        </button>
-        }
-      </fieldset>
-      }
-      @if (lignesError()) {
-      <p class="text-xs text-brake" role="alert">{{ lignesError() }}</p>
-      }
-    </section>
-
-    @if (formError()) {
-    <p
-      class="border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
-      role="alert"
-    >
-      {{ formError() }}
-    </p>
-    }
-
-    <div class="flex flex-wrap gap-3">
+      </div>
+      @if (draft().lignes.length > 1) {
       <button
-        class="pressable min-h-11 bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
-        type="submit"
+        (click)="removeLigne($index)"
+        class="btn-danger-outline pressable self-start px-2.5 py-1.5 text-xs"
+        type="button"
       >
-        Enregistrer
+        Retirer la ligne
       </button>
-      <a
-        class="pressable pressable-border inline-flex min-h-11 items-center border border-line px-4 py-2.5 text-sm font-medium text-ink"
-        routerLink="/commandes"
-      >
-        Annuler
-      </a>
-    </div>
-  </form>
+      }
+    </fieldset>
+    }
+    @if (lignesError()) {
+    <p class="text-xs text-brake" role="alert">{{ lignesError() }}</p>
+    }
+  </app-form-section>
+
+  @if (formError()) {
+  <div class="alert-panel" role="alert">{{ formError() }}</div>
   }
-</div>
+
+  <app-form-actions>
+    <button class="btn-primary pressable min-h-11 px-5" type="submit">
+      Enregistrer
+    </button>
+    <a class="btn-outline pressable min-h-11 px-5" routerLink="/commandes">
+      Annuler
+    </a>
+  </app-form-actions>
+</form>
+}

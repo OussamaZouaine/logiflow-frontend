@@ -24,7 +24,7 @@ export function skeletonCellWidthClass(
   template: `
     <div
       [attr.aria-label]="label()"
-      class="overflow-x-auto border border-line bg-surface"
+      class="list-table-panel"
       role="status"
     >
       <span class="sr-only">{{ label() }}</span>
@@ -86,7 +86,7 @@ export class ListTableSkeleton {
   },
   selector: "app-map-aside-skeleton",
   template: `
-    <aside class="flex min-h-80 flex-col border border-line bg-surface">
+    <aside class="surface-panel flex min-h-80 flex-col">
       <div class="border-b border-line px-4 py-3">
         <div class="h-4 w-36 animate-pulse rounded-sm bg-secondary"></div>
         <div

@@ -1,67 +1,58 @@
-<div class="flex max-w-lg flex-col gap-6">
-  <div>
-    <a
-      class="pressable pressable-border inline-flex items-center border border-line px-2.5 py-1.5 text-xs font-medium text-ink"
-      routerLink="/utilisateurs"
-    >
-      ← Utilisateurs
-    </a>
-    <h1 class="module-page-title mt-4">
-      Nouvel utilisateur
-    </h1>
-    <p class="mt-1 text-sm text-muted">
-      Le login ne se modifie plus ensuite. Compte créé actif.
-    </p>
-  </div>
+<app-form-page-header
+  description="Le login ne se modifie plus ensuite. Compte créé actif."
+  listLabel="Utilisateurs"
+  listLink="/utilisateurs"
+  title="Nouvel utilisateur"
+/>
 
-  <form (submit)="onSubmit($event)" class="flex flex-col gap-5" novalidate>
-    @if (createForm().touched() && createForm().invalid()) {
-    <div
-      class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
-      role="alert"
+<form (submit)="onSubmit($event)" class="form-page" novalidate>
+  <app-form-validation-summary
+    [show]="createForm().touched() && createForm().invalid()"
+  />
+
+  <app-form-section title="Compte">
+    <app-form-field
+      [error]="
+        showFieldError(createForm.login())
+          ? firstFieldError(createForm.login().errors())
+          : null
+      "
+      inputId="login"
+      label="Login"
     >
-      <p class="font-medium">Certains champs sont à corriger.</p>
-      <p class="mt-1 text-xs text-brake/90">
-        Consultez les messages sous chaque champ en surbrillance.
-      </p>
-    </div>
-    }
-    <div class="flex flex-col gap-1.5">
-      <label class="text-xs font-medium text-muted" for="login">Login</label>
       <input
-        [formField]="createForm.login"
+        [attr.aria-invalid]="showFieldError(createForm.login()) || null"
         [class]="fieldClasses(createForm.login())"
+        [formField]="createForm.login"
         autocomplete="off"
         id="login"
         placeholder="marie.dupont"
         type="text"
-      >
-      @if (showFieldError(createForm.login())) {
-      <p class="text-xs text-brake" role="alert">
-        {{ firstFieldError(createForm.login().errors()) }}
-      </p>
-      }
-    </div>
+      />
+    </app-form-field>
 
-    <div class="flex flex-col gap-1.5">
-      <label class="text-xs font-medium text-muted" for="email">Email</label>
+    <app-form-field
+      [error]="
+        showFieldError(createForm.email())
+          ? firstFieldError(createForm.email().errors())
+          : null
+      "
+      inputId="email"
+      label="Email"
+    >
       <input
-        [formField]="createForm.email"
+        [attr.aria-invalid]="showFieldError(createForm.email()) || null"
         [class]="fieldClasses(createForm.email())"
+        [formField]="createForm.email"
         autocomplete="off"
         id="email"
         placeholder="marie.dupont@logiflow.tms"
         type="email"
-      >
-      @if (showFieldError(createForm.email())) {
-      <p class="text-xs text-brake" role="alert">
-        {{ firstFieldError(createForm.email().errors()) }}
-      </p>
-      }
-    </div>
+      />
+    </app-form-field>
 
-    <fieldset class="flex flex-col gap-2">
-      <legend class="text-xs font-medium text-muted">Rôles</legend>
+    <fieldset class="fiche-inset flex flex-col gap-2 p-4">
+      <legend class="px-1 text-xs font-medium text-muted">Rôles</legend>
       @for (role of roles; track role) {
       <label class="flex items-center gap-2 text-sm text-ink">
         <input
@@ -69,7 +60,7 @@
           [checked]="draft().roles.includes(role)"
           class="size-4 accent-pine"
           type="checkbox"
-        >
+        />
         {{ roleLabel(role) }}
       </label>
       }
@@ -79,29 +70,18 @@
       Au moins un rôle est obligatoire.
     </p>
     }
+  </app-form-section>
 
-    @if (formError()) {
-    <p
-      class="border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
-      role="alert"
-    >
-      {{ formError() }}
-    </p>
-    }
+  @if (formError()) {
+  <div class="alert-panel" role="alert">{{ formError() }}</div>
+  }
 
-    <div class="flex flex-wrap gap-3">
-      <button
-        class="pressable min-h-11 bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
-        type="submit"
-      >
-        Enregistrer
-      </button>
-      <a
-        class="pressable pressable-border inline-flex min-h-11 items-center border border-line px-4 py-2.5 text-sm font-medium text-ink"
-        routerLink="/utilisateurs"
-      >
-        Annuler
-      </a>
-    </div>
-  </form>
-</div>
+  <app-form-actions>
+    <button class="btn-primary pressable min-h-11 px-5" type="submit">
+      Enregistrer
+    </button>
+    <a class="btn-outline pressable min-h-11 px-5" routerLink="/utilisateurs">
+      Annuler
+    </a>
+  </app-form-actions>
+</form>

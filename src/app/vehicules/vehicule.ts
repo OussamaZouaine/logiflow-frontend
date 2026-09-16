@@ -11,23 +11,8 @@ export const VEHICULE_STATUTS = [
 ] as const;
 export type VehiculeStatut = (typeof VEHICULE_STATUTS)[number];
 
-export const DOCUMENT_TYPES = [
-  "CARTE_GRISE",
-  "ASSURANCE",
-  "CONTROLE_TECHNIQUE",
-  "ADR",
-] as const;
-export type DocumentType = (typeof DOCUMENT_TYPES)[number];
-
-export interface VehiculeDocument {
-  dateExpiration: string;
-  reference: string;
-  type: DocumentType;
-}
-
 export interface Vehicule {
   chargeUtileKg: number;
-  documents: VehiculeDocument[];
   heuresMoteur: number;
   id: string;
   immatriculation: string;
@@ -39,14 +24,9 @@ export interface Vehicule {
 
 export interface VehiculeWrite {
   chargeUtileKg: number;
-  documents: VehiculeDocument[];
   immatriculation: string;
   ptacKg: number;
   type: VehiculeType;
-}
-
-export function isDocumentType(value: string): value is DocumentType {
-  return (DOCUMENT_TYPES as readonly string[]).includes(value);
 }
 
 export function typeLabel(type: VehiculeType): string {
@@ -85,19 +65,3 @@ export function statutLabel(statut: VehiculeStatut): string {
   }
 }
 
-export function documentTypeLabel(type: DocumentType): string {
-  switch (type) {
-    case "CARTE_GRISE":
-      return "Carte grise";
-    case "ASSURANCE":
-      return "Assurance";
-    case "CONTROLE_TECHNIQUE":
-      return "Contrôle technique";
-    case "ADR":
-      return "ADR";
-    default: {
-      const _exhaustive: never = type;
-      return _exhaustive;
-    }
-  }
-}

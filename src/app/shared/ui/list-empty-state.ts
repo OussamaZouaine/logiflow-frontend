@@ -12,7 +12,7 @@ import { RouterLink } from "@angular/router";
   selector: "app-list-empty-state",
   template: `
     <div
-      class="border border-line bg-surface px-6 py-10 text-center"
+      class="surface-panel px-6 py-10 text-center"
       role="status"
     >
       <p class="text-sm font-medium text-ink">{{ title() }}</p>
@@ -24,14 +24,14 @@ import { RouterLink } from "@angular/router";
         @if (actionLink(); as link) {
         <a
           [routerLink]="link"
-          class="pressable inline-flex min-h-11 items-center bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
+          class="btn-primary pressable"
         >
           {{ label }}
         </a>
         } @else {
         <button
           (click)="action.emit()"
-          class="pressable inline-flex min-h-11 items-center border border-line bg-surface px-4 py-2.5 text-sm font-medium text-ink"
+          class="btn-outline pressable"
           type="button"
         >
           {{ label }}

@@ -55,7 +55,7 @@ export class ListStatutFilter {
 
   protected chipClass(active: boolean): string {
     return active
-      ? "pressable border border-pine/30 bg-pine/10 px-2.5 py-1 text-xs font-medium text-pine"
-      : "pressable border border-line bg-surface px-2.5 py-1 text-xs font-medium text-muted hover:border-pine/40 hover:text-ink";
+      ? "pressable rounded-md border border-pine/30 bg-pine/10 px-2.5 py-1.5 text-xs font-medium text-pine"
+      : "pressable rounded-md border border-line bg-canvas px-2.5 py-1.5 text-xs font-medium text-muted hover:border-pine/40 hover:bg-surface hover:text-ink";
   }
 }

@@ -7,12 +7,35 @@
       </p>
     </div>
     <a
-      class="pressable min-h-11 bg-pine px-4 py-2.5 text-center text-sm font-medium tracking-wide text-surface"
+      [queryParams]="vehiculeFilterId() ? { vehiculeId: vehiculeFilterId() } : null"
+      class="btn-primary pressable"
       routerLink="/maintenance/nouveau"
     >
       Nouvel ordre
     </a>
   </div>
+
+  <app-maintenance-tabs />
+
+  @if (filteredVehiculeLabel(); as immat) {
+  <p class="text-sm text-muted">
+    Filtre véhicule :
+    <a
+      [routerLink]="['/vehicules', vehiculeFilterId()]"
+      class="font-mono text-pine underline-offset-2 hover:underline"
+    >
+      {{ immat }}
+    </a>
+    ·
+    <button
+      (click)="clearFilters()"
+      class="pressable font-medium text-ink underline underline-offset-2"
+      type="button"
+    >
+      Tous les véhicules
+    </button>
+  </p>
+  }
 
   <app-list-statut-filter
     [(selected)]="statutFilter"
@@ -22,10 +45,7 @@
   @if (ordres.isLoading()) {
   <app-list-table-skeleton label="Chargement des ordres" />
   } @else if (ordres.error()) {
-  <div
-    class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
-    role="alert"
-  >
+  <div class="alert-panel" role="alert">
     <p>{{ errorMessage() }}</p>
     <button
       (click)="ordres.reload()"
@@ -55,12 +75,13 @@
     [(activeId)]="activeRowId"
     [rows]="keyboardRows()"
     aria-label="Liste des ordres — flèches pour naviguer, Entrée pour ouvrir"
-    class="overflow-x-auto border border-line bg-surface"
+    class="list-table-panel"
   >
     <table class="w-full min-w-xl text-left text-sm">
       <thead class="list-table-head">
         <tr>
           <th class="px-4 py-3 font-medium" scope="col">Identifiant</th>
+          <th class="px-4 py-3 font-medium" scope="col">Véhicule</th>
           <th class="px-4 py-3 font-medium" scope="col">Type</th>
           <th class="px-4 py-3 font-medium" scope="col">Planifié</th>
           <th class="px-4 py-3 font-medium" scope="col">Coût</th>
@@ -82,7 +103,15 @@
               [routerLink]="['/maintenance', ordre.id]"
               class="font-mono text-xs text-pine underline-offset-2 hover:underline"
             >
-              {{ ordre.id }}
+              #{{ formatOrdreShortId(ordre.id) }}
+            </a>
+          </td>
+          <td class="px-4 py-3">
+            <a
+              [routerLink]="['/vehicules', ordre.vehiculeId]"
+              class="font-mono text-xs text-pine underline-offset-2 hover:underline"
+            >
+              {{ vehiculeLabel(ordre.vehiculeId, vehiculeLookups()) }}
             </a>
           </td>
           <td class="px-4 py-3 text-ink">

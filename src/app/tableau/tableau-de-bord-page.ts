@@ -1,19 +1,31 @@
 import { httpResource } from "@angular/common/http";
 import { Component, computed, inject } from "@angular/core";
 import { RouterLink } from "@angular/router";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import {
+	lucideChevronRight,
+	lucideClipboardList,
+	lucideContainer,
+	lucideFolderOpen,
+	lucideInbox,
+	lucideMapPin,
+	lucidePackage,
+	lucideRoute,
+	lucideTruck,
+	lucideUsers,
+	lucideWrench,
+} from "@ng-icons/lucide";
 import { environment } from "../../environments/environment";
 import type { PageResponse } from "../core/api/page-response";
 import { DemoSessionService } from "../core/auth/demo-session";
 import { roleLabel } from "../core/auth/role";
 import { destinationsForRoles } from "../core/nav/work-destination";
 import type { OrdreTravail } from "../maintenance/ordre-travail";
-import { StatutChip } from "../shared/ui/statut-chip";
 import type { Site } from "../sites/site";
 import type { Utilisateur } from "../utilisateurs/utilisateur";
 import {
 	APERCU_COUNT_PAGE_SIZE,
 	type ApercuCountableId,
-	type ApercuTone,
 	apercuApiPath,
 	apercuDestinations,
 	apercuToneBorderClass,
@@ -26,6 +38,11 @@ import {
 	voyageStatutSlices,
 } from "./apercu";
 import { FileDuJourStore } from "./file-du-jour-store";
+import {
+	fileDuJourIcon,
+	fileDuJourToneCounts,
+	groupFileDuJourByTone,
+} from "./file-du-jour";
 
 export interface ApercuTile {
 	count: number | null;
@@ -37,7 +54,22 @@ export interface ApercuTile {
 }
 
 @Component({
-	imports: [RouterLink, StatutChip],
+	imports: [NgIcon, RouterLink],
+	providers: [
+		provideIcons({
+			lucideChevronRight,
+			lucideClipboardList,
+			lucideContainer,
+			lucideFolderOpen,
+			lucideInbox,
+			lucideMapPin,
+			lucidePackage,
+			lucideRoute,
+			lucideTruck,
+			lucideUsers,
+			lucideWrench,
+		}),
+	],
 	selector: "app-tableau-de-bord-page",
 	styleUrl: "./tableau-de-bord-page.css",
 	templateUrl: "./tableau-de-bord-page.html",
@@ -48,6 +80,7 @@ export class TableauDeBordPage {
 
 	protected readonly apercuToneBorderClass = apercuToneBorderClass;
 	protected readonly apercuToneClass = apercuToneClass;
+	protected readonly fileDuJourIcon = fileDuJourIcon;
 
 	protected readonly login = computed(
 		() => this.session.session()?.login ?? "",
@@ -90,6 +123,16 @@ export class TableauDeBordPage {
 
 	protected readonly fileDuJourLoading = this.fileDuJourStore.loading;
 
+	protected readonly fileDuJourSummary = this.fileDuJourStore.summary;
+
+	protected readonly fileDuJourTiers = computed(() =>
+		groupFileDuJourByTone(this.fileDuJour()),
+	);
+
+	protected readonly fileDuJourToneCounts = computed(() =>
+		fileDuJourToneCounts(this.fileDuJour()),
+	);
+
 	protected readonly tiles = computed((): ApercuTile[] =>
 		this.countableDestinations().map((destination) => {
 			switch (destination.id) {
@@ -127,6 +170,15 @@ export class TableauDeBordPage {
 		}),
 	);
 
+	protected fileDuJourSummaryAriaLabel(): string {
+		const summary = this.fileDuJourSummary();
+		if (summary.totalCount <= 0) {
+			return "";
+		}
+		const plural = summary.totalCount === 1 ? "" : "s";
+		return `${summary.totalCount} élément${plural} à traiter`;
+	}
+
 	protected tileAriaLabel(tile: ApercuTile): string {
 		if (tile.loading) {
 			return `${tile.label}, chargement. Ouvrir le module.`;
@@ -135,25 +187,6 @@ export class TableauDeBordPage {
 			return `${tile.label}, indisponible. Ouvrir le module.`;
 		}
 		return `${tile.label}, ${tile.count}. Ouvrir le module.`;
-	}
-
-	protected priorityLabel(tone: ApercuTone): string {
-		switch (tone) {
-			case "brake":
-				return "Priorité";
-			case "amber":
-				return "À risque";
-			case "ink":
-				return "Attention";
-			case "pine":
-				return "En cours";
-			case "muted":
-				return "À faire";
-			default: {
-				const _exhaustive: never = tone;
-				return _exhaustive;
-			}
-		}
 	}
 
 	private listRequest(

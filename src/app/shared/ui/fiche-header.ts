@@ -17,7 +17,7 @@ import { RouterLink } from "@angular/router";
   template: `
     <a
       [routerLink]="listLink()"
-      class="pressable pressable-border inline-flex items-center border border-line px-2.5 py-1.5 text-xs font-medium text-ink"
+      class="btn-back pressable"
     >
       ← {{ listLabel() }}
     </a>

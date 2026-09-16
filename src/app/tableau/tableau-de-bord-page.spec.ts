@@ -126,7 +126,6 @@ describe("TableauDeBordPage", () => {
         [
           {
             chargeUtileKg: 9000,
-            documents: [],
             heuresMoteur: 12,
             id: "33333333-3333-3333-3333-333333333333",
             immatriculation: "AB-123-CD",
@@ -137,7 +136,6 @@ describe("TableauDeBordPage", () => {
           },
           {
             chargeUtileKg: 8000,
-            documents: [],
             heuresMoteur: 8,
             id: "44444444-4444-4444-4444-444444444444",
             immatriculation: "EF-456-GH",
@@ -177,7 +175,6 @@ describe("TableauDeBordPage", () => {
         [
           {
             chargeUtileKg: 9000,
-            documents: [],
             heuresMoteur: 12,
             id: "33333333-3333-3333-3333-333333333333",
             immatriculation: "AB-123-CD",

@@ -1,0 +1,98 @@
+<div class="relative shrink-0">
+  <button
+    (click)="toggle()"
+    [attr.aria-expanded]="open()"
+    aria-controls="app-copilote-panel"
+    aria-haspopup="dialog"
+    class="shell-pill shell-pill--copilote pressable shrink-0"
+    type="button"
+  >
+    <ng-icon class="shell-pill-icon text-sm" name="lucideSparkles" />
+    <span class="hidden sm:inline">Copilote</span>
+  </button>
+
+  @if (open()) {
+  <div
+    aria-labelledby="app-copilote-title"
+    aria-modal="true"
+    class="shell-popover absolute top-full right-0 z-40 mt-1.5 flex w-[min(calc(100vw-2rem),24rem)] flex-col gap-3 p-4"
+    id="app-copilote-panel"
+    role="dialog"
+  >
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h2 class="text-sm font-medium text-ink" id="app-copilote-title">
+          Copilote
+        </h2>
+        <p class="mt-0.5 text-xs text-muted">
+          Question en langage naturel sur la flotte et l'exploitation.
+        </p>
+      </div>
+      <button
+        (click)="close()"
+        aria-label="Fermer le copilote"
+        class="shell-icon-btn pressable size-7 shrink-0"
+        type="button"
+      >
+        <ng-icon class="text-sm" name="lucideX" />
+      </button>
+    </div>
+
+    <form (submit)="onSubmit($event)" class="flex flex-col gap-2">
+      <label class="sr-only" for="app-copilote-question">Question</label>
+      <textarea
+        (input)="onQuestionInput($event)"
+        [attr.maxlength]="questionMaxLength"
+        [value]="question()"
+        class="control min-h-20 resize-y px-3 py-2 text-sm outline-none placeholder:text-muted"
+        id="app-copilote-question"
+        placeholder="Ex. Quels camions sont disponibles demain ?"
+        rows="3"
+      ></textarea>
+      <div class="flex items-center justify-between gap-2">
+        <p class="font-mono text-[0.65rem] tabular-nums text-muted">
+          {{ question().trim().length }} / {{ questionMaxLength }}
+        </p>
+        <button
+          [disabled]="!canSubmit() || loading()"
+          class="pressable min-h-9 rounded-md bg-pine px-3 py-1.5 text-xs font-semibold tracking-wide text-surface shadow-[0_1px_2px_oklch(0_0_0/0.06),0_4px_12px_color-mix(in_oklch,var(--color-pine)_28%,transparent)] disabled:cursor-not-allowed disabled:opacity-50"
+          type="submit"
+        >
+          {{ loading() ? "Envoi…" : "Envoyer" }}
+        </button>
+      </div>
+    </form>
+
+    @if (error()) {
+    <p
+      class="rounded-md border border-brake/25 bg-brake/5 px-3 py-2 text-xs text-brake"
+      role="alert"
+    >
+      {{ error() }}
+    </p>
+    }
+
+    @if (response(); as answer) {
+    <div class="rounded-md border border-line/80 bg-canvas px-3 py-3 text-sm">
+      <p class="whitespace-pre-wrap text-ink">{{ answer.reponse }}</p>
+      @if (formatConfiance(answer.confiance); as confianceLabel) {
+      <p class="mt-2 font-mono text-xs tabular-nums text-muted">
+        Confiance {{ confianceLabel }}
+      </p>
+      }
+      @if (answer.sources.length > 0) {
+      <ul class="mt-2 flex flex-wrap gap-1">
+        @for (source of answer.sources; track source) {
+        <li
+          class="font-mono text-[0.65rem] text-muted"
+        >
+          {{ source }}
+        </li>
+        }
+      </ul>
+      }
+    </div>
+    }
+  </div>
+  }
+</div>

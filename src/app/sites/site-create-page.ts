@@ -8,13 +8,11 @@ import {
   submit,
 } from "@angular/forms/signals";
 import { Router, RouterLink } from "@angular/router";
-import { ZardAlertComponent } from "@/shared/components/alert";
-import { ZardButtonComponent } from "@/shared/components/button";
-import { ZardInputComponent } from "@/shared/components/input";
 import { httpErrorMessage } from "../core/api/http-error";
-import { ToastService } from "../shared/ui/toast";
 import { firstFieldError } from "../core/forms/first-field-error";
-import { showFieldError } from "../core/forms/show-field-error";
+import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
+import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
+import { ToastService } from "../shared/ui/toast";
 import { draftToWrite, emptySiteDraft } from "./site";
 import { SiteApi } from "./site-api";
 import {
@@ -27,9 +25,7 @@ import {
     FormField,
     RouterLink,
     SiteLocalisationMap,
-    ZardAlertComponent,
-    ZardButtonComponent,
-    ZardInputComponent,
+    ...FORM_PAGE_IMPORTS,
   ],
   selector: "app-site-create-page",
   templateUrl: "./site-create-page.html",
@@ -41,6 +37,7 @@ export class SiteCreatePage {
 
   protected readonly firstFieldError = firstFieldError;
   protected readonly showFieldError = showFieldError;
+  protected readonly fieldClasses = fieldClasses;
   protected readonly formError = signal<string | null>(null);
 
   protected readonly draft = signal(emptySiteDraft());

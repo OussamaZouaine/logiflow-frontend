@@ -101,6 +101,7 @@ export interface VoyageDraft {
   distanceTotaleKm: number;
   dureeConduiteMin: number;
   portee: Portee;
+  remorqueId: string;
   typeVoyage: TypeVoyage;
   vehiculeId: string;
 }
@@ -128,12 +129,6 @@ export interface VoyageLookupDossier {
   volumeM3: number;
 }
 
-export interface VoyageLookupChauffeur {
-  id: string;
-  matricule: string;
-  nomComplet: string;
-}
-
 const TRANSITIONS: Record<StatutVoyage, readonly StatutVoyage[]> = {
   AFFECTE: ["EN_COURS", "ANNULE"],
   ANNULE: [],
@@ -157,6 +152,7 @@ export function emptyVoyageDraft(): VoyageDraft {
     distanceTotaleKm: 450,
     dureeConduiteMin: 360,
     portee: "NATIONAL",
+    remorqueId: "",
     typeVoyage: "SIMPLE",
     vehiculeId: "",
   };
@@ -182,7 +178,7 @@ export function draftToWrite(
     departPrevu,
     dossierIds: [...dossierIds],
     portee: draft.portee,
-    remorqueId: null,
+    remorqueId: draft.remorqueId.trim().length > 0 ? draft.remorqueId : null,
     trajet: {
       distanceTotaleKm: draft.distanceTotaleKm,
       dureeConduiteMin: draft.dureeConduiteMin,

@@ -16,6 +16,17 @@ export const SITES_ALLOWED_ROLES: readonly Role[] = [
   "COMMERCIAL",
 ];
 
+/** Catalogue référentiel — same reach as Sites. */
+export const MARCHANDISES_ALLOWED_ROLES = SITES_ALLOWED_ROLES;
+
+/** Flotte semi-remorques — same reach as Véhicules. */
+export const REMORQUES_ALLOWED_ROLES: readonly Role[] = [
+  "ADMINISTRATEUR",
+  "RESPONSABLE_EXPLOITATION",
+  "EXPLOITANT",
+  "ATELIER",
+];
+
 export const VOYAGES_PLAN_ROLES: readonly Role[] = [
   "ADMINISTRATEUR",
   "RESPONSABLE_EXPLOITATION",

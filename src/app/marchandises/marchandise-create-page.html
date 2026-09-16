@@ -1,0 +1,105 @@
+<app-form-page-header
+  description="Entrée du catalogue référentiel. Le code ne se modifie plus ensuite."
+  listLabel="Marchandises"
+  listLink="/marchandises"
+  title="Nouvelle marchandise"
+/>
+
+<form (submit)="onSubmit($event)" class="form-page" novalidate>
+  <app-form-validation-summary
+    [show]="createForm().touched() && createForm().invalid()"
+  />
+
+  <app-form-section title="Fiche">
+    <app-form-field
+      [error]="
+        showFieldError(createForm.code())
+          ? firstFieldError(createForm.code().errors())
+          : null
+      "
+      inputId="code"
+      label="Code"
+    >
+      <input
+        [attr.aria-invalid]="showFieldError(createForm.code()) || null"
+        [class]="fieldClasses(createForm.code())"
+        [formField]="createForm.code"
+        autocomplete="off"
+        id="code"
+        placeholder="PAL-EUR"
+        type="text"
+      />
+    </app-form-field>
+
+    <app-form-field
+      [error]="
+        showFieldError(createForm.libelle())
+          ? firstFieldError(createForm.libelle().errors())
+          : null
+      "
+      inputId="libelle"
+      label="Libellé"
+    >
+      <input
+        [attr.aria-invalid]="showFieldError(createForm.libelle()) || null"
+        [class]="fieldClasses(createForm.libelle())"
+        [formField]="createForm.libelle"
+        id="libelle"
+        type="text"
+      />
+    </app-form-field>
+
+    <app-form-field inputId="famille" label="Famille">
+      <input
+        [class]="fieldClasses(createForm.famille())"
+        [formField]="createForm.famille"
+        id="famille"
+        placeholder="Palettes"
+        type="text"
+      />
+    </app-form-field>
+
+    <div class="form-page__coords">
+      <app-form-field inputId="classeAdr" label="Classe ADR">
+        <input
+          [class]="fieldClasses(createForm.classeAdr())"
+          [formField]="createForm.classeAdr"
+          id="classeAdr"
+          type="text"
+        />
+      </app-form-field>
+
+      <app-form-field inputId="numeroOnu" label="Numéro ONU">
+        <input
+          [class]="fieldClasses(createForm.numeroOnu())"
+          [formField]="createForm.numeroOnu"
+          id="numeroOnu"
+          type="text"
+        />
+      </app-form-field>
+    </div>
+
+    <label class="flex items-center gap-2 text-sm text-ink">
+      <input
+        (change)="onGerbable($event)"
+        [checked]="draft().gerbable"
+        class="size-4 rounded accent-pine"
+        type="checkbox"
+      />
+      Gerbable
+    </label>
+  </app-form-section>
+
+  @if (formError()) {
+  <div class="alert-panel" role="alert">{{ formError() }}</div>
+  }
+
+  <app-form-actions>
+    <button class="btn-primary pressable min-h-11 px-5" type="submit">
+      Enregistrer
+    </button>
+    <a class="btn-outline pressable min-h-11 px-5" routerLink="/marchandises">
+      Annuler
+    </a>
+  </app-form-actions>
+</form>

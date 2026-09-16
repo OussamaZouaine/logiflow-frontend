@@ -12,11 +12,11 @@ describe("destinationsForRoles", () => {
     const labels = destinationsForRoles(["ATELIER"]).map(
       (destination) => destination.label
     );
-    expect(labels).toEqual(["Véhicules", "Maintenance"]);
+    expect(labels).toEqual(["Véhicules", "Remorques", "Maintenance"]);
   });
 
   it("gives admin every destination", () => {
-    expect(destinationsForRoles(["ADMINISTRATEUR"])).toHaveLength(7);
+    expect(destinationsForRoles(["ADMINISTRATEUR"])).toHaveLength(9);
   });
 
   it("includes Dossiers for commercial and exploitant", () => {

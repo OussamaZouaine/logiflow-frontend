@@ -6,12 +6,23 @@
         Quais de chargement et de déchargement.
       </p>
     </div>
-    <a
-      class="pressable min-h-11 bg-pine px-4 py-2.5 text-center text-sm font-medium tracking-wide text-surface"
-      routerLink="/sites/nouveau"
-    >
-      Nouveau site
-    </a>
+    <div class="flex flex-wrap items-center gap-2">
+      @if (sites.isLoading() || sites.hasValue()) {
+      <button
+        (click)="toggleMapVisible()"
+        [attr.aria-expanded]="mapVisible()"
+        [attr.aria-pressed]="mapVisible()"
+        aria-controls="sites-map-panel"
+        class="btn-outline pressable"
+        type="button"
+      >
+        {{ mapVisible() ? "Masquer la carte" : "Carte" }}
+      </button>
+      }
+      <a class="btn-primary pressable" routerLink="/sites/nouveau">
+        Nouveau site
+      </a>
+    </div>
   </div>
 
   <div class="flex flex-col gap-3">
@@ -29,15 +40,14 @@
   </div>
 
   @if (sites.isLoading()) {
-  <div class="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+  <div [class]="listWithMapLayoutClass()">
     <app-list-table-skeleton [columns]="5" label="Chargement des sites" />
+    @if (mapVisible()) {
     <app-map-aside-skeleton />
+    }
   </div>
   } @else if (sites.error()) {
-  <div
-    class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
-    role="alert"
-  >
+  <div class="alert-panel" role="alert">
     <p>{{ errorMessage() }}</p>
     <button
       (click)="sites.reload()"
@@ -71,14 +81,14 @@
     title="Aucun site pour ce filtre"
   />
   } @else if (sites.hasValue()) {
-  <div class="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+  <div [class]="listWithMapLayoutClass()">
     <div class="flex min-w-0 flex-col gap-3">
       <div
         appListRowKeyboard
         [(activeId)]="selectedSiteId"
         [rows]="keyboardRows()"
         aria-label="Liste des sites — flèches pour naviguer, Entrée pour ouvrir"
-        class="overflow-x-auto border border-line bg-surface"
+        class="list-table-panel"
       >
         <table class="w-full min-w-xl text-left text-sm">
           <thead
@@ -147,12 +157,13 @@
       />
     </div>
 
-    <aside class="flex min-h-80 flex-col border border-line bg-surface">
-      <div class="border-b border-line px-4 py-3">
+    @if (mapVisible()) {
+    <aside class="surface-panel flex min-h-80 flex-col" id="sites-map-panel">
+      <div class="border-b border-line/80 px-4 py-3">
         <h2 class="text-sm font-medium text-ink">Carte des sites</h2>
         <p class="mt-0.5 text-xs text-muted">{{ mapHint() }}</p>
       </div>
-      <div class="min-h-0 flex-1 p-2">
+      <div class="min-h-0 flex-1 p-3">
         <app-geo-markers-map
           ariaLabel="Carte des sites de la page"
           [focusId]="selectedSiteId()"
@@ -161,6 +172,7 @@
         />
       </div>
     </aside>
+    }
   </div>
   }
 </div>

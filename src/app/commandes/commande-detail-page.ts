@@ -17,6 +17,7 @@ import {
   formatMoney,
   statutCommandeLabel,
 } from "./commande";
+import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
 import { FicheHeader } from "../shared/ui/fiche-header";
 import { ToastService } from "../shared/ui/toast";
 import { StatutChip } from "../shared/ui/statut-chip";
@@ -24,7 +25,7 @@ import { commandeStatutTone } from "../tableau/apercu";
 import { CommandeApi } from "./commande-api";
 
 @Component({
-  imports: [RouterLink, FicheHeader, StatutChip],
+  imports: [RouterLink, FicheHeader, StatutChip, ...FORM_PAGE_IMPORTS],
   selector: "app-commande-detail-page",
   templateUrl: "./commande-detail-page.html",
 })

@@ -44,9 +44,15 @@ export interface SiteLocalisationCoordinates {
     }
 
     .map-host {
-      height: 28rem;
+      height: min(28rem, 50vh);
+      min-height: 16rem;
       width: 100%;
       z-index: 0;
+      overflow: hidden;
+    }
+
+    .map-host ::ng-deep .leaflet-container {
+      border-radius: inherit;
     }
 
     :host ::ng-deep .leaflet-control-attribution {
@@ -60,6 +66,7 @@ export class SiteLocalisationMap implements AfterViewInit {
 
   readonly latitude = input.required<number>();
   readonly longitude = input.required<number>();
+  readonly showHeader = input(true);
   readonly coordinatesChange = output<SiteLocalisationCoordinates>();
 
   private readonly mapHost =

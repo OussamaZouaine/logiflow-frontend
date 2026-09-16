@@ -1,4 +1,8 @@
 import type { Role } from "../auth/role";
+import type { Marchandise } from "../../marchandises/marchandise";
+import { formatMarchandiseLabel } from "../../marchandises/marchandise";
+import type { Remorque } from "../../remorques/remorque";
+import { formatRemorqueLabel } from "../../remorques/remorque";
 import type { Commande } from "../../commandes/commande";
 import { formatCommandeLabel } from "../../commandes/commande";
 import type { PageResponse } from "../api/page-response";
@@ -31,7 +35,9 @@ export interface PaletteEntitySource {
 
 const PALETTE_ENTITY_SOURCES: readonly PaletteEntitySource[] = [
   { badge: "Site", id: "sites", serverSearch: true },
+  { badge: "Marchandise", id: "marchandises", serverSearch: true },
   { badge: "Véhicule", id: "vehicules", serverSearch: true },
+  { badge: "Remorque", id: "remorques", serverSearch: true },
   { badge: "Commande", id: "commandes", serverSearch: true },
   { badge: "Dossier", id: "dossiers", serverSearch: true },
   { badge: "Voyage", id: "voyages", serverSearch: true },
@@ -88,6 +94,18 @@ export function siteToPaletteItem(
   );
 }
 
+export function marchandiseToPaletteItem(
+  source: PaletteEntitySource,
+  marchandise: Marchandise
+): PaletteItem {
+  return entityItem(
+    source,
+    formatMarchandiseLabel(marchandise),
+    `/marchandises/${marchandise.id}`,
+    [marchandise.code, marchandise.libelle, marchandise.famille ?? ""]
+  );
+}
+
 export function vehiculeToPaletteItem(
   source: PaletteEntitySource,
   vehicule: Vehicule
@@ -97,6 +115,18 @@ export function vehiculeToPaletteItem(
     vehicule.immatriculation,
     `/vehicules/${vehicule.id}`,
     [vehicule.immatriculation, vehicule.type]
+  );
+}
+
+export function remorqueToPaletteItem(
+  source: PaletteEntitySource,
+  remorque: Remorque
+): PaletteItem {
+  return entityItem(
+    source,
+    formatRemorqueLabel(remorque),
+    `/remorques/${remorque.id}`,
+    [remorque.immatriculation, remorque.carrosserie, remorque.statut]
   );
 }
 
@@ -159,12 +189,25 @@ export function paletteItemsFromPage(
       return content
         .filter((item): item is Site => typeof item === "object" && item !== null)
         .map((site) => siteToPaletteItem(source, site));
+    case "marchandises":
+      return content
+        .filter(
+          (item): item is Marchandise =>
+            typeof item === "object" && item !== null
+        )
+        .map((marchandise) => marchandiseToPaletteItem(source, marchandise));
     case "vehicules":
       return content
         .filter(
           (item): item is Vehicule => typeof item === "object" && item !== null
         )
         .map((vehicule) => vehiculeToPaletteItem(source, vehicule));
+    case "remorques":
+      return content
+        .filter(
+          (item): item is Remorque => typeof item === "object" && item !== null
+        )
+        .map((remorque) => remorqueToPaletteItem(source, remorque));
     case "commandes":
       return content
         .filter(

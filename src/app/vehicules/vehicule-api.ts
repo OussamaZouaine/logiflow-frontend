@@ -6,7 +6,7 @@ import type { Vehicule, VehiculeWrite } from "./vehicule";
 
 /**
  * Véhicule HTTP surface (no DELETE, no general PUT of plate/type/weights).
- * Updates are documents + counters only. Identity is set at create.
+ * Counter updates via PUT .../compteurs. Documents via DocumentApi.
  */
 @Service()
 export class VehiculeApi {
@@ -15,12 +15,6 @@ export class VehiculeApi {
 
   create(body: VehiculeWrite): Promise<Vehicule> {
     return firstValueFrom(this.http.post<Vehicule>(this.baseUrl, body));
-  }
-
-  updateDocuments(id: string, body: VehiculeWrite): Promise<Vehicule> {
-    return firstValueFrom(
-      this.http.put<Vehicule>(`${this.baseUrl}/${id}/documents`, body)
-    );
   }
 
   relever(

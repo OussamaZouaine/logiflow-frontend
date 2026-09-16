@@ -12,7 +12,7 @@ const TONE_CLASSES: Record<StatutTone, string> = {
 };
 
 export function statutChipClasses(tone: StatutTone): string {
-  return `inline-flex items-center border px-2 py-0.5 text-[0.7rem] font-medium tracking-wide ${TONE_CLASSES[tone]}`;
+  return `inline-flex items-center rounded-md border px-2 py-0.5 text-[0.7rem] font-medium tracking-wide ${TONE_CLASSES[tone]}`;
 }
 
 export function actifTone(actif: boolean): StatutTone {

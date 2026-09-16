@@ -185,7 +185,9 @@ describe("PaletteEntitySearchStore", () => {
     });
 
     for (const path of [
+      "marchandises",
       "vehicules",
+      "remorques",
       "commandes",
       "dossiers",
       "voyages",

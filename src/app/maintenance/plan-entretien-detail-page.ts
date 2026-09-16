@@ -1,0 +1,47 @@
+import { httpResource } from "@angular/common/http";
+import { Component, computed, inject, input } from "@angular/core";
+import { RouterLink } from "@angular/router";
+import { environment } from "../../environments/environment";
+import { httpErrorMessage } from "../core/api/http-error";
+import type { PageResponse } from "../core/api/page-response";
+import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
+import { FicheHeader } from "../shared/ui/fiche-header";
+import {
+  formatPeriodicite,
+  type PlanEntretien,
+  vehiculeLabel,
+} from "./plan-entretien";
+import type { VehiculeLookup } from "./ordre-travail";
+
+const LOOKUP_PAGE_SIZE = 50;
+
+@Component({
+  imports: [FicheHeader, RouterLink, ...FORM_PAGE_IMPORTS],
+  selector: "app-plan-entretien-detail-page",
+  templateUrl: "./plan-entretien-detail-page.html",
+})
+export class PlanEntretienDetailPage {
+  readonly id = input.required<string>();
+
+  protected readonly formatPeriodicite = formatPeriodicite;
+  protected readonly vehiculeLabel = vehiculeLabel;
+
+  protected readonly plan = httpResource<PlanEntretien>(() => ({
+    url: `${environment.apiBaseUrl}/plans-entretien/${this.id()}`,
+  }));
+
+  protected readonly vehicules = httpResource<PageResponse<VehiculeLookup>>(
+    () => ({
+      params: { page: 0, size: LOOKUP_PAGE_SIZE },
+      url: `${environment.apiBaseUrl}/vehicules`,
+    })
+  );
+
+  protected readonly vehiculeLookups = computed(
+    () => this.vehicules.value()?.content ?? []
+  );
+
+  protected readonly loadError = computed(() =>
+    httpErrorMessage(this.plan.error())
+  );
+}

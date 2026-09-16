@@ -1,9 +1,10 @@
 import { httpResource } from "@angular/common/http";
-import { Component, computed, inject, signal } from "@angular/core";
+import { Component, computed, effect, inject, signal } from "@angular/core";
 import { FormField, form, min, required, submit } from "@angular/forms/signals";
-import { Router, RouterLink } from "@angular/router";
+import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
+import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
 import { ToastService } from "../shared/ui/toast";
 import type { PageResponse } from "../core/api/page-response";
 import { firstFieldError } from "../core/forms/first-field-error";
@@ -20,12 +21,13 @@ import { OrdreTravailApi } from "./ordre-travail-api";
 const LOOKUP_PAGE_SIZE = 50;
 
 @Component({
-  imports: [FormField, RouterLink],
+  imports: [FormField, RouterLink, ...FORM_PAGE_IMPORTS],
   selector: "app-ordre-create-page",
   templateUrl: "./ordre-create-page.html",
 })
 export class OrdreCreatePage {
   private readonly api = inject(OrdreTravailApi);
+  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
 
@@ -62,6 +64,24 @@ export class OrdreCreatePage {
     });
     min(path.montant, 0, { message: "Le montant ne peut pas être négatif." });
   });
+
+  private seededVehiculeId = "";
+
+  constructor() {
+    effect(() => {
+      const vehiculeId = this.route.snapshot.queryParamMap.get("vehiculeId");
+      const options = this.vehiculeOptions();
+      if (
+        !vehiculeId ||
+        this.seededVehiculeId === vehiculeId ||
+        !options.some((entry) => entry.id === vehiculeId)
+      ) {
+        return;
+      }
+      this.seededVehiculeId = vehiculeId;
+      this.draft.update((current) => ({ ...current, vehiculeId }));
+    });
+  }
 
   protected async onSubmit(event: SubmitEvent): Promise<void> {
     event.preventDefault();

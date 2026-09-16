@@ -69,7 +69,9 @@ describe("voyageTimelineEntries", () => {
       },
     ];
 
-    const entries = voyageTimelineEntries(sampleVoyage(), evenements);
+    const entries = voyageTimelineEntries(sampleVoyage(), evenements, () =>
+      "CH-001 — Jean Martin"
+    );
     const labels = entries.map((entry) => entry.label);
 
     expect(labels).toContain("Départ prévu");
@@ -78,6 +80,9 @@ describe("voyageTimelineEntries", () => {
     expect(labels.indexOf("Affectation · Titulaire")).toBeLessThan(
       labels.indexOf("Départ prévu")
     );
+    expect(
+      entries.find((entry) => entry.label === "Affectation · Titulaire")?.detail
+    ).toBe("CH-001 — Jean Martin");
     expect(labels.some((label) => label.toLowerCase().includes("position"))).toBe(
       false
     );

@@ -1,0 +1,61 @@
+<div class="flex flex-col gap-8">
+  <app-fiche-header listLabel="Plans d'entretien" listLink="/maintenance/plans">
+    @if (plan.isLoading()) {
+    <p class="text-sm text-muted" role="status">Chargement…</p>
+    } @else if (plan.error()) {
+    <div class="alert-panel" role="alert">
+      <p>{{ loadError() }}</p>
+      <button
+        (click)="plan.reload()"
+        class="pressable mt-2 font-medium text-ink underline underline-offset-2"
+        type="button"
+      >
+        Réessayer
+      </button>
+    </div>
+    } @else if (plan.hasValue()) {
+    <h1 class="fiche-page-title">{{ plan.value().libelle }}</h1>
+    <p class="mt-1 text-sm text-muted">
+      Plan préventif — lecture seule en v1.
+    </p>
+    }
+  </app-fiche-header>
+
+  @if (plan.hasValue()) {
+  <app-form-section title="Fiche">
+    <dl class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+      <div class="sm:col-span-2">
+        <dt class="text-xs text-muted">Véhicule</dt>
+        <dd class="mt-0.5">
+          <a
+            [routerLink]="['/vehicules', plan.value().vehiculeId]"
+            class="font-mono text-xs text-pine underline-offset-2 hover:underline"
+          >
+            {{
+              vehiculeLabel(plan.value().vehiculeId, vehiculeLookups())
+            }}
+          </a>
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs text-muted">Périodicité</dt>
+        <dd class="mt-0.5 text-ink">
+          {{ formatPeriodicite(plan.value()) }}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs text-muted">Seuil alerte</dt>
+        <dd class="mt-0.5 font-mono tabular-nums text-ink">
+          {{ plan.value().seuilAlerteKm.toLocaleString("fr-FR") }} km
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs text-muted">Durée estimée</dt>
+        <dd class="mt-0.5 font-mono tabular-nums text-ink">
+          {{ plan.value().dureeEstimeeMin }} min
+        </dd>
+      </div>
+    </dl>
+  </app-form-section>
+  }
+</div>

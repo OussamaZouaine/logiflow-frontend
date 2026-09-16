@@ -48,6 +48,33 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
+        data: { roles: workDestination("marchandises").roles },
+        loadComponent: () =>
+          import("./marchandises/marchandises-page").then(
+            (module) => module.MarchandisesPage
+          ),
+        path: "marchandises",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("marchandises").roles },
+        loadComponent: () =>
+          import("./marchandises/marchandise-create-page").then(
+            (module) => module.MarchandiseCreatePage
+          ),
+        path: "marchandises/nouveau",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("marchandises").roles },
+        loadComponent: () =>
+          import("./marchandises/marchandise-detail-page").then(
+            (module) => module.MarchandiseDetailPage
+          ),
+        path: "marchandises/:id",
+      },
+      {
+        canActivate: [roleGuard],
         data: { roles: workDestination("vehicules").roles },
         loadComponent: () =>
           import("./vehicules/vehicules-page").then(
@@ -72,6 +99,33 @@ export const routes: Routes = [
             (module) => module.VehiculeDetailPage
           ),
         path: "vehicules/:id",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("remorques").roles },
+        loadComponent: () =>
+          import("./remorques/remorques-page").then(
+            (module) => module.RemorquesPage
+          ),
+        path: "remorques",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("remorques").roles },
+        loadComponent: () =>
+          import("./remorques/remorque-create-page").then(
+            (module) => module.RemorqueCreatePage
+          ),
+        path: "remorques/nouveau",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("remorques").roles },
+        loadComponent: () =>
+          import("./remorques/remorque-detail-page").then(
+            (module) => module.RemorqueDetailPage
+          ),
+        path: "remorques/:id",
       },
       {
         canActivate: [roleGuard],
@@ -115,6 +169,33 @@ export const routes: Routes = [
             (module) => module.OrdreCreatePage
           ),
         path: "maintenance/nouveau",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("maintenance").roles },
+        loadComponent: () =>
+          import("./maintenance/plans-entretien-page").then(
+            (module) => module.PlansEntretienPage
+          ),
+        path: "maintenance/plans",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("maintenance").roles },
+        loadComponent: () =>
+          import("./maintenance/plan-entretien-create-page").then(
+            (module) => module.PlanEntretienCreatePage
+          ),
+        path: "maintenance/plans/nouveau",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("maintenance").roles },
+        loadComponent: () =>
+          import("./maintenance/plan-entretien-detail-page").then(
+            (module) => module.PlanEntretienDetailPage
+          ),
+        path: "maintenance/plans/:id",
       },
       {
         canActivate: [roleGuard],

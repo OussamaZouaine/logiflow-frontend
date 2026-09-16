@@ -17,6 +17,7 @@ import {
 } from "@angular/forms/signals";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
+import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
 import { FicheHeader } from "../shared/ui/fiche-header";
 import { ToastService } from "../shared/ui/toast";
 import { firstFieldError } from "../core/forms/first-field-error";
@@ -34,7 +35,13 @@ import {
 } from "./site-localisation-map";
 
 @Component({
-  imports: [FicheHeader, FormField, SiteLocalisationMap, StatutChip],
+  imports: [
+    FicheHeader,
+    FormField,
+    SiteLocalisationMap,
+    StatutChip,
+    ...FORM_PAGE_IMPORTS,
+  ],
   selector: "app-site-detail-page",
   templateUrl: "./site-detail-page.html",
 })

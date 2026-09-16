@@ -49,6 +49,55 @@ describe("SitesPage", () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain("Entrepôt Paris Nord");
     expect(compiled.textContent).toContain("SITE-DEMO-PARIS");
+    expect(compiled.querySelector("#sites-map-panel")).toBeNull();
+    http.verify();
+  });
+
+  it("toggles the map panel on demand", async () => {
+    const fixture = TestBed.createComponent(SitesPage);
+    fixture.detectChanges();
+
+    const http = TestBed.inject(HttpTestingController);
+    http.expectOne((req) => req.url === "/api/v1/sites").flush({
+      content: [
+        {
+          actif: true,
+          adresse: "10 rue de la Logistique, 75018 Paris",
+          clientId: "11111111-1111-1111-1111-111111111111",
+          code: "SITE-DEMO-PARIS",
+          id: "22222222-2222-2222-2222-222222222222",
+          libelle: "Entrepôt Paris Nord",
+          localisation: { latitude: 48.8566, longitude: 2.3522 },
+        },
+      ],
+      pageNumber: 0,
+      pageSize: 20,
+      totalElements: 1,
+      totalPages: 1,
+    });
+
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const toggle = compiled.querySelector(
+      'button[aria-controls="sites-map-panel"]'
+    ) as HTMLButtonElement;
+
+    expect(toggle.textContent?.trim()).toBe("Carte");
+    expect(compiled.querySelector("#sites-map-panel")).toBeNull();
+
+    toggle.click();
+    fixture.detectChanges();
+
+    expect(toggle.textContent?.trim()).toBe("Masquer la carte");
+    expect(compiled.querySelector("#sites-map-panel")).not.toBeNull();
+    expect(compiled.textContent).toContain("Carte des sites");
+
+    toggle.click();
+    fixture.detectChanges();
+
+    expect(compiled.querySelector("#sites-map-panel")).toBeNull();
     http.verify();
   });
 

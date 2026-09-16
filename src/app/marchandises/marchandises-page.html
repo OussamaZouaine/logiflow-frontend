@@ -1,0 +1,135 @@
+<div class="flex flex-col gap-6">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <h1 class="module-page-title">Marchandises</h1>
+      <p class="mt-1 text-sm text-muted">
+        Catalogue référentiel pour les lignes de commande.
+      </p>
+    </div>
+    <a class="btn-primary pressable" routerLink="/marchandises/nouveau">
+      Nouvelle marchandise
+    </a>
+  </div>
+
+  <div class="flex flex-col gap-3">
+    <app-list-search-bar
+      [(draft)]="searchDraft"
+      [(query)]="search"
+      inputId="marchandise-search"
+      placeholder="Code ou libellé…"
+    />
+    <app-list-statut-filter
+      [(selected)]="actifFilter"
+      [options]="actifOptions"
+      ariaLabel="Filtrer par activité"
+    />
+  </div>
+
+  @if (marchandises.isLoading()) {
+  <app-list-table-skeleton [columns]="5" label="Chargement des marchandises" />
+  } @else if (marchandises.error()) {
+  <div class="alert-panel" role="alert">
+    <p>{{ errorMessage() }}</p>
+    <button
+      (click)="marchandises.reload()"
+      class="pressable mt-2 font-medium text-ink underline underline-offset-2"
+      type="button"
+    >
+      Réessayer
+    </button>
+  </div>
+  } @else if (marchandises.hasValue() && marchandises.value().content.length === 0) {
+  @if (search()) {
+  <app-list-empty-state
+    (action)="clearFilters()"
+    actionLabel="Effacer la recherche"
+    description="Aucune marchandise ne correspond à « {{ search() }} »."
+    title="Aucun résultat"
+  />
+  } @else {
+  <app-list-empty-state
+    actionLabel="Nouvelle marchandise"
+    actionLink="/marchandises/nouveau"
+    description="Créez la première entrée du catalogue."
+    title="Aucune marchandise en base"
+  />
+  }
+  } @else if (marchandises.hasValue() && visibleMarchandises().length === 0) {
+  <app-list-empty-state
+    (action)="clearFilters()"
+    actionLabel="Réinitialiser les filtres"
+    description="Réinitialisez la recherche ou le filtre d'activité pour revoir la liste."
+    title="Aucune marchandise pour ce filtre"
+  />
+  } @else if (marchandises.hasValue()) {
+  <div
+    appListRowKeyboard
+    [(activeId)]="activeRowId"
+    [rows]="keyboardRows()"
+    aria-label="Liste des marchandises — flèches pour naviguer, Entrée pour ouvrir"
+    class="list-table-panel"
+  >
+    <table class="w-full min-w-xl text-left text-sm">
+      <thead class="list-table-head">
+        <tr>
+          <th class="px-4 py-3 font-medium" scope="col">Code</th>
+          <th class="px-4 py-3 font-medium" scope="col">Libellé</th>
+          <th class="px-4 py-3 font-medium" scope="col">Famille</th>
+          <th class="px-4 py-3 font-medium" scope="col">Statut</th>
+          <th class="px-4 py-3 font-medium" scope="col">
+            <span class="sr-only">Actions</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (marchandise of visibleMarchandises(); track marchandise.id) {
+        <tr
+          [attr.aria-selected]="activeRowId() === marchandise.id"
+          [class.bg-pine/5]="activeRowId() === marchandise.id"
+          class="list-row border-b border-line last:border-0 hover:bg-canvas"
+        >
+          <td class="px-4 py-3">
+            <a
+              [routerLink]="['/marchandises', marchandise.id]"
+              class="font-mono text-xs text-pine underline-offset-2 hover:underline"
+            >
+              {{ marchandise.code }}
+            </a>
+          </td>
+          <td class="px-4 py-3 text-ink">{{ marchandise.libelle }}</td>
+          <td class="px-4 py-3 text-muted">
+            {{ marchandise.famille ?? "—" }}
+          </td>
+          <td class="px-4 py-3">
+            <app-statut-chip
+              [label]="actifLabel(marchandise.actif)"
+              [tone]="actifTone(marchandise.actif)"
+            />
+          </td>
+          <td class="px-4 py-3 text-right">
+            <a
+              [routerLink]="['/marchandises', marchandise.id]"
+              class="list-row-action text-sm font-medium text-pine underline-offset-2 hover:underline"
+            >
+              Ouvrir
+            </a>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (marchandises.value().totalElements) {
+  <p class="font-mono text-sm tabular-nums text-muted">
+    {{ visibleMarchandises().length }}
+    affichée(s) /
+    {{ marchandises.value().totalElements }}
+    marchandise(s)
+  </p>
+  }
+  <app-list-pagination
+    [(page)]="page"
+    [totalPages]="marchandises.value().totalPages"
+  />
+  }
+</div>

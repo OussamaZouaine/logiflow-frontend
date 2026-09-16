@@ -43,14 +43,27 @@ describe("MaintenancePage", () => {
         totalElements: 1,
         totalPages: 1,
       });
+    http
+      .expectOne((req) => req.url === "/api/v1/vehicules")
+      .flush({
+        content: [
+          {
+            id: "33333333-3333-3333-3333-333333333333",
+            immatriculation: "GP-001-AF",
+          },
+        ],
+        pageNumber: 0,
+        pageSize: 50,
+        totalElements: 1,
+        totalPages: 1,
+      });
 
     await fixture.whenStable();
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain(
-      "88888888-8888-8888-8888-888888888888"
-    );
+    expect(compiled.textContent).toContain("#888888888888");
+    expect(compiled.textContent).toContain("GP-001-AF");
     expect(compiled.textContent).toContain("Planifié");
     expect(compiled.textContent).toContain("Entretien préventif");
     http.verify();
@@ -67,6 +80,15 @@ describe("MaintenancePage", () => {
         content: [],
         pageNumber: 0,
         pageSize: 20,
+        totalElements: 0,
+        totalPages: 0,
+      });
+    http
+      .expectOne((req) => req.url === "/api/v1/vehicules")
+      .flush({
+        content: [],
+        pageNumber: 0,
+        pageSize: 50,
         totalElements: 0,
         totalPages: 0,
       });
@@ -88,6 +110,15 @@ describe("MaintenancePage", () => {
     http
       .expectOne((req) => req.url === "/api/v1/ordres-travail")
       .error(new ProgressEvent("error"));
+    http
+      .expectOne((req) => req.url === "/api/v1/vehicules")
+      .flush({
+        content: [],
+        pageNumber: 0,
+        pageSize: 50,
+        totalElements: 0,
+        totalPages: 0,
+      });
 
     await fixture.whenStable();
     fixture.detectChanges();

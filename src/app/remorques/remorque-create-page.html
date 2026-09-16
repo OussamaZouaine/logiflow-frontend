@@ -1,0 +1,111 @@
+<app-form-page-header
+  description="Immatriculation SIV et capacité utile. L'immatriculation ne se modifie plus ensuite."
+  listLabel="Remorques"
+  listLink="/remorques"
+  title="Nouvelle remorque"
+/>
+
+<form (submit)="onSubmit($event)" class="form-page" novalidate>
+  <app-form-validation-summary
+    [show]="createForm().touched() && createForm().invalid()"
+  />
+
+  <app-form-section title="Fiche">
+    <app-form-field
+      [error]="
+        showFieldError(createForm.immatriculation())
+          ? firstFieldError(createForm.immatriculation().errors())
+          : null
+      "
+      inputId="immatriculation"
+      label="Immatriculation"
+    >
+      <input
+        [attr.aria-invalid]="showFieldError(createForm.immatriculation()) || null"
+        [class]="fieldClasses(createForm.immatriculation())"
+        [formField]="createForm.immatriculation"
+        autocomplete="off"
+        id="immatriculation"
+        placeholder="AA-123-AA"
+        type="text"
+      />
+    </app-form-field>
+
+    <app-form-field
+      [error]="
+        showFieldError(createForm.carrosserie())
+          ? firstFieldError(createForm.carrosserie().errors())
+          : null
+      "
+      inputId="carrosserie"
+      label="Carrosserie"
+    >
+      <select
+        [attr.aria-invalid]="showFieldError(createForm.carrosserie()) || null"
+        [class]="fieldClasses(createForm.carrosserie())"
+        [formField]="createForm.carrosserie"
+        id="carrosserie"
+      >
+        @for (carrosserie of carrosseries; track carrosserie) {
+        <option [value]="carrosserie">
+          {{ carrosserieRequiseLabel(carrosserie) }}
+        </option>
+        }
+      </select>
+    </app-form-field>
+
+    <div class="form-page__coords">
+      <app-form-field inputId="volumeUtileM3" label="Volume utile (m³)">
+        <input
+          [class]="fieldClasses(createForm.volumeUtileM3())"
+          [formField]="createForm.volumeUtileM3"
+          id="volumeUtileM3"
+          step="0.1"
+          type="number"
+        />
+      </app-form-field>
+
+      <app-form-field inputId="chargeUtileKg" label="Charge utile (kg)">
+        <input
+          [class]="fieldClasses(createForm.chargeUtileKg())"
+          [formField]="createForm.chargeUtileKg"
+          id="chargeUtileKg"
+          step="1"
+          type="number"
+        />
+      </app-form-field>
+    </div>
+
+    <app-form-field inputId="nbPositionsPalettes" label="Positions palettes">
+      <input
+        [class]="fieldClasses(createForm.nbPositionsPalettes())"
+        [formField]="createForm.nbPositionsPalettes"
+        id="nbPositionsPalettes"
+        step="1"
+        type="number"
+      />
+    </app-form-field>
+
+    <label class="flex cursor-pointer items-center gap-2 text-sm text-ink">
+      <input
+        [formField]="createForm.groupeFroid"
+        class="size-4 accent-pine"
+        type="checkbox"
+      />
+      Groupe froid
+    </label>
+  </app-form-section>
+
+  @if (formError()) {
+  <div class="alert-panel" role="alert">{{ formError() }}</div>
+  }
+
+  <app-form-actions>
+    <button class="btn-primary pressable min-h-11 px-5" type="submit">
+      Enregistrer
+    </button>
+    <a class="btn-outline pressable min-h-11 px-5" routerLink="/remorques">
+      Annuler
+    </a>
+  </app-form-actions>
+</form>

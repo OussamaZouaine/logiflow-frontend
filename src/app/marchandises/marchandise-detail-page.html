@@ -1,0 +1,89 @@
+<div class="flex flex-col gap-8">
+  <app-fiche-header listLabel="Marchandises" listLink="/marchandises">
+    @if (marchandise.isLoading()) {
+    <p class="text-sm text-muted" role="status">Chargement…</p>
+    } @else if (marchandise.error()) {
+    <div class="alert-panel" role="alert">
+      <p>{{ loadError() }}</p>
+      <button
+        (click)="marchandise.reload()"
+        class="pressable mt-2 font-medium text-ink underline underline-offset-2"
+        type="button"
+      >
+        Réessayer
+      </button>
+    </div>
+    } @else if (marchandise.hasValue()) {
+    <div class="flex flex-wrap items-center gap-3">
+      <h1 class="fiche-page-title fiche-page-title--mono">
+        {{ marchandise.value().code }}
+      </h1>
+      <app-statut-chip
+        [label]="actifLabel(marchandise.value().actif)"
+        [tone]="actifTone(marchandise.value().actif)"
+      />
+    </div>
+    <p class="mt-1 text-sm text-muted">{{ marchandise.value().libelle }}</p>
+    }
+  </app-fiche-header>
+
+  @if (marchandise.hasValue()) {
+  <app-form-section title="Fiche">
+    <dl class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+      <div class="sm:col-span-2">
+        <dt class="text-xs text-muted">Libellé</dt>
+        <dd class="mt-0.5 text-ink">{{ marchandise.value().libelle }}</dd>
+      </div>
+      <div>
+        <dt class="text-xs text-muted">Famille</dt>
+        <dd class="mt-0.5 text-ink">
+          {{ marchandise.value().famille ?? "—" }}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs text-muted">Gerbable</dt>
+        <dd class="mt-0.5 text-ink">
+          {{ gerbableLabel(marchandise.value().gerbable) }}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs text-muted">Classe ADR</dt>
+        <dd class="mt-0.5 text-ink">
+          {{ marchandise.value().classeAdr ?? "—" }}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs text-muted">Numéro ONU</dt>
+        <dd class="mt-0.5 font-mono text-xs text-ink">
+          {{ marchandise.value().numeroOnu ?? "—" }}
+        </dd>
+      </div>
+    </dl>
+  </app-form-section>
+
+  @if (marchandise.value().actif) {
+  <app-form-section
+    description="Pas de suppression physique. Désactivation = retrait du catalogue actif."
+    title="Désactivation"
+  >
+    @if (deactivateError()) {
+    <div class="alert-panel" role="alert">
+      {{ deactivateError() }}
+    </div>
+    }
+    <button
+      (click)="desactiver()"
+      class="btn-danger-outline pressable w-fit"
+      type="button"
+    >
+      Désactiver
+    </button>
+  </app-form-section>
+  } @else {
+  <p class="max-w-lg rounded-lg border border-line/80 bg-canvas px-4 py-3 text-sm text-muted">
+    Cette marchandise est inactive et n'apparaît plus dans les sélecteurs de
+    commande.
+  </p>
+  }
+  }
+</div>

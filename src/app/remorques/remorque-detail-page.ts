@@ -1,0 +1,221 @@
+import { httpResource } from "@angular/common/http";
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+} from "@angular/core";
+import { FormField, form, min, required, submit } from "@angular/forms/signals";
+import { environment } from "../../environments/environment";
+import { httpErrorMessage } from "../core/api/http-error";
+import { firstFieldError } from "../core/forms/first-field-error";
+import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
+import { DocumentApi } from "../documents/document-api";
+import {
+  DOCUMENT_TYPES,
+  documentTypeLabel,
+  emptyDocumentUploadDraft,
+  formatDocumentExpiration,
+  isDocumentType,
+  type Document,
+} from "../documents/document";
+import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
+import { FicheHeader } from "../shared/ui/fiche-header";
+import { ToastService } from "../shared/ui/toast";
+import { StatutChip } from "../shared/ui/statut-chip";
+import {
+  remorqueCarrosserieLabel,
+  remorqueStatutLabel,
+  remorqueStatutTone,
+  type Remorque,
+} from "./remorque";
+import { RemorqueApi } from "./remorque-api";
+
+@Component({
+  imports: [FormField, FicheHeader, StatutChip, ...FORM_PAGE_IMPORTS],
+  selector: "app-remorque-detail-page",
+  templateUrl: "./remorque-detail-page.html",
+})
+export class RemorqueDetailPage {
+  private readonly api = inject(RemorqueApi);
+  private readonly documentApi = inject(DocumentApi);
+  private readonly toast = inject(ToastService);
+
+  readonly id = input.required<string>();
+
+  protected readonly documentTypes = DOCUMENT_TYPES;
+  protected readonly documentTypeLabel = documentTypeLabel;
+  protected readonly formatDocumentExpiration = formatDocumentExpiration;
+  protected readonly remorqueCarrosserieLabel = remorqueCarrosserieLabel;
+  protected readonly remorqueStatutLabel = remorqueStatutLabel;
+  protected readonly remorqueStatutTone = remorqueStatutTone;
+  protected readonly firstFieldError = firstFieldError;
+  protected readonly showFieldError = showFieldError;
+  protected readonly fieldClasses = fieldClasses;
+  protected readonly compteursError = signal<string | null>(null);
+  protected readonly uploadError = signal<string | null>(null);
+  protected readonly selectedFile = signal<File | null>(null);
+  protected readonly uploadDraft = signal(emptyDocumentUploadDraft());
+
+  protected readonly remorque = httpResource<Remorque>(() => ({
+    url: `${environment.apiBaseUrl}/remorques/${this.id()}`,
+  }));
+
+  protected readonly documents = httpResource<Document[]>(() => ({
+    params: { entiteId: this.id(), typeEntite: "REMORQUE" },
+    url: `${environment.apiBaseUrl}/documents`,
+  }));
+
+  protected readonly loadError = computed(() => {
+    const error = this.remorque.error();
+    return error ? httpErrorMessage(error) : null;
+  });
+
+  protected readonly documentsLoadError = computed(() => {
+    const error = this.documents.error();
+    return error ? httpErrorMessage(error) : null;
+  });
+
+  protected readonly compteursDraft = signal({
+    heuresGroupeFroid: 0,
+    kilometrage: 0,
+  });
+
+  protected readonly compteursForm = form(this.compteursDraft, (path) => {
+    required(path.kilometrage, { message: "Le kilométrage est obligatoire." });
+    min(path.kilometrage, 0, {
+      message: "Le kilométrage ne peut pas être négatif.",
+    });
+    required(path.heuresGroupeFroid, {
+      message: "Les heures groupe froid sont obligatoires.",
+    });
+    min(path.heuresGroupeFroid, 0, {
+      message: "Les heures groupe froid ne peuvent pas être négatives.",
+    });
+  });
+
+  private seededForId = "";
+
+  constructor() {
+    effect(() => {
+      const id = this.id();
+      const current = this.remorque.value();
+      if (!current || current.id !== id || this.seededForId === id) {
+        return;
+      }
+      this.seededForId = id;
+      this.compteursDraft.set({
+        heuresGroupeFroid: current.heuresGroupeFroid,
+        kilometrage: current.kilometrage,
+      });
+    });
+  }
+
+  protected onUploadType(event: Event): void {
+    const { target } = event;
+    if (target instanceof HTMLSelectElement && isDocumentType(target.value)) {
+      const typeDocument = target.value;
+      this.uploadDraft.update((draft) => ({
+        ...draft,
+        typeDocument,
+      }));
+    }
+  }
+
+  protected onUploadReference(event: Event): void {
+    const { target } = event;
+    if (target instanceof HTMLInputElement) {
+      this.uploadDraft.update((draft) => ({
+        ...draft,
+        reference: target.value,
+      }));
+    }
+  }
+
+  protected onUploadExpiration(event: Event): void {
+    const { target } = event;
+    if (target instanceof HTMLInputElement) {
+      this.uploadDraft.update((draft) => ({
+        ...draft,
+        dateExpiration: target.value,
+      }));
+    }
+  }
+
+  protected onFileSelected(event: Event): void {
+    const { target } = event;
+    if (target instanceof HTMLInputElement) {
+      this.selectedFile.set(target.files?.[0] ?? null);
+    }
+  }
+
+  protected async uploadDocument(event: SubmitEvent): Promise<void> {
+    event.preventDefault();
+    this.uploadError.set(null);
+
+    const file = this.selectedFile();
+    if (!file) {
+      this.uploadError.set("Choisissez un fichier à téléverser.");
+      return;
+    }
+
+    const draft = this.uploadDraft();
+    if (draft.reference.trim().length === 0) {
+      this.uploadError.set("La référence du document est obligatoire.");
+      return;
+    }
+    if (draft.dateExpiration.length === 0) {
+      this.uploadError.set("La date d'expiration est obligatoire.");
+      return;
+    }
+
+    try {
+      await this.documentApi.televerser({
+        dateExpiration: draft.dateExpiration,
+        entiteId: this.id(),
+        fichier: file,
+        reference: draft.reference.trim(),
+        typeDocument: draft.typeDocument,
+        typeEntite: "REMORQUE",
+      });
+      this.selectedFile.set(null);
+      this.uploadDraft.set(emptyDocumentUploadDraft());
+      this.documents.reload();
+      this.toast.success("Document téléversé.");
+    } catch (error) {
+      this.uploadError.set(httpErrorMessage(error));
+    }
+  }
+
+  protected async deleteDocument(documentId: string): Promise<void> {
+    this.uploadError.set(null);
+    try {
+      await this.documentApi.supprimer(documentId);
+      this.documents.reload();
+      this.toast.success("Document supprimé.");
+    } catch (error) {
+      this.uploadError.set(httpErrorMessage(error));
+    }
+  }
+
+  protected async releverCompteurs(event: SubmitEvent): Promise<void> {
+    event.preventDefault();
+    this.compteursError.set(null);
+    await submit(this.compteursForm, async () => {
+      const draft = this.compteursDraft();
+      try {
+        await this.api.relever(
+          this.id(),
+          draft.kilometrage,
+          draft.heuresGroupeFroid
+        );
+        this.remorque.reload();
+        this.toast.success("Compteurs enregistrés.");
+      } catch (error) {
+        this.compteursError.set(httpErrorMessage(error));
+      }
+    });
+  }
+}

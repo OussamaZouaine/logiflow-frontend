@@ -8,50 +8,172 @@ import {
   signal,
 } from "@angular/core";
 import { FormField, form, min, required, submit } from "@angular/forms/signals";
+import { RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
+import { DemoSessionService } from "../core/auth/demo-session";
 import { httpErrorMessage } from "../core/api/http-error";
+import type { PageResponse } from "../core/api/page-response";
+import { WORK_DESTINATIONS } from "../core/nav/work-destination";
+import { DocumentApi } from "../documents/document-api";
+import {
+  DOCUMENT_TYPES,
+  documentTypeLabel,
+  emptyDocumentUploadDraft,
+  formatDocumentExpiration,
+  isDocumentType,
+  type Document,
+} from "../documents/document";
+import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
 import { FicheHeader } from "../shared/ui/fiche-header";
 import { ToastService } from "../shared/ui/toast";
 import { StatutChip } from "../shared/ui/statut-chip";
 import { vehiculeStatutTone } from "../tableau/apercu";
 import {
-  DOCUMENT_TYPES,
-  documentTypeLabel,
-  isDocumentType,
-  statutLabel,
-  typeLabel,
-  type Vehicule,
-  type VehiculeDocument,
-} from "./vehicule";
+  formatDateTime,
+  formatMoney,
+  formatOrdreShortId,
+  statutOtLabel,
+  statutOtTone,
+  typeInterventionLabel,
+  type OrdreTravail,
+} from "../maintenance/ordre-travail";
+import {
+  draftToWrite,
+  emptyScoreSanteDraft,
+  formatDate,
+  statutSanteLabel,
+  statutSanteTone,
+  type ScoreSante,
+} from "../maintenance/score-sante";
+import { ScoreSanteApi } from "../maintenance/score-sante-api";
+import {
+  formatPeriodicite,
+  type PlanEntretien,
+} from "../maintenance/plan-entretien";
+import { statutLabel, typeLabel, type Vehicule } from "./vehicule";
 import { VehiculeApi } from "./vehicule-api";
 
 @Component({
-  imports: [FormField, FicheHeader, StatutChip],
+  imports: [FormField, FicheHeader, RouterLink, StatutChip, ...FORM_PAGE_IMPORTS],
   selector: "app-vehicule-detail-page",
   templateUrl: "./vehicule-detail-page.html",
 })
 export class VehiculeDetailPage {
   private readonly api = inject(VehiculeApi);
+  private readonly documentApi = inject(DocumentApi);
+  private readonly scoreApi = inject(ScoreSanteApi);
+  private readonly session = inject(DemoSessionService);
   private readonly toast = inject(ToastService);
 
   readonly id = input.required<string>();
 
   protected readonly documentTypes = DOCUMENT_TYPES;
   protected readonly documentTypeLabel = documentTypeLabel;
+  protected readonly formatDocumentExpiration = formatDocumentExpiration;
   protected readonly typeLabel = typeLabel;
   protected readonly statutLabel = statutLabel;
   protected readonly vehiculeStatutTone = vehiculeStatutTone;
+  protected readonly statutSanteLabel = statutSanteLabel;
+  protected readonly statutSanteTone = statutSanteTone;
+  protected readonly formatScoreDate = formatDate;
+  protected readonly formatPeriodicite = formatPeriodicite;
+  protected readonly formatDateTime = formatDateTime;
+  protected readonly formatMoney = formatMoney;
+  protected readonly formatOrdreShortId = formatOrdreShortId;
+  protected readonly typeInterventionLabel = typeInterventionLabel;
+  protected readonly statutOtLabel = statutOtLabel;
+  protected readonly statutOtTone = statutOtTone;
+
+  protected readonly canMaintenance = computed(() =>
+    this.session.hasAnyRole(WORK_DESTINATIONS.maintenance.roles)
+  );
 
   protected readonly compteursError = signal<string | null>(null);
-  protected readonly documentsError = signal<string | null>(null);
+  protected readonly uploadError = signal<string | null>(null);
+  protected readonly scoreError = signal<string | null>(null);
+  protected readonly selectedFile = signal<File | null>(null);
+  protected readonly uploadDraft = signal(emptyDocumentUploadDraft());
 
   protected readonly vehicule = httpResource<Vehicule>(() => ({
     url: `${environment.apiBaseUrl}/vehicules/${this.id()}`,
   }));
 
-  protected readonly loadError = computed(() =>
-    httpErrorMessage(this.vehicule.error())
+  protected readonly documents = httpResource<Document[]>(() => ({
+    params: { entiteId: this.id(), typeEntite: "VEHICULE" },
+    url: `${environment.apiBaseUrl}/documents`,
+  }));
+
+  protected readonly scoreSante = httpResource<ScoreSante | null>(() => ({
+    params: { vehiculeId: this.id() },
+    url: `${environment.apiBaseUrl}/scores-sante/dernier`,
+  }));
+
+  protected readonly plansEntretien = httpResource<
+    PageResponse<PlanEntretien> | undefined
+  >(() => {
+    if (!this.canMaintenance()) {
+      return undefined;
+    }
+    return {
+      params: { page: 0, size: 5, vehiculeId: this.id() },
+      url: `${environment.apiBaseUrl}/plans-entretien`,
+    };
+  });
+
+  protected readonly plansEntretienList = computed(
+    () => this.plansEntretien.value()?.content ?? []
   );
+
+  protected readonly ordresTravail = httpResource<
+    PageResponse<OrdreTravail> | undefined
+  >(() => {
+    if (!this.canMaintenance()) {
+      return undefined;
+    }
+    return {
+      params: { page: 0, size: 5, vehiculeId: this.id() },
+      url: `${environment.apiBaseUrl}/ordres-travail`,
+    };
+  });
+
+  protected readonly ordresTravailList = computed(
+    () => this.ordresTravail.value()?.content ?? []
+  );
+
+  protected readonly loadError = computed(() => {
+    const error = this.vehicule.error();
+    return error ? httpErrorMessage(error) : null;
+  });
+
+  protected readonly documentsLoadError = computed(() => {
+    const error = this.documents.error();
+    return error ? httpErrorMessage(error) : null;
+  });
+
+  protected readonly scoreLoadError = computed(() => {
+    const error = this.scoreSante.error();
+    return error ? httpErrorMessage(error) : null;
+  });
+
+  protected readonly plansLoadError = computed(() => {
+    const error = this.plansEntretien.error();
+    return error ? httpErrorMessage(error) : null;
+  });
+
+  protected readonly ordresLoadError = computed(() => {
+    const error = this.ordresTravail.error();
+    return error ? httpErrorMessage(error) : null;
+  });
+
+  protected readonly scoreDraft = signal(emptyScoreSanteDraft());
+
+  protected readonly scoreForm = form(this.scoreDraft, (path) => {
+    required(path.score, { message: "Le score est obligatoire." });
+    min(path.score, 0, { message: "Le score ne peut pas être négatif." });
+    required(path.dateEcheanceProjetee, {
+      message: "La date d'échéance est obligatoire.",
+    });
+  });
 
   protected readonly compteursDraft = signal({
     heuresMoteur: 0,
@@ -71,8 +193,6 @@ export class VehiculeDetailPage {
     });
   });
 
-  protected readonly documents = signal<VehiculeDocument[]>([]);
-
   private seededForId = "";
 
   constructor() {
@@ -83,55 +203,49 @@ export class VehiculeDetailPage {
         return;
       }
       this.seededForId = id;
-      this.applyVehicule(current);
+      this.compteursDraft.set({
+        heuresMoteur: current.heuresMoteur,
+        kilometrage: current.kilometrage,
+      });
     });
   }
 
-  protected onDocumentType(index: number, event: Event): void {
+  protected onUploadType(event: Event): void {
     const { target } = event;
-    if (target instanceof HTMLSelectElement) {
-      this.setDocumentType(index, target.value);
+    if (target instanceof HTMLSelectElement && isDocumentType(target.value)) {
+      const typeDocument = target.value;
+      this.uploadDraft.update((draft) => ({
+        ...draft,
+        typeDocument,
+      }));
     }
   }
 
-  protected onDocumentReference(index: number, event: Event): void {
-    const { target } = event;
-    if (target instanceof HTMLInputElement) {
-      this.setDocumentReference(index, target.value);
-    }
-  }
-
-  protected onDocumentExpiration(index: number, event: Event): void {
+  protected onUploadReference(event: Event): void {
     const { target } = event;
     if (target instanceof HTMLInputElement) {
-      this.setDocumentExpiration(index, target.value);
+      this.uploadDraft.update((draft) => ({
+        ...draft,
+        reference: target.value,
+      }));
     }
   }
 
-  protected addDocument(): void {
-    this.documents.update((list) => [
-      ...list,
-      { dateExpiration: "", reference: "", type: "CARTE_GRISE" },
-    ]);
-  }
-
-  protected removeDocument(index: number): void {
-    this.documents.update((list) => list.filter((_, i) => i !== index));
-  }
-
-  protected setDocumentType(index: number, value: string): void {
-    if (!isDocumentType(value)) {
-      return;
+  protected onUploadExpiration(event: Event): void {
+    const { target } = event;
+    if (target instanceof HTMLInputElement) {
+      this.uploadDraft.update((draft) => ({
+        ...draft,
+        dateExpiration: target.value,
+      }));
     }
-    this.patchDocument(index, { type: value });
   }
 
-  protected setDocumentReference(index: number, value: string): void {
-    this.patchDocument(index, { reference: value });
-  }
-
-  protected setDocumentExpiration(index: number, value: string): void {
-    this.patchDocument(index, { dateExpiration: value });
+  protected onFileSelected(event: Event): void {
+    const { target } = event;
+    if (target instanceof HTMLInputElement) {
+      this.selectedFile.set(target.files?.[0] ?? null);
+    }
   }
 
   protected async saveCompteurs(event: SubmitEvent): Promise<void> {
@@ -145,7 +259,10 @@ export class VehiculeDetailPage {
           draft.kilometrage,
           draft.heuresMoteur
         );
-        this.applyVehicule(updated);
+        this.compteursDraft.set({
+          heuresMoteur: updated.heuresMoteur,
+          kilometrage: updated.kilometrage,
+        });
         this.vehicule.reload();
         this.toast.success("Compteurs enregistrés.");
       } catch (error) {
@@ -154,56 +271,68 @@ export class VehiculeDetailPage {
     });
   }
 
-  protected async saveDocuments(): Promise<void> {
-    this.documentsError.set(null);
-    const current = this.vehicule.value();
-    if (!current) {
+  protected async uploadDocument(event: SubmitEvent): Promise<void> {
+    event.preventDefault();
+    this.uploadError.set(null);
+
+    const file = this.selectedFile();
+    if (!file) {
+      this.uploadError.set("Choisissez un fichier à téléverser.");
       return;
     }
-    const documents = this.documents();
-    const incomplete = documents.some(
-      (document) =>
-        document.reference.trim().length === 0 ||
-        document.dateExpiration.length === 0
-    );
-    if (incomplete) {
-      this.documentsError.set(
-        "Chaque document doit avoir une référence et une date d'expiration."
-      );
+
+    const draft = this.uploadDraft();
+    if (draft.reference.trim().length === 0) {
+      this.uploadError.set("La référence du document est obligatoire.");
       return;
     }
+    if (draft.dateExpiration.length === 0) {
+      this.uploadError.set("La date d'expiration est obligatoire.");
+      return;
+    }
+
     try {
-      const updated = await this.api.updateDocuments(this.id(), {
-        chargeUtileKg: current.chargeUtileKg,
-        documents: documents.map((document) => ({
-          ...document,
-          reference: document.reference.trim(),
-        })),
-        immatriculation: current.immatriculation,
-        ptacKg: current.ptacKg,
-        type: current.type,
+      await this.documentApi.televerser({
+        dateExpiration: draft.dateExpiration,
+        entiteId: this.id(),
+        fichier: file,
+        reference: draft.reference.trim(),
+        typeDocument: draft.typeDocument,
+        typeEntite: "VEHICULE",
       });
-      this.applyVehicule(updated);
-      this.vehicule.reload();
-      this.toast.success("Documents enregistrés.");
+      this.selectedFile.set(null);
+      this.uploadDraft.set(emptyDocumentUploadDraft());
+      this.documents.reload();
+      this.toast.success("Document téléversé.");
     } catch (error) {
-      this.documentsError.set(httpErrorMessage(error));
+      this.uploadError.set(httpErrorMessage(error));
     }
   }
 
-  private applyVehicule(current: Vehicule): void {
-    this.compteursDraft.set({
-      heuresMoteur: current.heuresMoteur,
-      kilometrage: current.kilometrage,
-    });
-    this.documents.set(current.documents.map((document) => ({ ...document })));
+  protected async deleteDocument(documentId: string): Promise<void> {
+    this.uploadError.set(null);
+    try {
+      await this.documentApi.supprimer(documentId);
+      this.documents.reload();
+      this.toast.success("Document supprimé.");
+    } catch (error) {
+      this.uploadError.set(httpErrorMessage(error));
+    }
   }
 
-  private patchDocument(index: number, patch: Partial<VehiculeDocument>): void {
-    this.documents.update((list) =>
-      list.map((document, i) =>
-        i === index ? { ...document, ...patch } : document
-      )
-    );
+  protected async enregistrerScore(event: SubmitEvent): Promise<void> {
+    event.preventDefault();
+    this.scoreError.set(null);
+    await submit(this.scoreForm, async () => {
+      try {
+        await this.scoreApi.calculer(
+          draftToWrite(this.id(), this.scoreDraft())
+        );
+        this.scoreSante.reload();
+        this.toast.success("Score de santé enregistré.");
+      } catch (error) {
+        this.scoreError.set(httpErrorMessage(error));
+      }
+    });
   }
 }

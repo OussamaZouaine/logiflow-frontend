@@ -3,10 +3,7 @@
     @if (commande.isLoading()) {
     <p class="text-sm text-muted" role="status">Chargement…</p>
     } @else if (commande.error()) {
-    <div
-      class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
-      role="alert"
-    >
+    <div class="alert-panel" role="alert">
       <p>{{ loadError() }}</p>
       <button
         (click)="commande.reload()"
@@ -30,11 +27,8 @@
   </app-fiche-header>
 
   @if (commande.hasValue()) {
-  <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="text-xl font-medium tracking-tight text-ink">
-      Fiche
-    </h2>
-    <dl class="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+  <app-form-section title="Fiche">
+    <dl class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
       <div>
         <dt class="text-xs text-muted">Date souhaitée</dt>
         <dd class="mt-0.5 font-mono tabular-nums text-ink">
@@ -54,18 +48,17 @@
         </dd>
       </div>
     </dl>
-  </section>
+  </app-form-section>
 
-  <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="text-xl font-medium tracking-tight text-ink">
-      Lignes de marchandise
-    </h2>
+  <app-form-section title="Lignes de marchandise">
     @if (commande.value().lignes.length === 0) {
-    <p class="mt-4 text-sm text-muted">Aucune ligne enregistrée.</p>
+    <p class="text-sm text-muted">Aucune ligne enregistrée.</p>
     } @else {
-    <ul class="mt-4 flex flex-col gap-2 text-sm">
+    <ul class="flex flex-col gap-2 text-sm">
       @for (ligne of commande.value().lignes; track $index) {
-      <li class="border border-line px-3 py-2">
+      <li
+        class="rounded-lg border border-line/80 bg-canvas px-3 py-2"
+      >
         <p class="font-medium text-ink">
           {{ marchandiseLabel(ligne.marchandiseId) }}
         </p>
@@ -77,21 +70,20 @@
       }
     </ul>
     }
-  </section>
+  </app-form-section>
 
   @if (commande.value().statut === "CONFIRMEE") {
-  <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="text-xl font-medium tracking-tight text-ink">
-      Dossiers de transport
-    </h2>
+  <app-form-section title="Dossiers de transport">
     @if (dossiersLiees.isLoading()) {
-    <p class="mt-4 text-sm text-muted" role="status">Chargement…</p>
+    <p class="text-sm text-muted" role="status">Chargement…</p>
     } @else if (dossiersList().length === 0) {
-    <p class="mt-4 text-sm text-muted">Aucun dossier pour cette commande.</p>
+    <p class="text-sm text-muted">Aucun dossier pour cette commande.</p>
     } @else {
-    <ul class="mt-4 flex flex-col gap-2 text-sm">
+    <ul class="flex flex-col gap-2 text-sm">
       @for (dossier of dossiersList(); track dossier.id) {
-      <li class="flex flex-wrap items-baseline justify-between gap-2 border border-line px-3 py-2">
+      <li
+        class="flex flex-wrap items-baseline justify-between gap-2 rounded-lg border border-line/80 bg-canvas px-3 py-2"
+      >
         <a
           [routerLink]="['/dossiers', dossier.id]"
           class="font-mono text-pine underline-offset-2 hover:underline"
@@ -107,34 +99,28 @@
     <a
       [routerLink]="['/dossiers/nouveau']"
       [queryParams]="{ commandeId: commande.value().id }"
-      class="pressable mt-4 inline-flex min-h-11 items-center bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
+      class="btn-primary pressable inline-flex w-fit"
     >
       Créer un dossier
     </a>
     }
-  </section>
+  </app-form-section>
   }
 
-  <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="text-xl font-medium tracking-tight text-ink">
-      Cycle de vie
-    </h2>
-    <p class="mt-1 text-sm text-muted">
-      Pas de suppression physique. Annulation = statut Annulée.
-    </p>
+  <app-form-section
+    description="Pas de suppression physique. Annulation = statut Annulée."
+    title="Cycle de vie"
+  >
     @if (actionError()) {
-    <p
-      class="mt-4 border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
-      role="alert"
-    >
+    <div class="alert-panel" role="alert">
       {{ actionError() }}
-    </p>
+    </div>
     }
-    <div class="mt-4 flex flex-wrap gap-2">
+    <div class="flex flex-wrap gap-2">
       @if (commande.value().statut === "RECUE") {
       <button
         (click)="confirmer()"
-        class="pressable min-h-11 bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
+        class="btn-primary pressable"
         type="button"
       >
         Confirmer
@@ -142,7 +128,7 @@
       } @if (commande.value().statut !== "ANNULEE") {
       <button
         (click)="annuler()"
-        class="pressable pressable-border min-h-11 border border-brake/40 px-4 py-2.5 text-sm font-medium text-brake"
+        class="btn-danger-outline pressable"
         type="button"
       >
         Annuler
@@ -151,6 +137,6 @@
       <p class="text-sm text-muted">Commande déjà annulée.</p>
       }
     </div>
-  </section>
+  </app-form-section>
   }
 </div>

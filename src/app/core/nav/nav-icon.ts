@@ -5,6 +5,8 @@ export const DESTINATION_NAV_ICON: Record<WorkDestinationId, string> = {
   commandes: "lucideClipboardList",
   dossiers: "lucideFolderOpen",
   maintenance: "lucideWrench",
+  marchandises: "lucidePackage",
+  remorques: "lucideContainer",
   sites: "lucideMapPin",
   utilisateurs: "lucideUsers",
   vehicules: "lucideTruck",

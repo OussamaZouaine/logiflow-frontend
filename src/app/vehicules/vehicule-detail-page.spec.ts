@@ -32,7 +32,6 @@ describe("VehiculeDetailPage", () => {
       )
       .flush({
         chargeUtileKg: 9000,
-        documents: [],
         heuresMoteur: 12,
         id: "33333333-3333-3333-3333-333333333333",
         immatriculation: "AB-123-CD",
@@ -41,6 +40,22 @@ describe("VehiculeDetailPage", () => {
         statut: "DISPONIBLE",
         type: "TRACTEUR",
       });
+    http
+      .expectOne(
+        (req) =>
+          req.url === "/api/v1/documents" &&
+          req.params.get("typeEntite") === "VEHICULE" &&
+          req.params.get("entiteId") === "33333333-3333-3333-3333-333333333333"
+      )
+      .flush([]);
+
+    http
+      .expectOne(
+        (req) =>
+          req.url === "/api/v1/scores-sante/dernier" &&
+          req.params.get("vehiculeId") === "33333333-3333-3333-3333-333333333333"
+      )
+      .flush(null);
 
     await fixture.whenStable();
     fixture.detectChanges();
@@ -48,6 +63,9 @@ describe("VehiculeDetailPage", () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain("AB-123-CD");
     expect(compiled.textContent).toContain("Compteurs");
+    expect(compiled.textContent).toContain("Score de santé");
+    expect(compiled.textContent).not.toContain("Chargement impossible.");
+    expect(compiled.textContent).toContain("Aucun document.");
     http.verify();
   });
 });

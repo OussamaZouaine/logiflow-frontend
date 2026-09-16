@@ -1,12 +1,9 @@
-<div class="flex flex-col gap-8">
+<div class="flex flex-col gap-5">
   <app-fiche-header listLabel="Sites" listLink="/sites">
     @if (site.isLoading()) {
     <p class="text-sm text-muted" role="status">Chargement…</p>
     } @else if (site.error()) {
-    <div
-      class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
-      role="alert"
-    >
+    <div class="alert-panel" role="alert">
       <p>{{ loadError() }}</p>
       <button
         (click)="site.reload()"
@@ -30,148 +27,133 @@
   </app-fiche-header>
 
   @if (site.hasValue()) {
-  <form (submit)="onSubmit($event)" class="flex flex-col gap-5" novalidate>
-    @if (editForm().touched() && editForm().invalid()) {
-    <div
-      class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
-      role="alert"
-    >
-      <p class="font-medium">Certains champs sont à corriger.</p>
-      <p class="mt-1 text-xs text-brake/90">
-        Consultez les messages sous chaque champ en surbrillance.
-      </p>
-    </div>
-    }
-
-    <app-site-localisation-map
-      (coordinatesChange)="onLocalisationChange($event)"
-      [latitude]="draft().latitude"
-      [longitude]="draft().longitude"
+  <form (submit)="onSubmit($event)" class="form-page" novalidate>
+    <app-form-validation-summary
+      [show]="editForm().touched() && editForm().invalid()"
     />
 
-    <div class="grid max-w-lg grid-cols-1 gap-5 sm:grid-cols-2">
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-muted" for="latitude">
-          Latitude
-        </label>
-        <input
-          [formField]="editForm.latitude"
-          [class]="fieldClasses(editForm.latitude())"
-          id="latitude"
-          step="0.0001"
-          type="number"
+    <div class="form-page__layout form-page__layout--split">
+      <app-form-section
+        description="Le code n'est pas modifiable."
+        title="Fiche"
+      >
+        <app-form-field
+          [error]="
+            showFieldError(editForm.libelle())
+              ? firstFieldError(editForm.libelle().errors())
+              : null
+          "
+          inputId="libelle"
+          label="Libellé"
         >
-        @if (showFieldError(editForm.latitude())) {
-        <p class="text-xs text-brake" role="alert">
-          {{ firstFieldError(editForm.latitude().errors()) }}
-        </p>
-        }
-      </div>
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-muted" for="longitude">
-          Longitude
+          <input
+            [attr.aria-invalid]="showFieldError(editForm.libelle()) || null"
+            [class]="fieldClasses(editForm.libelle())"
+            [formField]="editForm.libelle"
+            id="libelle"
+            type="text"
+          />
+        </app-form-field>
+
+        <app-form-field inputId="adresse" label="Adresse">
+          <input
+            [formField]="editForm.adresse"
+            class="field"
+            id="adresse"
+            type="text"
+          />
+        </app-form-field>
+
+        <label class="flex items-center gap-2 text-sm text-ink">
+          <input
+            (change)="onPoidsLourd($event)"
+            [checked]="draft().interditPoidsLourd"
+            class="size-4 rounded accent-pine"
+            type="checkbox"
+          >
+          Interdit aux poids lourds
         </label>
-        <input
-          [formField]="editForm.longitude"
-          [class]="fieldClasses(editForm.longitude())"
-          id="longitude"
-          step="0.0001"
-          type="number"
-        >
-        @if (showFieldError(editForm.longitude())) {
-        <p class="text-xs text-brake" role="alert">
-          {{ firstFieldError(editForm.longitude().errors()) }}
-        </p>
-        }
-      </div>
+      </app-form-section>
+
+      <app-form-section
+        description="Cliquez sur la carte ou déplacez le repère. Les coordonnées se mettent à jour automatiquement."
+        title="Localisation"
+      >
+        <app-site-localisation-map
+          (coordinatesChange)="onLocalisationChange($event)"
+          [latitude]="draft().latitude"
+          [longitude]="draft().longitude"
+          [showHeader]="false"
+        />
+
+        <div class="form-page__coords fiche-inset">
+          <app-form-field
+            [error]="
+              showFieldError(editForm.latitude())
+                ? firstFieldError(editForm.latitude().errors())
+                : null
+            "
+            inputId="latitude"
+            label="Latitude"
+          >
+            <input
+              [attr.aria-invalid]="showFieldError(editForm.latitude()) || null"
+              [class]="fieldClasses(editForm.latitude())"
+              [formField]="editForm.latitude"
+              id="latitude"
+              step="0.0001"
+              type="number"
+            />
+          </app-form-field>
+
+          <app-form-field
+            [error]="
+              showFieldError(editForm.longitude())
+                ? firstFieldError(editForm.longitude().errors())
+                : null
+            "
+            inputId="longitude"
+            label="Longitude"
+          >
+            <input
+              [attr.aria-invalid]="showFieldError(editForm.longitude()) || null"
+              [class]="fieldClasses(editForm.longitude())"
+              [formField]="editForm.longitude"
+              id="longitude"
+              step="0.0001"
+              type="number"
+            />
+          </app-form-field>
+        </div>
+      </app-form-section>
     </div>
 
-    <div class="flex max-w-lg flex-col gap-5 border border-line bg-surface p-5">
-      <h2 class="text-xl font-medium tracking-tight text-ink">
-        Fiche
-      </h2>
-      <p class="text-sm text-muted">Le code n'est pas modifiable.</p>
+    @if (formError()) {
+    <div class="alert-panel" role="alert">{{ formError() }}</div>
+    }
 
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-muted" for="libelle">
-          Libellé
-        </label>
-        <input
-          [formField]="editForm.libelle"
-          [class]="fieldClasses(editForm.libelle())"
-          id="libelle"
-          type="text"
-        >
-        @if (showFieldError(editForm.libelle())) {
-        <p class="text-xs text-brake" role="alert">
-          {{ firstFieldError(editForm.libelle().errors()) }}
-        </p>
-        }
-      </div>
-
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-muted" for="adresse">
-          Adresse
-        </label>
-        <input
-          [formField]="editForm.adresse"
-          class="field"
-          id="adresse"
-          type="text"
-        >
-      </div>
-
-      <label class="flex items-center gap-2 text-sm text-ink">
-        <input
-          (change)="onPoidsLourd($event)"
-          [checked]="draft().interditPoidsLourd"
-          class="size-4 accent-pine"
-          type="checkbox"
-        >
-        Interdit aux poids lourds
-      </label>
-
-      @if (formError()) {
-      <p
-        class="border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
-        role="alert"
-      >
-        {{ formError() }}
-      </p>
-      }
-
-      <button
-        class="pressable min-h-11 w-fit bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
-        type="submit"
-      >
+    <app-form-actions>
+      <button class="btn-primary pressable min-h-11 px-5" type="submit">
         Enregistrer
       </button>
-    </div>
+    </app-form-actions>
   </form>
 
   @if (site.value().actif) {
-  <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="text-xl font-medium tracking-tight text-ink">
-      Désactivation
-    </h2>
-    <p class="mt-1 text-sm text-muted">
-      Le site reste en base, marqué inactif. Pas de suppression physique.
-    </p>
+  <app-form-section
+    description="Le site reste en base, marqué inactif. Pas de suppression physique."
+    title="Désactivation"
+  >
     @if (deactivateError()) {
-    <p
-      class="mt-4 border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
-      role="alert"
-    >
-      {{ deactivateError() }}
-    </p>
+    <div class="alert-panel" role="alert">{{ deactivateError() }}</div>
     }
     <button
       (click)="desactiver()"
-      class="pressable pressable-border mt-4 min-h-11 border border-brake/40 px-4 py-2.5 text-sm font-medium text-brake"
+      class="btn-danger-outline pressable w-fit"
       type="button"
     >
       Désactiver
     </button>
-  </section>
+  </app-form-section>
   } }
 </div>

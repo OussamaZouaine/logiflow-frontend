@@ -48,6 +48,11 @@ export interface GeoMapMarker {
       min-height: 20rem;
       width: 100%;
       z-index: 0;
+      overflow: hidden;
+    }
+
+    .map-host ::ng-deep .leaflet-container {
+      border-radius: inherit;
     }
 
     :host ::ng-deep .leaflet-control-attribution {
@@ -58,7 +63,7 @@ export interface GeoMapMarker {
     <div
       #mapHost
       [attr.aria-label]="ariaLabel()"
-      class="map-host border border-line bg-surface"
+      class="map-host surface-panel"
       role="application"
     ></div>
   `,

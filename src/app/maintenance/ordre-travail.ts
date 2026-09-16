@@ -46,6 +46,14 @@ export interface VehiculeLookup {
   immatriculation: string;
 }
 
+export function vehiculeLabel(
+  vehiculeId: string,
+  lookups: readonly VehiculeLookup[]
+): string {
+  const match = lookups.find((entry) => entry.id === vehiculeId);
+  return match?.immatriculation ?? vehiculeId;
+}
+
 const TRANSITIONS: Record<StatutOT, readonly StatutOT[]> = {
   ANNULE: [],
   EN_COURS: ["TERMINE", "ANNULE"],
@@ -144,6 +152,27 @@ export function formatDateTime(value: string): string {
     dateStyle: "short",
     timeStyle: "short",
   });
+}
+
+/** Last UUID segment for compact ordre labels in lists and fiches. */
+export function formatOrdreShortId(id: string): string {
+  const segments = id.split("-");
+  return segments.at(-1) ?? id;
+}
+
+export function formatDureeReelleMin(minutes: number): string {
+  if (minutes <= 0) {
+    return "0 min";
+  }
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  if (hours === 0) {
+    return `${remainder} min`;
+  }
+  if (remainder === 0) {
+    return `${hours} h`;
+  }
+  return `${hours} h ${remainder} min`;
 }
 
 export function toDatetimeLocal(date: Date): string {

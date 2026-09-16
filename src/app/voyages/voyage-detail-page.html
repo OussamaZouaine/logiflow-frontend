@@ -3,10 +3,7 @@
     @if (voyage.isLoading()) {
     <p class="text-sm text-muted" role="status">Chargement…</p>
     } @else if (voyage.error()) {
-    <div
-      class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
-      role="alert"
-    >
+    <div class="alert-panel" role="alert">
       <p>{{ loadError() }}</p>
       <button
         (click)="voyage.reload()"
@@ -35,11 +32,8 @@
   </app-fiche-header>
 
   @if (voyage.hasValue()) {
-  <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="text-xl font-medium tracking-tight text-ink">
-      Fiche
-    </h2>
-    <dl class="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+  <app-form-section title="Fiche">
+    <dl class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
       <div>
         <dt class="text-xs text-muted">Départ prévu</dt>
         <dd class="mt-0.5 font-mono tabular-nums text-ink">
@@ -54,10 +48,36 @@
       </div>
       <div>
         <dt class="text-xs text-muted">Véhicule</dt>
-        <dd class="mt-0.5 font-mono text-xs text-ink">
-          {{ voyage.value().vehiculeId }}
+        <dd class="mt-0.5 text-sm text-ink">
+          <a
+            [routerLink]="['/vehicules', voyage.value().vehiculeId]"
+            class="font-mono text-xs text-pine underline-offset-2 hover:underline"
+          >
+            {{ affectedVehiculeLabel() }}
+          </a>
         </dd>
       </div>
+      @if (voyage.value().remorqueId; as remorqueId) {
+      <div>
+        <dt class="text-xs text-muted">Remorque</dt>
+        <dd class="mt-0.5 text-sm text-ink">
+          <a
+            [routerLink]="['/remorques', remorqueId]"
+            class="font-mono text-xs text-pine underline-offset-2 hover:underline"
+          >
+            {{ affectedRemorqueLabel(remorqueId) }}
+          </a>
+        </dd>
+      </div>
+      }
+      @if (titulaireChauffeurId(); as chauffeurId) {
+      <div>
+        <dt class="text-xs text-muted">Chauffeur titulaire</dt>
+        <dd class="mt-0.5 text-sm text-ink">
+          {{ chauffeurLabel(chauffeurId) }}
+        </dd>
+      </div>
+      }
       <div>
         <dt class="text-xs text-muted">Remplissage</dt>
         <dd class="mt-0.5 font-mono tabular-nums text-ink">
@@ -82,21 +102,20 @@
         </dd>
       </div>
     </dl>
-  </section>
+  </app-form-section>
 
-  <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="text-xl font-medium tracking-tight text-ink">
-      Trajet
-    </h2>
-    <p class="mt-1 font-mono text-sm tabular-nums text-muted">
+  <app-form-section title="Trajet">
+    <p class="font-mono text-sm tabular-nums text-muted">
       {{ voyage.value().trajet.distanceTotaleKm }}
       km ·
       {{ voyage.value().trajet.dureeConduiteMin }}
       min de conduite
     </p>
-    <ol class="mt-4 flex flex-col gap-3">
+    <ol class="flex flex-col gap-3">
       @for (etape of voyage.value().trajet.etapes; track etape.ordre) {
-      <li class="border-l-2 border-line pl-3 text-sm">
+      <li
+        class="rounded-lg border border-line/80 bg-canvas px-3 py-2 text-sm"
+      >
         <p class="font-medium text-ink">{{ typeEtapeLabel(etape.type) }}</p>
         <p class="font-mono text-xs tabular-nums text-muted">
           {{ formatInstant(etape.eta) }}
@@ -104,49 +123,37 @@
       </li>
       }
     </ol>
-  </section>
+  </app-form-section>
 
-
-  <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="text-xl font-medium tracking-tight text-ink">
-      Chronologie
-    </h2>
-    <p class="mt-1 text-sm text-muted">
-      Prévu, affectations et événements réels — sans historique de statut.
-    </p>
+  <app-form-section
+    description="Prévu, affectations et événements réels — sans historique de statut."
+    title="Chronologie"
+  >
     @if (evenements.isLoading() && timelineEntries().length === 0) {
-    <p class="mt-4 text-sm text-muted" role="status">
+    <p class="text-sm text-muted" role="status">
       Chargement de la chronologie…
     </p>
     } @else {
-    <div class="mt-4">
-      <app-ops-timeline [entries]="timelineEntries()" />
-    </div>
+    <app-ops-timeline [entries]="timelineEntries()" />
     }
-  </section>
+  </app-form-section>
 
-  <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="text-xl font-medium tracking-tight text-ink">
-      Statut
-    </h2>
-    <p class="mt-1 text-sm text-muted">
-      Pas de suppression physique. Annulation = statut Annulé.
-    </p>
+  <app-form-section
+    description="Pas de suppression physique. Annulation = statut Annulé."
+    title="Statut"
+  >
     @if (statutError()) {
-    <p
-      class="mt-4 border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
-      role="alert"
-    >
+    <div class="alert-panel" role="alert">
       {{ statutError() }}
-    </p>
+    </div>
     } @if (nextStatuts(voyage.value().statut).length === 0) {
-    <p class="mt-4 text-sm text-muted">Aucune transition possible.</p>
+    <p class="text-sm text-muted">Aucune transition possible.</p>
     } @else {
-    <div class="mt-4 flex flex-wrap gap-2">
+    <div class="flex flex-wrap gap-2">
       @for (statut of nextStatuts(voyage.value().statut); track statut) {
       <button
         (click)="changerStatut(statut)"
-        class="pressable pressable-border min-h-11 border border-line px-4 py-2.5 text-sm font-medium text-ink"
+        class="btn-outline pressable"
         type="button"
       >
         {{ statutVoyageLabel(statut) }}
@@ -154,24 +161,18 @@
       }
     </div>
     }
-  </section>
+  </app-form-section>
 
-  <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="text-xl font-medium tracking-tight text-ink">
-      Exécution
-    </h2>
-    <p class="mt-1 text-sm text-muted">
-      Déclarez un événement réel. Il apparaît dans la chronologie ci-dessus.
-    </p>
+  <app-form-section
+    description="Déclarez un événement réel. Il apparaît dans la chronologie ci-dessus."
+    title="Exécution"
+  >
     @if (evenements.error()) {
-    <p class="mt-4 text-sm text-brake" role="alert">{{ eventsError() }}</p>
+    <p class="text-sm text-brake" role="alert">{{ eventsError() }}</p>
     }
 
-    <form (submit)="declarerEvenement($event)" class="mt-5 flex flex-col gap-3">
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-muted" for="eventType">
-          Type d'événement
-        </label>
+    <form (submit)="declarerEvenement($event)" novalidate>
+      <app-form-field inputId="eventType" label="Type d'événement">
         <select
           (change)="onEventType($event)"
           [value]="eventType()"
@@ -182,34 +183,30 @@
           <option [value]="type">{{ typeEvenementLabel(type) }}</option>
           }
         </select>
-      </div>
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-muted" for="eventComment">
-          Commentaire
-        </label>
+      </app-form-field>
+
+      <app-form-field inputId="eventComment" label="Commentaire">
         <input
           (input)="onEventComment($event)"
           [value]="eventComment()"
           class="field"
           id="eventComment"
           type="text"
-        >
-      </div>
+        />
+      </app-form-field>
+
       @if (eventError()) {
-      <p
-        class="border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
-        role="alert"
-      >
+      <div class="alert-panel" role="alert">
         {{ eventError() }}
-      </p>
+      </div>
       }
-      <button
-        class="pressable min-h-11 w-fit bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
-        type="submit"
-      >
-        Déclarer
-      </button>
+
+      <app-form-actions>
+        <button class="btn-primary pressable min-h-11 px-5" type="submit">
+          Déclarer
+        </button>
+      </app-form-actions>
     </form>
-  </section>
+  </app-form-section>
   }
 </div>

@@ -17,11 +17,13 @@ import {
 import { NgIcon, provideIcons } from "@ng-icons/core";
 import {
   lucideClipboardList,
+  lucideContainer,
   lucideFolderOpen,
   lucideInbox,
   lucideLayoutDashboard,
   lucideMapPin,
   lucideMenu,
+  lucidePackage,
   lucideRoute,
   lucideSearch,
   lucideTruck,
@@ -50,17 +52,20 @@ import {
   type WorkDestinationId,
 } from "../core/nav/work-destination";
 import { ToastHost } from "../shared/ui/toast";
+import { CopilotePanel } from "./copilote-panel";
 
 @Component({
-  imports: [NgIcon, RouterLink, RouterLinkActive, RouterOutlet, ToastHost],
+  imports: [NgIcon, RouterLink, RouterLinkActive, RouterOutlet, ToastHost, CopilotePanel],
   providers: [
     provideIcons({
       lucideClipboardList,
+      lucideContainer,
       lucideFolderOpen,
       lucideInbox,
       lucideLayoutDashboard,
       lucideMapPin,
       lucideMenu,
+      lucidePackage,
       lucideRoute,
       lucideSearch,
       lucideTruck,
@@ -70,6 +75,7 @@ import { ToastHost } from "../shared/ui/toast";
     }),
   ],
   selector: "app-signed-in-shell",
+  styleUrl: "./signed-in-shell.css",
   templateUrl: "./signed-in-shell.html",
 })
 export class SignedInShell {

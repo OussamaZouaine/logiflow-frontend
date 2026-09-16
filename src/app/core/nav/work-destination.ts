@@ -1,12 +1,16 @@
 import {
   DOSSIERS_ALLOWED_ROLES,
+  MARCHANDISES_ALLOWED_ROLES,
+  REMORQUES_ALLOWED_ROLES,
   type Role,
   SITES_ALLOWED_ROLES,
 } from "../auth/role";
 
 export const WORK_DESTINATION_IDS = [
   "sites",
+  "marchandises",
   "vehicules",
+  "remorques",
   "commandes",
   "dossiers",
   "voyages",
@@ -63,6 +67,16 @@ export const WORK_DESTINATIONS: Record<WorkDestinationId, WorkDestination> = {
     roles: ["ADMINISTRATEUR", "RESPONSABLE_EXPLOITATION", "ATELIER"],
     section: "Atelier",
   },
+  marchandises: {
+    apiHint: "/api/v1/marchandises",
+    blurb: "Catalogue référentiel pour les lignes de commande.",
+    id: "marchandises",
+    label: "Marchandises",
+    live: true,
+    path: "marchandises",
+    roles: MARCHANDISES_ALLOWED_ROLES,
+    section: "Référentiel",
+  },
   sites: {
     apiHint: "/api/v1/sites",
     blurb: "Quais de chargement et de déchargement.",
@@ -96,6 +110,16 @@ export const WORK_DESTINATIONS: Record<WorkDestinationId, WorkDestination> = {
       "EXPLOITANT",
       "ATELIER",
     ],
+    section: "Flotte",
+  },
+  remorques: {
+    apiHint: "/api/v1/remorques",
+    blurb: "Semi-remorques, capacité, compteurs.",
+    id: "remorques",
+    label: "Remorques",
+    live: true,
+    path: "remorques",
+    roles: REMORQUES_ALLOWED_ROLES,
     section: "Flotte",
   },
   voyages: {

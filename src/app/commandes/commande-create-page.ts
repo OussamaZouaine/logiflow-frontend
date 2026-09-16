@@ -5,6 +5,7 @@ import { Router, RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
+import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
 import { ToastService } from "../shared/ui/toast";
 import { firstFieldError } from "../core/forms/first-field-error";
 import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
@@ -20,8 +21,13 @@ import { CommandeApi } from "./commande-api";
 
 const LOOKUP_PAGE_SIZE = 50;
 
+const marchandisesLookupRequest = {
+  params: { page: 0, size: LOOKUP_PAGE_SIZE },
+  url: `${environment.apiBaseUrl}/marchandises`,
+};
+
 @Component({
-  imports: [FormField, RouterLink],
+  imports: [FormField, RouterLink, ...FORM_PAGE_IMPORTS],
   selector: "app-commande-create-page",
   templateUrl: "./commande-create-page.html",
 })
@@ -37,10 +43,9 @@ export class CommandeCreatePage {
   protected readonly formError = signal<string | null>(null);
   protected readonly lignesError = signal<string | null>(null);
 
-  protected readonly marchandises = httpResource<PageResponse<Marchandise>>(() => ({
-    params: { page: 0, size: LOOKUP_PAGE_SIZE },
-    url: `${environment.apiBaseUrl}/marchandises`,
-  }));
+  protected readonly marchandises = httpResource<PageResponse<Marchandise>>(
+    () => marchandisesLookupRequest
+  );
 
   protected readonly marchandiseOptions = computed(() =>
     (this.marchandises.value()?.content ?? []).filter(
@@ -48,9 +53,10 @@ export class CommandeCreatePage {
     )
   );
 
-  protected readonly marchandisesError = computed(() =>
-    httpErrorMessage(this.marchandises.error())
-  );
+  protected readonly marchandisesError = computed(() => {
+    const error = this.marchandises.error();
+    return error ? httpErrorMessage(error) : null;
+  });
 
   protected readonly draft = signal(emptyCommandeDraft());
 

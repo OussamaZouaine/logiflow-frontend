@@ -1,5 +1,7 @@
 import { Component, inject, signal } from "@angular/core";
 import { FormField, form, required, submit } from "@angular/forms/signals";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import { lucideTruck } from "@ng-icons/lucide";
 import { Router } from "@angular/router";
 import {
   DEMO_IDENTITIES,
@@ -12,7 +14,8 @@ import { firstFieldError } from "../core/forms/first-field-error";
 import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
 
 @Component({
-  imports: [FormField],
+  imports: [FormField, NgIcon],
+  providers: [provideIcons({ lucideTruck })],
   selector: "app-sign-in-page",
   styleUrl: "./sign-in-page.css",
   templateUrl: "./sign-in-page.html",

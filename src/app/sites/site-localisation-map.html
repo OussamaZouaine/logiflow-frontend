@@ -1,4 +1,5 @@
 <section class="flex flex-col gap-2">
+  @if (showHeader()) {
   <div class="flex flex-wrap items-baseline justify-between gap-2">
     <h2 class="text-lg font-medium tracking-tight text-ink">
       Localisation
@@ -7,10 +8,11 @@
       Cliquez sur la carte ou déplacez le repère.
     </p>
   </div>
+  }
   <div
     #mapHost
     aria-label="Carte interactive pour positionner le site"
-    class="map-host border border-line bg-surface"
+    class="map-host surface-panel"
     role="application"
   ></div>
 </section>

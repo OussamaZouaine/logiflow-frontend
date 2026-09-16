@@ -9,10 +9,8 @@ import type {
 } from "./ordre-travail";
 
 /**
- * Ordre de travail HTTP surface: POST create, GET list, GET by id, PUT statut.
+ * Ordre de travail HTTP surface: POST create, PUT statut.
  * No DELETE — cancel via statut ANNULE.
- * Second statut change 500s until OrdreTravailRepositoryAdapter updates
- * in place like VehiculeRepositoryAdapter.
  */
 @Service()
 export class OrdreTravailApi {

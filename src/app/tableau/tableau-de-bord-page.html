@@ -18,63 +18,95 @@
 
   <section
     aria-label="File du jour"
-    class="flex flex-col gap-3 scroll-mt-24"
+    class="scroll-mt-24"
     id="file-du-jour"
   >
-    <div class="flex flex-col gap-1">
-      <h2 class="text-lg font-medium tracking-tight text-ink">File du jour</h2>
-      <p class="text-sm text-muted">
-        Exceptions et prochaines actions pour ce rôle.
-      </p>
-    </div>
+    <div class="file-inbox surface-panel">
+      <header class="file-inbox__head">
+        <div class="file-inbox__intro">
+          <h2 class="text-lg font-medium tracking-tight text-ink">
+            File du jour
+          </h2>
+          <p class="text-sm text-muted">
+            Exceptions et prochaines actions pour ce rôle.
+          </p>
+        </div>
 
-    @if (fileDuJourLoading()) {
-    <p class="text-sm text-muted" role="status">Chargement de la file…</p>
-    } @else if (fileDuJour().length === 0) {
-    <p
-      class="border border-line bg-surface px-4 py-3 text-sm text-muted"
-      role="status"
-    >
-      Rien à traiter pour le moment. L’Aperçu ci-dessous reste disponible.
-    </p>
-    } @else {
-    <ul class="flex flex-col gap-2">
-      @for (item of fileDuJour(); track item.id) {
-      <li>
-        <a
-          [routerLink]="item.path"
-          [class]="
-            'pressable flex items-center gap-3 border border-line border-l-4 bg-surface px-4 py-3 hover:border-pine ' +
-            apercuToneBorderClass(item.tone)
-          "
+        @if (!fileDuJourLoading() && fileDuJour().length > 0) {
+        <p
+          [attr.aria-label]="fileDuJourSummaryAriaLabel()"
+          class="file-inbox__summary"
         >
+          <span class="file-inbox__total tabular-nums">
+            {{ fileDuJourSummary().totalCount }}
+            {{ fileDuJourSummary().totalCount === 1 ? "élément" : "éléments" }}
+          </span>
+          @for (toneCount of fileDuJourToneCounts(); track toneCount.tone) {
           <span
-            class="font-mono text-2xl font-medium tracking-tight text-ink tabular-nums"
+            [class]="'file-inbox__stat file-inbox__stat--' + toneCount.tone"
           >
-            {{ item.count }}
+            <span class="tabular-nums">{{ toneCount.count }}</span>
+            {{ toneCount.label }}
           </span>
-          <span class="min-w-0 flex-1">
-            <span class="block text-sm font-medium text-ink">{{
-              item.title
-            }}</span>
-            <span class="mt-0.5 block text-xs text-muted">{{
-              item.detail
-            }}</span>
-          </span>
-          <app-statut-chip
-            [label]="priorityLabel(item.tone)"
-            [tone]="item.tone"
-          />
-        </a>
-      </li>
-      }
-    </ul>
-    }
+          }
+        </p>
+        }
+      </header>
+
+      <div class="file-inbox__body">
+        @if (fileDuJourLoading()) {
+        <p class="text-sm text-muted" role="status">Chargement de la file…</p>
+        } @else if (fileDuJour().length === 0) {
+        <p class="tableau-empty" role="status">
+          Rien à traiter pour le moment. L’Aperçu ci-dessous reste disponible.
+        </p>
+        } @else {
+        @for (tier of fileDuJourTiers(); track tier.tone) {
+        <div class="file-tier">
+          <h3 [class]="'file-tier__label file-tier__label--' + tier.tone">
+            {{ tier.label }}
+          </h3>
+          <ul
+            [class.file-tier__list--compact]="tier.compact"
+            class="file-tier__list"
+          >
+            @for (item of tier.items; track item.id) {
+            <li>
+              <a
+                [class]="
+                  'file-item pressable border-l-4 ' +
+                  apercuToneBorderClass(item.tone)
+                "
+                [routerLink]="item.path"
+              >
+                <ng-icon
+                  [name]="fileDuJourIcon(item.path)"
+                  class="file-item__icon"
+                />
+                <span class="file-item__count tabular-nums">
+                  {{ item.count }}
+                </span>
+                <span class="file-item__body">
+                  <span class="file-item__title">{{ item.title }}</span>
+                  <span class="file-item__detail">{{ item.detail }}</span>
+                </span>
+                <ng-icon class="file-item__chevron" name="lucideChevronRight" />
+              </a>
+            </li>
+            }
+          </ul>
+        </div>
+        }
+        }
+      </div>
+    </div>
   </section>
 
   @if (tiles().length > 0) {
-  <section aria-label="Aperçu" class="tableau-board flex flex-col gap-3">
-    <h2 class="text-lg font-medium tracking-tight text-ink">Aperçu</h2>
+  <section aria-label="Aperçu" class="tableau-board flex flex-col gap-4">
+    <div class="tableau-section-head">
+      <h2 class="text-lg font-medium tracking-tight text-ink">Aperçu</h2>
+    </div>
 
     <ul class="metric-grid">
       @for (tile of tiles(); track tile.path) {
@@ -102,15 +134,12 @@
 
           @if (tile.slices; as slices) {
           <div class="metric-card-foot">
-            <div
-              aria-hidden="true"
-              class="flex h-1.5 w-full overflow-hidden bg-line"
-            >
+            <div aria-hidden="true" class="metric-bar">
               @for (slice of slices; track slice.key) {
               <span
                 [class]="apercuToneClass(slice.tone)"
                 [style.flex-grow]="slice.count"
-                class="min-w-0.5"
+                class="metric-bar__segment"
               ></span>
               }
             </div>

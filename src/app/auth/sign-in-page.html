@@ -1,79 +1,81 @@
-<section class="relative min-h-dvh overflow-x-hidden bg-canvas">
-  <div aria-hidden="true" class="absolute inset-x-0 top-0 h-0.5 bg-pine"></div>
+<section class="sign-in-shell relative h-full overflow-hidden">
+  <div aria-hidden="true" class="sign-in-ambient pointer-events-none absolute inset-0">
+    <div class="sign-in-ambient__glow sign-in-ambient__glow--pine"></div>
+    <div class="sign-in-ambient__glow sign-in-ambient__glow--warm"></div>
+    <div class="sign-in-ambient__grid"></div>
+  </div>
 
   <div
-    class="mx-auto flex min-h-dvh w-full max-w-5xl flex-col items-center justify-start gap-8 px-4 py-10 sm:px-6 sm:py-12 lg:flex-row lg:items-center lg:justify-center lg:gap-8 lg:px-8 lg:py-12"
+    class="sign-in-layout relative mx-auto flex h-full w-full max-w-lg flex-col items-center justify-center gap-6 px-4 py-5 sm:gap-7 sm:px-6 sm:py-6"
   >
-    <header
-      class="sign-in-copy mx-auto w-full max-w-lg shrink-0 lg:mx-0 lg:max-w-80"
-    >
-      <p
-        class="text-[0.7rem] font-medium tracking-[0.22em] text-pine uppercase"
+    <header class="sign-in-copy flex flex-col items-center text-center">
+      <div
+        class="sign-in-mark mb-4 flex size-12 items-center justify-center rounded-2xl bg-pine text-surface shadow-[0_1px_2px_oklch(0_0_0/0.06),0_8px_20px_oklch(0.21_0.04_160/0.28)] sm:mb-5 sm:size-14"
       >
+        <ng-icon class="text-2xl" name="lucideTruck" />
+      </div>
+      <p class="text-[0.68rem] font-medium tracking-[0.24em] text-pine uppercase">
         Fret routier
       </p>
       <h1
-        class="font-display mt-3 text-4xl leading-[1.08] font-medium tracking-tight text-ink sm:text-5xl"
+        class="font-display mt-2 text-4xl leading-[1.06] font-medium tracking-tight text-ink sm:text-[2.65rem]"
       >
         LogiFlow
       </h1>
-      <p
-        class="mt-3 max-w-md text-sm leading-relaxed text-muted sm:text-[0.95rem] lg:max-w-none"
-      >
+      <p class="mt-3 max-w-xs text-sm leading-relaxed text-muted">
         Ouvrir la vacation. Véhicules, quais, tournées — un identifiant, puis le
         parquet d'exploitation.
       </p>
     </header>
 
-    <div
-      class="sign-in-panel mx-auto w-full min-w-0 max-w-lg lg:mx-0 lg:border-l lg:border-line lg:pl-8"
-    >
-      <div class="border border-line bg-surface p-5 sm:p-7 md:p-8">
-        <h2
-          class="text-xl font-medium tracking-tight text-ink sm:text-2xl"
-        >
-          Connexion
-        </h2>
-        <p class="mt-1.5 text-sm text-muted">
-          Comptes démo — mot de passe
-          <span class="font-mono text-ink">{{ demoPassword }}</span>
-        </p>
-
-        <div class="mt-5 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-          @for (identity of identities; track identity.login) {
-          <button
-            (click)="fillIdentity(identity)"
-            class="pressable pressable-border flex min-h-11 min-w-0 items-baseline gap-1.5 border border-line bg-canvas px-2.5 py-2 text-left"
-            type="button"
-          >
-            <span class="font-mono text-[0.7rem] text-ink"
-              >{{ identity.login }}</span
-            >
-            <span class="truncate text-[0.7rem] text-muted"
-              >{{ roleLabel(identity.role) }}</span
-            >
-          </button>
-          }
+    <div class="sign-in-panel w-full min-w-0">
+      <div class="sign-in-card">
+        <div class="sign-in-card__header">
+          <h2 class="text-lg font-semibold tracking-tight text-ink">
+            Connexion
+          </h2>
+          <p class="mt-1 text-sm text-muted">
+            Comptes démo — mot de passe
+            <span class="sign-in-demo-code font-mono text-ink">{{ demoPassword }}</span>
+          </p>
         </div>
 
-        <form (submit)="onSubmit($event)" class="mt-7 flex flex-col gap-5" novalidate>
+        <div class="sign-in-card__section sign-in-card__section--choices">
+          <p class="sign-in-section-label">Comptes rapides</p>
+          <div class="sign-in-chips">
+            @for (identity of identities; track identity.login) {
+            <button
+              (click)="fillIdentity(identity)"
+              class="sign-in-chip pressable"
+              type="button"
+            >
+              <span class="sign-in-chip__login font-mono font-medium text-ink">
+                {{ identity.login }}
+              </span>
+              <span class="sign-in-chip__role text-muted">
+                {{ roleLabel(identity.role) }}
+              </span>
+            </button>
+            }
+          </div>
+        </div>
+
+        <form (submit)="onSubmit($event)" class="sign-in-card__section sign-in-card__section--form flex flex-col gap-5" novalidate>
           @if (signInForm().touched() && signInForm().invalid()) {
-          <div
-            class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
-            role="alert"
-          >
+          <div class="sign-in-alert" role="alert">
             <p class="font-medium">Identifiant ou mot de passe manquant.</p>
           </div>
           }
           <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-medium text-muted" for="login">
+            <label class="sign-in-section-label" for="login">
               Identifiant
             </label>
             <input
               [formField]="signInForm.login"
-              [class]="fieldClasses(signInForm.login())"
+              [class]="fieldClasses(signInForm.login(), 'sign-in-field')"
               autocomplete="username"
               id="login"
+              placeholder="ex. admin"
               type="text"
             >
             @if (showFieldError(signInForm.login())) {
@@ -84,14 +86,15 @@
           </div>
 
           <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-medium text-muted" for="password">
+            <label class="sign-in-section-label" for="password">
               Mot de passe
             </label>
             <input
               [formField]="signInForm.password"
-              [class]="fieldClasses(signInForm.password())"
+              [class]="fieldClasses(signInForm.password(), 'sign-in-field')"
               autocomplete="current-password"
               id="password"
+              placeholder="••••••••"
               type="password"
             >
             @if (showFieldError(signInForm.password())) {
@@ -102,18 +105,12 @@
           </div>
 
           @if (authError()) {
-          <p
-            class="auth-error border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
-            role="alert"
-          >
+          <p class="auth-error sign-in-alert" role="alert">
             {{ authError() }}
           </p>
           }
 
-          <button
-            class="pressable mt-1 min-h-11 bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
-            type="submit"
-          >
+          <button class="sign-in-submit pressable" type="submit">
             Entrer
           </button>
         </form>

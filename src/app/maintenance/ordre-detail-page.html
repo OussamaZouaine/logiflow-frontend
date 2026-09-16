@@ -3,10 +3,7 @@
     @if (ordre.isLoading()) {
     <p class="text-sm text-muted" role="status">Chargement…</p>
     } @else if (ordre.error()) {
-    <div
-      class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
-      role="alert"
-    >
+    <div class="alert-panel" role="alert">
       <p>{{ loadError() }}</p>
       <button
         (click)="ordre.reload()"
@@ -18,26 +15,24 @@
     </div>
     } @else if (ordre.hasValue()) {
     <div class="flex flex-wrap items-center gap-3">
-      <h1 class="fiche-page-title fiche-page-title--mono">
-        {{ ordre.value().id }}
+      <h1 class="fiche-page-title">
+        {{ typeInterventionLabel(ordre.value().type) }}
       </h1>
       <app-statut-chip
         [label]="statutOtLabel(ordre.value().statut)"
         [tone]="statutOtTone(ordre.value().statut)"
       />
     </div>
-    <p class="mt-1 text-sm text-muted">
-      {{ typeInterventionLabel(ordre.value().type) }}
+    <p class="mt-1 font-mono text-sm tabular-nums text-muted">
+      #{{ formatOrdreShortId(ordre.value().id) }}
+      · planifié le {{ formatDateTime(ordre.value().datePlanifiee) }}
     </p>
     }
   </app-fiche-header>
 
   @if (ordre.hasValue()) {
-  <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="text-xl font-medium tracking-tight text-ink">
-      Fiche
-    </h2>
-    <dl class="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+  <app-form-section title="Fiche">
+    <dl class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
       <div>
         <dt class="text-xs text-muted">Planifié</dt>
         <dd class="mt-0.5 font-mono tabular-nums text-ink">
@@ -50,37 +45,55 @@
           {{ formatMoney(ordre.value().cout) }}
         </dd>
       </div>
+      @if (ordre.value().statut === "TERMINE") {
+      <div>
+        <dt class="text-xs text-muted">Durée réelle</dt>
+        <dd class="mt-0.5 font-mono tabular-nums text-ink">
+          {{ formatDureeReelleMin(ordre.value().dureeReelleMin) }}
+        </dd>
+      </div>
+      }
       <div class="sm:col-span-2">
         <dt class="text-xs text-muted">Véhicule</dt>
-        <dd class="mt-0.5 font-mono text-xs text-ink">
-          {{ ordre.value().vehiculeId }}
+        <dd class="mt-0.5">
+          @if (vehicules.isLoading()) {
+          <span class="text-sm text-muted">Chargement…</span>
+          } @else if (vehicules.error()) {
+          <span class="font-mono text-sm text-muted">
+            {{ vehiculeDisplay().label }}
+          </span>
+          <p class="mt-1 text-xs text-brake" role="alert">
+            {{ vehiculeLoadError() }}
+          </p>
+          } @else {
+          <a
+            [routerLink]="['/vehicules', vehiculeDisplay().id]"
+            class="font-mono text-sm text-pine underline-offset-2 hover:underline"
+          >
+            {{ vehiculeDisplay().label }}
+          </a>
+          }
         </dd>
       </div>
     </dl>
-  </section>
+  </app-form-section>
 
-  <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="text-xl font-medium tracking-tight text-ink">
-      Statut
-    </h2>
-    <p class="mt-1 text-sm text-muted">
-      Pas de suppression physique. Annulation = statut Annulé.
-    </p>
+  <app-form-section
+    description="Pas de suppression physique. Annulation = statut Annulé."
+    title="Statut"
+  >
     @if (statutError()) {
-    <p
-      class="mt-4 border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
-      role="alert"
-    >
+    <div class="alert-panel" role="alert">
       {{ statutError() }}
-    </p>
+    </div>
     } @if (nextStatuts(ordre.value().statut).length === 0) {
-    <p class="mt-4 text-sm text-muted">Aucune transition possible.</p>
+    <p class="text-sm text-muted">Aucune transition possible.</p>
     } @else {
-    <div class="mt-4 flex flex-wrap gap-2">
+    <div class="flex flex-wrap gap-2">
       @for (statut of nextStatuts(ordre.value().statut); track statut) {
       <button
         (click)="changerStatut(statut)"
-        class="pressable pressable-border min-h-11 border border-line px-4 py-2.5 text-sm font-medium text-ink"
+        class="btn-outline pressable"
         type="button"
       >
         {{ statutOtLabel(statut) }}
@@ -88,6 +101,6 @@
       }
     </div>
     }
-  </section>
+  </app-form-section>
   }
 </div>

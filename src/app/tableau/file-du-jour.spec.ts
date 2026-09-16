@@ -1,7 +1,10 @@
 import {
   buildFileDuJour,
   fileDuJourBadgeLabel,
+  fileDuJourIcon,
   fileDuJourSummary,
+  fileDuJourToneCounts,
+  groupFileDuJourByTone,
 } from "./file-du-jour";
 
 describe("buildFileDuJour", () => {
@@ -72,6 +75,59 @@ describe("fileDuJourSummary", () => {
       topTone: null,
       totalCount: 0,
     });
+  });
+});
+
+describe("groupFileDuJourByTone", () => {
+  it("groups consecutive items by tone and marks lower tiers compact", () => {
+    const items = buildFileDuJour({
+      allowedIds: new Set(["dossiers", "commandes", "voyages"]),
+      commandes: [{ statut: "RECUE" }, { statut: "RECUE" }],
+      dossiers: [
+        { statut: "INCIDENT" },
+        { statut: "CREE" },
+        { statut: "EN_TRANSIT" },
+      ],
+      vehicules: null,
+      voyages: [{ statut: "PLANIFIE" }, { statut: "AFFECTE" }],
+    });
+
+    expect(groupFileDuJourByTone(items).map((tier) => tier.tone)).toEqual([
+      "brake",
+      "amber",
+      "pine",
+      "muted",
+    ]);
+    expect(groupFileDuJourByTone(items).map((tier) => tier.compact)).toEqual([
+      false,
+      false,
+      true,
+      true,
+    ]);
+  });
+});
+
+describe("fileDuJourToneCounts", () => {
+  it("sums item counts per urgency tier", () => {
+    const items = buildFileDuJour({
+      allowedIds: new Set(["dossiers", "commandes"]),
+      commandes: [{ statut: "RECUE" }, { statut: "RECUE" }],
+      dossiers: [{ statut: "INCIDENT" }],
+      vehicules: null,
+      voyages: null,
+    });
+
+    expect(fileDuJourToneCounts(items)).toEqual([
+      { count: 1, label: "Priorité", tone: "brake" },
+      { count: 2, label: "À risque", tone: "amber" },
+    ]);
+  });
+});
+
+describe("fileDuJourIcon", () => {
+  it("maps module paths to shell icons", () => {
+    expect(fileDuJourIcon("/vehicules")).toBe("lucideTruck");
+    expect(fileDuJourIcon("/unknown")).toBe("lucideInbox");
   });
 });
 

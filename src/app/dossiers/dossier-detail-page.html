@@ -3,10 +3,7 @@
     @if (dossier.isLoading()) {
     <p class="text-sm text-muted" role="status">Chargement…</p>
     } @else if (dossier.error()) {
-    <div
-      class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
-      role="alert"
-    >
+    <div class="alert-panel" role="alert">
       <p>{{ loadError() }}</p>
       <button
         (click)="dossier.reload()"
@@ -39,11 +36,8 @@
   </app-fiche-header>
 
   @if (dossier.hasValue()) {
-  <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="text-xl font-medium tracking-tight text-ink">
-      Fiche
-    </h2>
-    <dl class="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+  <app-form-section title="Fiche">
+    <dl class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
       <div>
         <dt class="text-xs text-muted">Commande</dt>
         <dd class="mt-0.5 text-sm text-ink">
@@ -94,16 +88,15 @@
       </div>
       }
     </dl>
-  </section>
+  </app-form-section>
 
-  <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="text-xl font-medium tracking-tight text-ink">
-      Marchandise
-    </h2>
-    <ul class="mt-4 flex flex-col gap-3 text-sm">
-      @for (ligne of dossier.value().lignesMarchandise; track ligne.designation) {
-      <li class="border border-line px-3 py-2">
-        <p class="font-medium text-ink">{{ ligne.designation }}</p>
+  <app-form-section title="Marchandise">
+    <ul class="flex flex-col gap-3 text-sm">
+      @for (ligne of dossier.value().lignesMarchandise; track ligne.marchandiseId) {
+      <li class="rounded-lg border border-line/80 bg-canvas px-3 py-2">
+        <p class="font-medium text-ink">
+          {{ marchandiseLabel(ligne.marchandiseId) }}
+        </p>
         <p class="mt-1 font-mono text-xs tabular-nums text-muted">
           {{ ligne.poidsKg }} kg · {{ ligne.volumeM3 }} m³ ·
           {{ ligne.nbColis }} colis
@@ -114,15 +107,12 @@
       </li>
       }
     </ul>
-  </section>
+  </app-form-section>
 
-  <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="text-xl font-medium tracking-tight text-ink">
-      Segments
-    </h2>
-    <ol class="mt-4 flex flex-col gap-3 text-sm">
+  <app-form-section title="Segments">
+    <ol class="flex flex-col gap-3 text-sm">
       @for (segment of dossier.value().segments; track segment.ordre) {
-      <li class="border border-line px-3 py-2">
+      <li class="rounded-lg border border-line/80 bg-canvas px-3 py-2">
         <p class="font-medium text-ink">
           {{ typeSegmentLabel(segment.type) }}
           <span class="font-mono text-xs text-muted">#{{ segment.ordre }}</span>
@@ -141,53 +131,43 @@
       </li>
       }
     </ol>
-  </section>
+  </app-form-section>
 
-  <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="text-xl font-medium tracking-tight text-ink">
-      Chronologie
-    </h2>
-    <p class="mt-1 text-sm text-muted">
-      Fenêtres de segments et réalisations. Pas d'historique de statut en v1.
-    </p>
-    <div class="mt-4">
-      <app-ops-timeline [entries]="timelineEntries()" />
-    </div>
-  </section>
+  <app-form-section
+    description="Fenêtres de segments et réalisations. Pas d'historique de statut en v1."
+    title="Chronologie"
+  >
+    <app-ops-timeline [entries]="timelineEntries()" />
+  </app-form-section>
 
   @if (dossier.value().statut === "CREE" && canPlan()) {
-  <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="text-xl font-medium tracking-tight text-ink">
-      Planification
-    </h2>
-    <p class="mt-1 text-sm text-muted">
-      Créer un voyage qui exécute ce dossier. Le statut passera à Planifié
-      automatiquement.
-    </p>
+  <app-form-section
+    description="Créer un voyage qui exécute ce dossier. Le statut passera à Planifié automatiquement."
+    title="Planification"
+  >
     <a
       [routerLink]="['/voyages/nouveau']"
       [queryParams]="{ dossierId: dossier.value().id }"
-      class="pressable mt-4 inline-flex min-h-11 items-center bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
+      class="btn-primary pressable inline-flex w-fit"
     >
       Planifier un voyage
     </a>
-  </section>
+  </app-form-section>
   }
 
   @if (dossier.value().statut === "PLANIFIE") {
-  <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="text-xl font-medium tracking-tight text-ink">
-      Planification
-    </h2>
+  <app-form-section title="Planification">
     @if (canOpenVoyages()) {
       @if (voyagesPorteurs.isLoading()) {
-      <p class="mt-4 text-sm text-muted" role="status">Chargement…</p>
+      <p class="text-sm text-muted" role="status">Chargement…</p>
       } @else if (voyagesPorteursList().length === 0) {
-      <p class="mt-4 text-sm text-muted">Aucun voyage trouvé pour ce dossier.</p>
+      <p class="text-sm text-muted">Aucun voyage trouvé pour ce dossier.</p>
       } @else {
-      <ul class="mt-4 flex flex-col gap-2 text-sm">
+      <ul class="flex flex-col gap-2 text-sm">
         @for (voyage of voyagesPorteursList(); track voyage.id) {
-        <li>
+        <li
+          class="rounded-lg border border-line/80 bg-canvas px-3 py-2"
+        >
           <a
             [routerLink]="['/voyages', voyage.id]"
             class="font-mono text-pine underline-offset-2 hover:underline"
@@ -199,40 +179,33 @@
       </ul>
       }
     } @else {
-    <p class="mt-4 text-sm text-muted">Planifié sur un voyage.</p>
+    <p class="text-sm text-muted">Planifié sur un voyage.</p>
     }
-  </section>
+  </app-form-section>
   }
 
   @if (canPlan() && manualNextStatuts(dossier.value().statut).length > 0) {
-  <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="text-xl font-medium tracking-tight text-ink">
-      Cycle de vie
-    </h2>
-    <p class="mt-1 text-sm text-muted">
-      Transitions autorisées par le domaine. Pas de modification du contenu
-      après création.
-    </p>
+  <app-form-section
+    description="Transitions autorisées par le domaine. Pas de modification du contenu après création."
+    title="Cycle de vie"
+  >
     @if (statutError()) {
-    <p
-      class="mt-4 border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
-      role="alert"
-    >
+    <div class="alert-panel" role="alert">
       {{ statutError() }}
-    </p>
+    </div>
     }
-    <div class="mt-4 flex flex-wrap gap-2">
+    <div class="flex flex-wrap gap-2">
       @for (statut of manualNextStatuts(dossier.value().statut); track statut) {
       <button
         (click)="changerStatut(statut)"
-        class="pressable min-h-11 border border-line px-4 py-2.5 text-sm font-medium text-ink"
+        class="btn-outline pressable"
         type="button"
       >
         → {{ statutDossierLabel(statut) }}
       </button>
       }
     </div>
-  </section>
+  </app-form-section>
   }
   }
 </div>

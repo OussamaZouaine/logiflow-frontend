@@ -1,0 +1,254 @@
+<div class="flex flex-col gap-8">
+  <app-fiche-header listLabel="Remorques" listLink="/remorques">
+    @if (remorque.isLoading()) {
+    <p class="text-sm text-muted" role="status">Chargement…</p>
+    } @else if (remorque.error()) {
+    <div class="alert-panel" role="alert">
+      <p>{{ loadError() }}</p>
+      <button
+        (click)="remorque.reload()"
+        class="pressable mt-2 font-medium text-ink underline underline-offset-2"
+        type="button"
+      >
+        Réessayer
+      </button>
+    </div>
+    } @else if (remorque.hasValue()) {
+    <div class="flex flex-wrap items-center gap-3">
+      <h1 class="fiche-page-title fiche-page-title--mono">
+        {{ remorque.value().immatriculation }}
+      </h1>
+      <app-statut-chip
+        [label]="remorqueStatutLabel(remorque.value().statut)"
+        [tone]="remorqueStatutTone(remorque.value().statut)"
+      />
+    </div>
+    <p class="mt-1 text-sm text-muted">
+      {{ remorqueCarrosserieLabel(remorque.value().carrosserie) }}
+    </p>
+    }
+  </app-fiche-header>
+
+  @if (remorque.hasValue()) {
+  <app-form-section title="Fiche">
+    <dl class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+      <div>
+        <dt class="text-xs text-muted">Volume utile</dt>
+        <dd class="mt-0.5 font-mono tabular-nums text-ink">
+          {{ remorque.value().volumeUtileM3 }} m³
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs text-muted">Charge utile</dt>
+        <dd class="mt-0.5 font-mono tabular-nums text-ink">
+          {{ remorque.value().chargeUtileKg }} kg
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs text-muted">Positions palettes</dt>
+        <dd class="mt-0.5 font-mono tabular-nums text-ink">
+          {{ remorque.value().nbPositionsPalettes }}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs text-muted">Groupe froid</dt>
+        <dd class="mt-0.5 text-ink">
+          {{ remorque.value().groupeFroid ? "Oui" : "Non" }}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs text-muted">N° parc</dt>
+        <dd class="mt-0.5 text-ink">
+          {{ remorque.value().numeroParc ?? "—" }}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs text-muted">Type</dt>
+        <dd class="mt-0.5 text-ink">{{ remorque.value().type ?? "—" }}</dd>
+      </div>
+    </dl>
+  </app-form-section>
+
+  <app-form-section
+    description="Relevé kilométrique et heures groupe froid."
+    title="Compteurs"
+  >
+    <form (submit)="releverCompteurs($event)" novalidate>
+      <app-form-validation-summary
+        [show]="compteursForm().touched() && compteursForm().invalid()"
+      />
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <app-form-field
+          [error]="
+            showFieldError(compteursForm.kilometrage())
+              ? firstFieldError(compteursForm.kilometrage().errors())
+              : null
+          "
+          inputId="kilometrage"
+          label="Kilométrage"
+        >
+          <input
+            [attr.aria-invalid]="showFieldError(compteursForm.kilometrage()) || null"
+            [class]="fieldClasses(compteursForm.kilometrage())"
+            [formField]="compteursForm.kilometrage"
+            id="kilometrage"
+            step="1"
+            type="number"
+          >
+        </app-form-field>
+        <app-form-field
+          [error]="
+            showFieldError(compteursForm.heuresGroupeFroid())
+              ? firstFieldError(compteursForm.heuresGroupeFroid().errors())
+              : null
+          "
+          inputId="heuresGroupeFroid"
+          label="Heures groupe froid"
+        >
+          <input
+            [attr.aria-invalid]="showFieldError(compteursForm.heuresGroupeFroid()) || null"
+            [class]="fieldClasses(compteursForm.heuresGroupeFroid())"
+            [formField]="compteursForm.heuresGroupeFroid"
+            id="heuresGroupeFroid"
+            step="1"
+            type="number"
+          >
+        </app-form-field>
+      </div>
+      @if (compteursError()) {
+      <div class="alert-panel" role="alert">
+        {{ compteursError() }}
+      </div>
+      }
+      <app-form-actions>
+        <button class="btn-primary pressable min-h-11 px-5" type="submit">
+          Enregistrer les compteurs
+        </button>
+      </app-form-actions>
+    </form>
+  </app-form-section>
+
+  <app-form-section
+    description="Carte grise, assurance, contrôle technique — pièces rattachées à cette remorque."
+    title="Documents"
+  >
+    @if (documents.isLoading()) {
+    <p class="text-sm text-muted" role="status">Chargement…</p>
+    } @else if (documents.error()) {
+    <div class="alert-panel" role="alert">
+      <p>{{ documentsLoadError() }}</p>
+      <button
+        (click)="documents.reload()"
+        class="pressable mt-2 font-medium text-ink underline underline-offset-2"
+        type="button"
+      >
+        Réessayer
+      </button>
+    </div>
+    } @else if (documents.hasValue()) {
+    @if (documents.value().length === 0) {
+    <p class="text-sm text-muted">Aucun document.</p>
+    } @else {
+    <ul class="flex flex-col gap-2">
+      @for (document of documents.value(); track document.id) {
+      <li
+        class="flex flex-wrap items-end justify-between gap-3 rounded-lg border border-line/80 bg-canvas px-3 py-3"
+      >
+        <div class="min-w-0 flex-1 text-sm">
+          <p class="font-medium text-ink">
+            {{ documentTypeLabel(document.typeDocument) }}
+          </p>
+          <p class="mt-1 text-muted">{{ document.reference }}</p>
+          <p class="mt-1 font-mono text-xs tabular-nums text-muted">
+            Expire le {{ formatDocumentExpiration(document.dateExpiration) }}
+          </p>
+          @if (document.url) {
+          <a
+            [href]="document.url"
+            class="mt-2 inline-block text-xs text-pine underline-offset-2 hover:underline"
+            rel="noopener"
+            target="_blank"
+          >
+            Ouvrir le fichier
+          </a>
+          }
+        </div>
+        <button
+          (click)="deleteDocument(document.id)"
+          class="btn-danger-outline pressable h-11 px-3 text-xs"
+          type="button"
+        >
+          Supprimer
+        </button>
+      </li>
+      }
+    </ul>
+    }
+
+    <details class="fiche-disclosure fiche-inset">
+      <summary class="text-sm font-medium text-ink">
+        Téléverser un document
+      </summary>
+      <form
+        (submit)="uploadDocument($event)"
+        class="mt-4"
+        novalidate
+      >
+        <app-form-field inputId="documentFichier" label="Fichier">
+          <input
+            (change)="onFileSelected($event)"
+            accept=".pdf,.png,.jpg,.jpeg,.webp"
+            class="field"
+            id="documentFichier"
+            type="file"
+          >
+        </app-form-field>
+        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <app-form-field inputId="uploadType" label="Type">
+            <select
+              (change)="onUploadType($event)"
+              [value]="uploadDraft().typeDocument"
+              class="field"
+              id="uploadType"
+            >
+              @for (type of documentTypes; track type) {
+              <option [value]="type">{{ documentTypeLabel(type) }}</option>
+              }
+            </select>
+          </app-form-field>
+          <app-form-field inputId="uploadReference" label="Référence">
+            <input
+              (input)="onUploadReference($event)"
+              [value]="uploadDraft().reference"
+              class="field"
+              id="uploadReference"
+              type="text"
+            >
+          </app-form-field>
+          <app-form-field inputId="uploadExpiration" label="Expiration">
+            <input
+              (change)="onUploadExpiration($event)"
+              (input)="onUploadExpiration($event)"
+              [value]="uploadDraft().dateExpiration"
+              class="field"
+              id="uploadExpiration"
+              type="date"
+            >
+          </app-form-field>
+        </div>
+        @if (uploadError()) {
+        <div class="alert-panel" role="alert">
+          {{ uploadError() }}
+        </div>
+        }
+        <app-form-actions>
+          <button class="btn-primary pressable min-h-11 px-5" type="submit">
+            Téléverser
+          </button>
+        </app-form-actions>
+      </form>
+    </details>
+    }
+  </app-form-section>
+  }
+</div>

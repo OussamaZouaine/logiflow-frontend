@@ -9,7 +9,8 @@ export const buttonVariants = cva(
   {
     variants: {
       zType: {
-        default: 'bg-primary text-primary-foreground [a]:hover:bg-primary/80',
+        default:
+          'bg-primary text-primary-foreground shadow-[0_1px_2px_oklch(0_0_0/0.06),0_4px_12px_color-mix(in_oklch,var(--color-pine)_28%,transparent)] [a]:hover:bg-primary/88',
         destructive:
           'bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40',
         outline:
@@ -32,7 +33,7 @@ export const buttonVariants = cva(
         'icon-lg': 'size-9',
       },
       zShape: {
-        default: 'rounded-md',
+        default: 'rounded-md shadow-[0_1px_2px_oklch(0_0_0/0.05)]',
         circle: 'rounded-full',
         square: 'rounded-none',
       },

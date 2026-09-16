@@ -1,5 +1,9 @@
 import type { Commande } from "../commandes/commande";
-import type { WorkDestinationId } from "../core/nav/work-destination";
+import { DESTINATION_NAV_ICON } from "../core/nav/nav-icon";
+import {
+  WORK_DESTINATION_IDS,
+  type WorkDestinationId,
+} from "../core/nav/work-destination";
 import type { Dossier } from "../dossiers/dossier";
 import type { Vehicule } from "../vehicules/vehicule";
 import type { Voyage } from "../voyages/voyage";
@@ -37,6 +41,102 @@ const TONE_RANK: Record<ApercuTone, number> = {
   pine: 3,
   muted: 4,
 };
+
+const TONE_SECTION_LABEL: Record<ApercuTone, string> = {
+  amber: "À risque",
+  brake: "Priorité",
+  ink: "Attention",
+  muted: "À faire",
+  pine: "En cours",
+};
+
+const COMPACT_TONES = new Set<ApercuTone>(["muted", "pine"]);
+
+export interface FileDuJourTier {
+  compact: boolean;
+  items: FileDuJourItem[];
+  label: string;
+  tone: ApercuTone;
+}
+
+export interface FileDuJourToneCount {
+  count: number;
+  label: string;
+  tone: ApercuTone;
+}
+
+/** Section label for a file-du-jour urgency tier. */
+export function fileDuJourToneLabel(tone: ApercuTone): string {
+  return TONE_SECTION_LABEL[tone];
+}
+
+/** Groups sorted queue items into urgency tiers for the dashboard inbox. */
+export function groupFileDuJourByTone(
+  items: readonly FileDuJourItem[]
+): FileDuJourTier[] {
+  const tiers: FileDuJourTier[] = [];
+  let currentTone: ApercuTone | null = null;
+  let currentItems: FileDuJourItem[] = [];
+
+  for (const item of items) {
+    if (item.tone !== currentTone) {
+      if (currentTone !== null && currentItems.length > 0) {
+        tiers.push({
+          compact: COMPACT_TONES.has(currentTone),
+          items: currentItems,
+          label: TONE_SECTION_LABEL[currentTone],
+          tone: currentTone,
+        });
+      }
+      currentTone = item.tone;
+      currentItems = [item];
+      continue;
+    }
+    currentItems.push(item);
+  }
+
+  if (currentTone !== null && currentItems.length > 0) {
+    tiers.push({
+      compact: COMPACT_TONES.has(currentTone),
+      items: currentItems,
+      label: TONE_SECTION_LABEL[currentTone],
+      tone: currentTone,
+    });
+  }
+
+  return tiers;
+}
+
+/** Per-tier totals for the inbox header summary. */
+export function fileDuJourToneCounts(
+  items: readonly FileDuJourItem[]
+): FileDuJourToneCount[] {
+  const totals = new Map<ApercuTone, number>();
+
+  for (const item of items) {
+    totals.set(item.tone, (totals.get(item.tone) ?? 0) + item.count);
+  }
+
+  return Array.from(totals.entries())
+    .sort(([left], [right]) => TONE_RANK[left] - TONE_RANK[right])
+    .map(([tone, count]) => ({
+      count,
+      label: TONE_SECTION_LABEL[tone],
+      tone,
+    }));
+}
+
+/** Lucide icon for a file-du-jour deep link path. */
+export function fileDuJourIcon(path: string): string {
+  const segment = path.replace(/^\//, "").split("/")[0];
+  if (
+    segment &&
+    (WORK_DESTINATION_IDS as readonly string[]).includes(segment)
+  ) {
+    return DESTINATION_NAV_ICON[segment as WorkDestinationId];
+  }
+  return "lucideInbox";
+}
 
 function countBy<T extends string>(
   values: readonly T[],

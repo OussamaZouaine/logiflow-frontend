@@ -1,0 +1,138 @@
+<app-form-page-header
+  description="Périodicité kilométrique et/ou calendaire. Le véhicule doit déjà exister."
+  listLabel="Plans d'entretien"
+  listLink="/maintenance/plans"
+  title="Nouveau plan d'entretien"
+/>
+
+<app-maintenance-tabs />
+
+@if (vehicules.isLoading()) {
+<p class="text-sm text-muted" role="status">Chargement des véhicules…</p>
+} @else if (lookupsError()) {
+<div class="alert-panel" role="alert">
+  <p>{{ lookupsError() }}</p>
+</div>
+} @else if (vehicules.hasValue()) {
+<form (submit)="onSubmit($event)" class="form-page" novalidate>
+  <app-form-section title="Plan">
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-medium text-muted" for="vehiculeId">
+        Véhicule
+      </label>
+      <select
+        [formField]="createForm.vehiculeId"
+        [class]="fieldClasses(createForm.vehiculeId())"
+        id="vehiculeId"
+      >
+        <option value="">Choisir un véhicule…</option>
+        @for (vehicule of vehiculeOptions(); track vehicule.id) {
+        <option [value]="vehicule.id">{{ vehicule.immatriculation }}</option>
+        }
+      </select>
+      @if (showFieldError(createForm.vehiculeId())) {
+      <p class="text-xs text-brake" role="alert">
+        {{ firstFieldError(createForm.vehiculeId().errors()) }}
+      </p>
+      }
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-medium text-muted" for="libelle">
+        Libellé
+      </label>
+      <input
+        [formField]="createForm.libelle"
+        [class]="fieldClasses(createForm.libelle())"
+        id="libelle"
+        type="text"
+      />
+      @if (showFieldError(createForm.libelle())) {
+      <p class="text-xs text-brake" role="alert">
+        {{ firstFieldError(createForm.libelle().errors()) }}
+      </p>
+      }
+    </div>
+
+    <div class="form-page__coords">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="periodiciteKm">
+          Périodicité (km)
+        </label>
+        <input
+          [formField]="createForm.periodiciteKm"
+          [class]="fieldClasses(createForm.periodiciteKm())"
+          id="periodiciteKm"
+          step="1"
+          type="number"
+        />
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="periodiciteMois">
+          Périodicité (mois)
+        </label>
+        <input
+          [formField]="createForm.periodiciteMois"
+          [class]="fieldClasses(createForm.periodiciteMois())"
+          id="periodiciteMois"
+          step="1"
+          type="number"
+        />
+      </div>
+    </div>
+
+    <div class="form-page__coords">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="seuilAlerteKm">
+          Seuil alerte (km)
+        </label>
+        <input
+          [formField]="createForm.seuilAlerteKm"
+          [class]="fieldClasses(createForm.seuilAlerteKm())"
+          id="seuilAlerteKm"
+          step="1"
+          type="number"
+        />
+        @if (showFieldError(createForm.seuilAlerteKm())) {
+        <p class="text-xs text-brake" role="alert">
+          {{ firstFieldError(createForm.seuilAlerteKm().errors()) }}
+        </p>
+        }
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-muted" for="dureeEstimeeMin">
+          Durée estimée (min)
+        </label>
+        <input
+          [formField]="createForm.dureeEstimeeMin"
+          [class]="fieldClasses(createForm.dureeEstimeeMin())"
+          id="dureeEstimeeMin"
+          step="1"
+          type="number"
+        />
+        @if (showFieldError(createForm.dureeEstimeeMin())) {
+        <p class="text-xs text-brake" role="alert">
+          {{ firstFieldError(createForm.dureeEstimeeMin().errors()) }}
+        </p>
+        }
+      </div>
+    </div>
+  </app-form-section>
+
+  @if (formError()) {
+  <div class="alert-panel" role="alert">{{ formError() }}</div>
+  }
+
+  <app-form-actions>
+    <button class="btn-primary pressable min-h-11 px-5" type="submit">
+      Enregistrer
+    </button>
+    <a
+      class="btn-outline pressable min-h-11 px-5"
+      routerLink="/maintenance/plans"
+    >
+      Annuler
+    </a>
+  </app-form-actions>
+</form>
+}

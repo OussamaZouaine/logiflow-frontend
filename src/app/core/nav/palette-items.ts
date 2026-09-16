@@ -1,5 +1,7 @@
 import {
   DOSSIERS_PLAN_ROLES,
+  MARCHANDISES_ALLOWED_ROLES,
+  REMORQUES_ALLOWED_ROLES,
   type Role,
   SITES_ALLOWED_ROLES,
   VOYAGES_PLAN_ROLES,
@@ -40,11 +42,25 @@ const CREATE_ACTIONS: readonly PaletteActionDef[] = [
     roles: SITES_ALLOWED_ROLES,
   },
   {
+    icon: DESTINATION_NAV_ICON.marchandises,
+    keywords: ["nouvelle", "créer", "marchandise", "catalogue"],
+    label: "Nouvelle marchandise",
+    path: "/marchandises/nouveau",
+    roles: MARCHANDISES_ALLOWED_ROLES,
+  },
+  {
     icon: DESTINATION_NAV_ICON.vehicules,
     keywords: ["nouveau", "créer", "véhicule", "vehicule"],
     label: "Nouveau véhicule",
     path: "/vehicules/nouveau",
     roles: workDestination("vehicules").roles,
+  },
+  {
+    icon: DESTINATION_NAV_ICON.remorques,
+    keywords: ["nouvelle", "créer", "remorque", "semi"],
+    label: "Nouvelle remorque",
+    path: "/remorques/nouveau",
+    roles: REMORQUES_ALLOWED_ROLES,
   },
   {
     icon: DESTINATION_NAV_ICON.commandes,
@@ -72,6 +88,13 @@ const CREATE_ACTIONS: readonly PaletteActionDef[] = [
     keywords: ["nouvel", "créer", "ordre", "maintenance", "atelier"],
     label: "Nouvel ordre de travail",
     path: "/maintenance/nouveau",
+    roles: workDestination("maintenance").roles,
+  },
+  {
+    icon: DESTINATION_NAV_ICON.maintenance,
+    keywords: ["nouveau", "créer", "plan", "entretien", "préventif"],
+    label: "Nouveau plan d'entretien",
+    path: "/maintenance/plans/nouveau",
     roles: workDestination("maintenance").roles,
   },
   {

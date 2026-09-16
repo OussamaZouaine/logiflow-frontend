@@ -4,6 +4,7 @@
 @import "@fontsource-variable/geist-mono";
 @import "tailwindcss";
 @import "./app/shared/core/css/tailwind";
+@import "./app/layout/shell-chrome.css";
 @import "leaflet/dist/leaflet.css";
 @plugin "tailwindcss-animate";
 
@@ -17,7 +18,7 @@
 
 /* LogiFlow palette mapped onto Zard semantic tokens (light only). */
 :root {
-  --radius: 0.25rem;
+  --radius: 0.75rem;
   --background: #f7f7f5;
   --foreground: #171717;
   --card: #ffffff;
@@ -176,24 +177,28 @@
 }
 
 .pressable {
-  transition: transform 160ms var(--ease-out-strong);
+  transition: transform 160ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 .pressable:active {
-  transform: scale(0.97);
+  transform: scale(0.96);
 }
 
 .field {
   width: 100%;
   min-height: 2.75rem;
-  padding: 0.65rem 0.75rem;
+  padding: 0.65rem 0.9rem;
   font-family: var(--font-mono);
   font-size: 1rem;
   color: var(--color-ink);
   outline: none;
-  background: var(--color-surface);
+  background: var(--color-canvas);
   border: 1px solid var(--color-line);
-  transition: border-color 150ms ease;
+  border-radius: var(--radius-md);
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background-color 150ms ease;
 }
 
 @media (min-width: 640px) {
@@ -203,16 +208,232 @@
 }
 
 .field:focus {
+  background: var(--color-surface);
   border-color: var(--color-pine);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-pine) 14%, transparent);
+}
+
+.control {
+  width: 100%;
+  outline: none;
+  color: var(--color-ink);
+  background: var(--color-canvas);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background-color 150ms ease;
+}
+
+.control:focus {
+  background: var(--color-surface);
+  border-color: var(--color-pine);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-pine) 14%, transparent);
+}
+
+.fiche-inset {
+  margin-top: 1.5rem;
+  background: var(--color-canvas);
+  padding: 1rem;
+  border: 1px solid color-mix(in oklch, var(--color-line) 70%, transparent);
+  border-radius: var(--radius-lg);
+}
+
+.surface-panel {
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 1px solid color-mix(in oklch, var(--color-line) 80%, transparent);
+  border-radius: var(--radius-xl);
+  box-shadow:
+    0 1px 2px oklch(0 0 0 / 0.04),
+    0 6px 20px oklch(0 0 0 / 0.04);
+}
+
+.form-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 56rem;
+}
+
+.form-page__layout {
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 1024px) {
+  .form-page__layout--split {
+    grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.form-page__coords {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.form-page__coords.fiche-inset {
+  margin-top: 0;
+}
+
+@media (min-width: 480px) {
+  .form-page__coords {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.list-table-panel {
+  overflow-x: auto;
+  background: var(--color-surface);
+  border: 1px solid color-mix(in oklch, var(--color-line) 80%, transparent);
+  border-radius: var(--radius-xl);
+  box-shadow:
+    0 1px 2px oklch(0 0 0 / 0.04),
+    0 6px 20px oklch(0 0 0 / 0.04);
+}
+
+.alert-panel {
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: var(--color-brake);
+  background: color-mix(in oklch, var(--color-brake) 6%, var(--color-surface));
+  border: 1px solid color-mix(in oklch, var(--color-brake) 22%, transparent);
+  border-radius: var(--radius-lg);
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.65rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-surface);
+  text-align: center;
+  text-decoration: none;
+  background: var(--color-pine);
+  border: none;
+  border-radius: var(--radius-md);
+  box-shadow:
+    0 1px 2px oklch(0 0 0 / 0.06),
+    0 6px 16px color-mix(in oklch, var(--color-pine) 35%, transparent);
+  transition:
+    transform 160ms cubic-bezier(0.2, 0, 0, 1),
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary:hover {
+    background: color-mix(in oklch, var(--color-pine) 88%, black);
+  }
+}
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.65rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-ink);
+  text-decoration: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-outline:hover {
+    border-color: color-mix(in oklch, var(--color-pine) 35%, var(--color-line));
+    background: color-mix(in oklch, var(--color-pine) 4%, var(--color-surface));
+  }
+}
+
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-ink);
+  text-decoration: none;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-back:hover {
+    border-color: color-mix(in oklch, var(--color-pine) 35%, var(--color-line));
+    background: color-mix(in oklch, var(--color-pine) 4%, var(--color-surface));
+  }
+}
+
+.btn-danger-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.65rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-brake);
+  background: var(--color-surface);
+  border: 1px solid color-mix(in oklch, var(--color-brake) 40%, transparent);
+  border-radius: var(--radius-md);
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-danger-outline:hover {
+    background: color-mix(in oklch, var(--color-brake) 6%, var(--color-surface));
+  }
+}
+
+.fiche-disclosure > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.fiche-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+.fiche-disclosure > summary::after {
+  content: "+";
+  float: right;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--color-muted);
+  transition: transform 160ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.fiche-disclosure[open] > summary::after {
+  content: "−";
 }
 
 .field--invalid {
   border-color: color-mix(in srgb, var(--color-brake) 55%, var(--color-line));
-  background: color-mix(in srgb, var(--color-brake) 4%, var(--color-surface));
+  background: color-mix(in srgb, var(--color-brake) 4%, var(--color-canvas));
 }
 
 .field--invalid:focus {
   border-color: var(--color-brake);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-brake) 12%, transparent);
 }
 
 .list-table-head {

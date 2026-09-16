@@ -3,10 +3,7 @@
     @if (utilisateur.isLoading()) {
     <p class="text-sm text-muted" role="status">Chargement…</p>
     } @else if (utilisateur.error()) {
-    <div
-      class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
-      role="alert"
-    >
+    <div class="alert-panel" role="alert">
       <p>{{ loadError() }}</p>
       <button
         (click)="utilisateur.reload()"
@@ -30,103 +27,84 @@
   </app-fiche-header>
 
   @if (utilisateur.hasValue()) {
-  <form
-    (submit)="onSubmit($event)"
-    class="flex max-w-lg flex-col gap-5 border border-line bg-surface p-5"
-    novalidate
-  >
-    @if (editForm().touched() && editForm().invalid()) {
-    <div
-      class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
-      role="alert"
+  <form (submit)="onSubmit($event)" class="form-page" novalidate>
+    <app-form-validation-summary
+      [show]="editForm().touched() && editForm().invalid()"
+    />
+
+    <app-form-section
+      description="Le login n'est pas modifiable."
+      title="Fiche"
     >
-      <p class="font-medium">Certains champs sont à corriger.</p>
-      <p class="mt-1 text-xs text-brake/90">
-        Consultez les messages sous chaque champ en surbrillance.
-      </p>
-    </div>
-    }
-    <h2 class="text-xl font-medium tracking-tight text-ink">
-      Fiche
-    </h2>
-    <p class="text-sm text-muted">Le login n'est pas modifiable.</p>
-
-    <div class="flex flex-col gap-1.5">
-      <label class="text-xs font-medium text-muted" for="email">Email</label>
-      <input
-        [formField]="editForm.email"
-        [class]="fieldClasses(editForm.email())"
-        id="email"
-        type="email"
+      <app-form-field
+        [error]="
+          showFieldError(editForm.email())
+            ? firstFieldError(editForm.email().errors())
+            : null
+        "
+        inputId="email"
+        label="Email"
       >
-      @if (showFieldError(editForm.email())) {
+        <input
+          [attr.aria-invalid]="showFieldError(editForm.email()) || null"
+          [class]="fieldClasses(editForm.email())"
+          [formField]="editForm.email"
+          id="email"
+          type="email"
+        />
+      </app-form-field>
+
+      <fieldset class="fiche-inset flex flex-col gap-2 p-4">
+        <legend class="px-1 text-xs font-medium text-muted">Rôles</legend>
+        @for (role of roles; track role) {
+        <label class="flex items-center gap-2 text-sm text-ink">
+          <input
+            (change)="toggleRole(role, $event)"
+            [checked]="draft().roles.includes(role)"
+            class="size-4 accent-pine"
+            type="checkbox"
+          >
+          {{ roleLabel(role) }}
+        </label>
+        }
+      </fieldset>
+      @if (rolesTouched() && draft().roles.length === 0) {
       <p class="text-xs text-brake" role="alert">
-        {{ firstFieldError(editForm.email().errors()) }}
+        Au moins un rôle est obligatoire.
       </p>
       }
-    </div>
-
-    <fieldset class="flex flex-col gap-2">
-      <legend class="text-xs font-medium text-muted">Rôles</legend>
-      @for (role of roles; track role) {
-      <label class="flex items-center gap-2 text-sm text-ink">
-        <input
-          (change)="toggleRole(role, $event)"
-          [checked]="draft().roles.includes(role)"
-          class="size-4 accent-pine"
-          type="checkbox"
-        >
-        {{ roleLabel(role) }}
-      </label>
-      }
-    </fieldset>
-    @if (rolesTouched() && draft().roles.length === 0) {
-    <p class="text-xs text-brake" role="alert">
-      Au moins un rôle est obligatoire.
-    </p>
-    }
+    </app-form-section>
 
     @if (formError()) {
-    <p
-      class="border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
-      role="alert"
-    >
+    <div class="alert-panel" role="alert">
       {{ formError() }}
-    </p>
+    </div>
     }
 
-    <button
-      class="pressable min-h-11 w-fit bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
-      type="submit"
-    >
-      Enregistrer
-    </button>
+    <app-form-actions>
+      <button class="btn-primary pressable min-h-11 px-5" type="submit">
+        Enregistrer
+      </button>
+    </app-form-actions>
   </form>
 
   @if (utilisateur.value().actif) {
-  <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="text-xl font-medium tracking-tight text-ink">
-      Désactivation
-    </h2>
-    <p class="mt-1 text-sm text-muted">
-      Le compte reste en base, marqué inactif. Pas de suppression physique, pas
-      de réactivation via l'API.
-    </p>
+  <app-form-section
+    description="Le compte reste en base, marqué inactif. Pas de suppression physique, pas de réactivation via l'API."
+    title="Désactivation"
+  >
     @if (deactivateError()) {
-    <p
-      class="mt-4 border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
-      role="alert"
-    >
+    <div class="alert-panel" role="alert">
       {{ deactivateError() }}
-    </p>
+    </div>
     }
     <button
       (click)="desactiver()"
-      class="pressable pressable-border mt-4 min-h-11 border border-brake/40 px-4 py-2.5 text-sm font-medium text-brake"
+      class="btn-danger-outline pressable w-fit"
       type="button"
     >
       Désactiver
     </button>
-  </section>
+  </app-form-section>
   } }
 </div>

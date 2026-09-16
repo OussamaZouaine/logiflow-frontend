@@ -48,8 +48,8 @@ export interface TimeWindow {
 
 export interface LigneMarchandise {
   classeAdr: string | null;
-  designation: string;
-  gerbable: boolean;
+  gerbable: boolean | null;
+  marchandiseId: string;
   nbColis: number;
   numeroOnu: string | null;
   poidsKg: number;
@@ -106,8 +106,8 @@ export interface DossierDraft {
   dechargementDebut: string;
   dechargementFin: string;
   dechargementSiteId: string;
-  designation: string;
   familleMarchandise: string;
+  marchandiseId: string;
   gerbable: boolean;
   groupable: boolean;
   nbColis: number;
@@ -181,8 +181,8 @@ export function emptyDossierDraft(commandeId = ""): DossierDraft {
     dechargementDebut: toDatetimeLocal(dechargementDebut),
     dechargementFin: toDatetimeLocal(dechargementFin),
     dechargementSiteId: "",
-    designation: "Palettes standard",
     familleMarchandise: "Palettes standard",
+    marchandiseId: "",
     gerbable: true,
     groupable: true,
     nbColis: 10,
@@ -195,6 +195,7 @@ export function emptyDossierDraft(commandeId = ""): DossierDraft {
   };
 }
 
+/** Maps UI draft to POST /dossiers — see {@link DossierApi} for API contract. */
 export function draftToWrite(draft: DossierDraft): DossierWrite {
   const classeAdr = draft.classeAdr.trim();
   const numeroOnu = draft.numeroOnu.trim();
@@ -210,8 +211,8 @@ export function draftToWrite(draft: DossierDraft): DossierWrite {
     lignesMarchandise: [
       {
         classeAdr: classeAdr.length > 0 ? classeAdr : null,
-        designation: draft.designation.trim(),
         gerbable: draft.gerbable,
+        marchandiseId: draft.marchandiseId.trim(),
         nbColis: draft.nbColis,
         numeroOnu: numeroOnu.length > 0 ? numeroOnu : null,
         poidsKg: draft.poidsKg,

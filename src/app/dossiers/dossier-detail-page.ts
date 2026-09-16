@@ -1,6 +1,7 @@
 import { httpResource } from "@angular/common/http";
 import { Component, computed, inject, input, signal } from "@angular/core";
 import { RouterLink } from "@angular/router";
+import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
 import { FicheHeader } from "../shared/ui/fiche-header";
 import { ToastService } from "../shared/ui/toast";
 import { OpsTimeline } from "../shared/ui/ops-timeline";
@@ -18,6 +19,10 @@ import {
   commandeLabelFromLookup,
   type Commande,
 } from "../commandes/commande";
+import {
+  marchandiseLabelFromLookup,
+  type Marchandise,
+} from "../marchandises/marchandise";
 import { statutVoyageLabel } from "../voyages/voyage";
 import {
   formatWindow,
@@ -35,6 +40,7 @@ import { dossierTimelineEntries } from "./dossier-timeline";
 
 const SITE_LOOKUP_PAGE_SIZE = 50;
 const COMMANDE_LOOKUP_PAGE_SIZE = 50;
+const MARCHANDISE_LOOKUP_PAGE_SIZE = 50;
 
 interface VoyageLink {
   id: string;
@@ -42,7 +48,7 @@ interface VoyageLink {
 }
 
 @Component({
-  imports: [RouterLink, FicheHeader, OpsTimeline, StatutChip],
+  imports: [RouterLink, FicheHeader, OpsTimeline, StatutChip, ...FORM_PAGE_IMPORTS],
   selector: "app-dossier-detail-page",
   templateUrl: "./dossier-detail-page.html",
 })
@@ -98,6 +104,11 @@ export class DossierDetailPage {
     url: `${environment.apiBaseUrl}/sites`,
   }));
 
+  protected readonly marchandises = httpResource<PageResponse<Marchandise>>(() => ({
+    params: { page: 0, size: MARCHANDISE_LOOKUP_PAGE_SIZE },
+    url: `${environment.apiBaseUrl}/marchandises`,
+  }));
+
   protected readonly sitesById = computed(() => {
     const map = new Map<string, DossierLookupSite>();
     for (const site of this.sites.value()?.content ?? []) {
@@ -110,6 +121,14 @@ export class DossierDetailPage {
     const map = new Map<string, Commande>();
     for (const commande of this.commandes.value()?.content ?? []) {
       map.set(commande.id, commande);
+    }
+    return map;
+  });
+
+  protected readonly marchandisesById = computed(() => {
+    const map = new Map<string, Marchandise>();
+    for (const marchandise of this.marchandises.value()?.content ?? []) {
+      map.set(marchandise.id, marchandise);
     }
     return map;
   });
@@ -136,6 +155,10 @@ export class DossierDetailPage {
 
   protected siteLabel(siteId: string): string {
     return siteLabelFromLookup(siteId, this.sitesById());
+  }
+
+  protected marchandiseLabel(marchandiseId: string): string {
+    return marchandiseLabelFromLookup(marchandiseId, this.marchandisesById());
   }
 
   protected async changerStatut(valeur: StatutDossier): Promise<void> {

@@ -1,44 +1,29 @@
-<div class="flex max-w-lg flex-col gap-6">
-  <div>
-    <a
-      class="pressable pressable-border inline-flex items-center border border-line px-2.5 py-1.5 text-xs font-medium text-ink"
-      routerLink="/voyages"
-    >
-      ← Voyages
-    </a>
-    <h1 class="module-page-title mt-4">
-      Nouveau voyage
-    </h1>
-    <p class="mt-1 text-sm text-muted">
-      Conformité bloquante : véhicule disponible, documents valides, chauffeur
-      disponible, solde de conduite suffisant.
-    </p>
-  </div>
+<app-form-page-header
+  description="Conformité bloquante : véhicule disponible, documents valides, chauffeur disponible, solde de conduite suffisant."
+  listLabel="Voyages"
+  listLink="/voyages"
+  title="Nouveau voyage"
+/>
 
-  @if (vehicules.isLoading() || dossiers.isLoading() || chauffeurs.isLoading())
-  {
-  <p class="text-sm text-muted" role="status">Chargement des ressources…</p>
-  } @else if (lookupsError()) {
-  <div
-    class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
-    role="alert"
-  >
-    <p>{{ lookupsError() }}</p>
-  </div>
-  } @else if (lookupsReady()) {
-  <form (submit)="onSubmit($event)" class="flex flex-col gap-5" novalidate>
-    @if (createForm().touched() && createForm().invalid()) {
-    <div
-      class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
-      role="alert"
-    >
-      <p class="font-medium">Certains champs sont à corriger.</p>
-      <p class="mt-1 text-xs text-brake/90">
-        Consultez les messages sous chaque champ en surbrillance.
-      </p>
-    </div>
-    }
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+@if (
+  vehicules.isLoading() ||
+  dossiers.isLoading() ||
+  chauffeurs.isLoading() ||
+  sites.isLoading()
+) {
+<p class="text-sm text-muted" role="status">Chargement des ressources…</p>
+} @else if (lookupsError()) {
+<div class="alert-panel" role="alert">
+  <p>{{ lookupsError() }}</p>
+</div>
+} @else if (lookupsReady()) {
+<form (submit)="onSubmit($event)" class="form-page" novalidate>
+  <app-form-validation-summary
+    [show]="createForm().touched() && createForm().invalid()"
+  />
+
+  <app-form-section title="Planification">
+    <div class="form-page__coords">
       <div class="flex flex-col gap-1.5">
         <label class="text-xs font-medium text-muted" for="typeVoyage">
           Type
@@ -79,7 +64,7 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+    <div class="form-page__coords">
       <div class="flex flex-col gap-1.5">
         <label class="text-xs font-medium text-muted" for="departPrevu">
           Départ prévu
@@ -89,7 +74,7 @@
           [class]="fieldClasses(createForm.departPrevu())"
           id="departPrevu"
           type="datetime-local"
-        >
+        />
         @if (showFieldError(createForm.departPrevu())) {
         <p class="text-xs text-brake" role="alert">
           {{ firstFieldError(createForm.departPrevu().errors()) }}
@@ -105,7 +90,7 @@
           [class]="fieldClasses(createForm.arriveePrevue())"
           id="arriveePrevue"
           type="datetime-local"
-        >
+        />
         @if (showFieldError(createForm.arriveePrevue())) {
         <p class="text-xs text-brake" role="alert">
           {{ firstFieldError(createForm.arriveePrevue().errors()) }}
@@ -148,6 +133,40 @@
       }
     </div>
 
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-medium text-muted" for="remorqueId">
+        Remorque (optionnel)
+      </label>
+      <select
+        [formField]="createForm.remorqueId"
+        [class]="fieldClasses(createForm.remorqueId())"
+        id="remorqueId"
+      >
+        <option value="">Sans remorque</option>
+        @for (remorque of remorqueOptions(); track remorque.id) {
+        <option [value]="remorque.id">
+          {{ formatRemorqueLabel(remorque) }}
+        </option>
+        }
+      </select>
+      @if (remorquesLoading()) {
+      <p class="text-xs text-muted" role="status">Chargement des remorques…</p>
+      } @else if (remorqueLookupError()) {
+      <p class="text-xs text-brake" role="alert">{{ remorqueLookupError() }}</p>
+      <p class="text-xs text-muted">
+        Le voyage peut être créé sans remorque. Redémarre le backend pour activer
+        la liste.
+      </p>
+      } @else if (remorqueOptions().length === 0) {
+      <p class="text-xs text-muted">Aucune remorque en base.</p>
+      }
+    </div>
+  </app-form-section>
+
+  <app-form-section
+    description="Propositions à partir des dossiers Créé groupables visibles dans la liste ci-dessous."
+    title="Groupage IA"
+  >
     <fieldset class="flex flex-col gap-2 border-0 p-0">
       <legend class="text-xs font-medium text-muted">
         Dossiers (statut Créé)
@@ -156,7 +175,9 @@
         Sélectionnez un ou plusieurs dossiers pour un groupage.
       </p>
       @if (dossierSelectionError()) {
-      <p class="text-xs text-brake" role="alert">{{ dossierSelectionError() }}</p>
+      <p class="text-xs text-brake" role="alert">
+        {{ dossierSelectionError() }}
+      </p>
       }
       @if (dossierOptions().length === 0) {
       <p class="text-xs text-muted">
@@ -167,16 +188,22 @@
       <ul class="flex flex-col gap-2">
         @for (dossier of dossierOptions(); track dossier.id) {
         <li>
-          <label class="flex cursor-pointer items-start gap-2 border border-line px-3 py-2 text-sm">
+          <label
+            class="flex cursor-pointer items-start gap-2 rounded-lg border border-line/80 bg-canvas px-3 py-2 text-sm hover:border-pine/30"
+          >
             <input
               (change)="toggleDossier(dossier.id, $any($event.target).checked)"
               [checked]="isDossierSelected(dossier.id)"
               class="mt-0.5 size-4 accent-pine"
               type="checkbox"
-            >
+            />
             <span>
-              <span class="font-mono font-medium text-ink">{{ dossier.reference }}</span>
-              <span class="mt-0.5 block font-mono text-xs tabular-nums text-muted">
+              <span class="font-mono font-medium text-ink">{{
+                dossier.reference
+              }}</span>
+              <span
+                class="mt-0.5 block font-mono text-xs tabular-nums text-muted"
+              >
                 {{ dossier.poidsBrutKg }} kg · {{ dossier.volumeM3 }} m³
               </span>
             </span>
@@ -187,6 +214,71 @@
       }
     </fieldset>
 
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <p class="text-xs text-muted">
+        Lance une analyse IA sur les dossiers groupables sélectionnés.
+      </p>
+      <button
+        (click)="suggererGroupage()"
+        [disabled]="!canSuggererGroupage() || groupageLoading()"
+        class="btn-outline pressable min-h-10 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+        type="button"
+      >
+        {{ groupageLoading() ? "Analyse…" : "Suggérer un groupage" }}
+      </button>
+    </div>
+    @if (groupageHint()) {
+    <p class="text-xs text-muted">{{ groupageHint() }}</p>
+    }
+    @if (groupageError()) {
+    <p class="text-xs text-brake" role="alert">{{ groupageError() }}</p>
+    }
+    @if (groupagePropositions().length > 0) {
+    <ul class="mt-1 flex flex-col gap-2">
+      @for (
+        proposition of groupagePropositions();
+        track proposition.dossierIds.join(",")
+      ) {
+      <li class="rounded-lg border border-line/80 bg-canvas px-3 py-3 text-sm">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p class="font-mono text-xs text-ink">
+              {{
+                dossierReferencesForIds(
+                  proposition.dossierIds,
+                  dossiersById()
+                ).join(" · ")
+              }}
+            </p>
+            <p class="mt-1 text-xs text-muted">
+              Score {{ formatPropositionScore(proposition.score) }}
+              @if (formatPropositionGainKm(proposition.gainKm); as gainKm) {
+              · gain {{ gainKm }}
+              }
+              · {{ propositionSourceLabel(proposition.genereParIa) }}
+            </p>
+            <p class="mt-2 text-xs text-ink">
+              {{ proposition.justification }}
+            </p>
+          </div>
+          <button
+            (click)="appliquerProposition(proposition)"
+            class="btn-outline pressable min-h-9 px-3 py-1.5 text-xs text-pine"
+            type="button"
+          >
+            Appliquer
+          </button>
+        </div>
+      </li>
+      }
+    </ul>
+    }
+  </app-form-section>
+
+  <app-form-section
+    description="Distance et durée de conduite à partir des segments des dossiers sélectionnés (OSRM via le backend)."
+    title="Équipage & distances"
+  >
     <div class="flex flex-col gap-1.5">
       <label class="text-xs font-medium text-muted" for="chauffeurId">
         Chauffeur titulaire
@@ -199,8 +291,7 @@
         <option value="">Choisir un chauffeur…</option>
         @for (chauffeur of chauffeurOptions(); track chauffeur.id) {
         <option [value]="chauffeur.id">
-          {{ chauffeur.matricule }}
-          — {{ chauffeur.nomComplet }}
+          {{ formatChauffeurLabel(chauffeur) }}
         </option>
         }
       </select>
@@ -213,7 +304,25 @@
       }
     </div>
 
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <p class="text-xs font-medium text-muted">Itinéraire (IA)</p>
+      <button
+        (click)="calculerItineraire()"
+        [disabled]="!canCalculerItineraire() || itineraireCalculating()"
+        class="btn-outline pressable min-h-10 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+        type="button"
+      >
+        {{ itineraireCalculating() ? "Calcul…" : "Calculer via IA" }}
+      </button>
+    </div>
+    @if (itineraireHint()) {
+    <p class="text-xs text-muted">{{ itineraireHint() }}</p>
+    }
+    @if (itineraireError()) {
+    <p class="text-xs text-brake" role="alert">{{ itineraireError() }}</p>
+    }
+
+    <div class="form-page__coords">
       <div class="flex flex-col gap-1.5">
         <label class="text-xs font-medium text-muted" for="distanceTotaleKm">
           Distance (km)
@@ -224,7 +333,7 @@
           id="distanceTotaleKm"
           step="1"
           type="number"
-        >
+        />
         @if (showFieldError(createForm.distanceTotaleKm())) {
         <p class="text-xs text-brake" role="alert">
           {{ firstFieldError(createForm.distanceTotaleKm().errors()) }}
@@ -241,7 +350,7 @@
           id="dureeConduiteMin"
           step="1"
           type="number"
-        >
+        />
         @if (showFieldError(createForm.dureeConduiteMin())) {
         <p class="text-xs text-brake" role="alert">
           {{ firstFieldError(createForm.dureeConduiteMin().errors()) }}
@@ -249,30 +358,19 @@
         }
       </div>
     </div>
+  </app-form-section>
 
-    @if (formError()) {
-    <p
-      class="border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
-      role="alert"
-    >
-      {{ formError() }}
-    </p>
-    }
-
-    <div class="flex flex-wrap gap-3">
-      <button
-        class="pressable min-h-11 bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
-        type="submit"
-      >
-        Enregistrer
-      </button>
-      <a
-        class="pressable pressable-border inline-flex min-h-11 items-center border border-line px-4 py-2.5 text-sm font-medium text-ink"
-        routerLink="/voyages"
-      >
-        Annuler
-      </a>
-    </div>
-  </form>
+  @if (formError()) {
+  <div class="alert-panel" role="alert">{{ formError() }}</div>
   }
-</div>
+
+  <app-form-actions>
+    <button class="btn-primary pressable min-h-11 px-5" type="submit">
+      Enregistrer
+    </button>
+    <a class="btn-outline pressable min-h-11 px-5" routerLink="/voyages">
+      Annuler
+    </a>
+  </app-form-actions>
+</form>
+}

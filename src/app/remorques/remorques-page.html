@@ -1,0 +1,137 @@
+<div class="flex flex-col gap-6">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <h1 class="module-page-title">Remorques</h1>
+      <p class="mt-1 text-sm text-muted">
+        Semi-remorques du parc — immatriculation
+        <span class="font-mono text-ink">AA-123-AA</span>
+      </p>
+    </div>
+    <a class="btn-primary pressable" routerLink="/remorques/nouveau">
+      Nouvelle remorque
+    </a>
+  </div>
+
+  <div class="flex flex-col gap-3">
+    <app-list-search-bar
+      [(draft)]="searchDraft"
+      [(query)]="search"
+      inputId="remorque-search"
+      placeholder="Immatriculation…"
+    />
+    <app-list-statut-filter
+      [(selected)]="statutFilter"
+      [options]="statutOptions"
+    />
+  </div>
+
+  @if (remorques.isLoading()) {
+  <app-list-table-skeleton label="Chargement des remorques" />
+  } @else if (remorques.error()) {
+  <div class="alert-panel" role="alert">
+    <p>{{ errorMessage() }}</p>
+    <button
+      (click)="remorques.reload()"
+      class="pressable mt-2 font-medium text-ink underline underline-offset-2"
+      type="button"
+    >
+      Réessayer
+    </button>
+  </div>
+  } @else if (remorques.hasValue() && remorques.value().content.length === 0) {
+  @if (search()) {
+  <app-list-empty-state
+    (action)="clearFilters()"
+    actionLabel="Effacer la recherche"
+    description="Aucune remorque ne correspond à « {{ search() }} »."
+    title="Aucun résultat"
+  />
+  } @else {
+  <app-list-empty-state
+    actionLabel="Nouvelle remorque"
+    actionLink="/remorques/nouveau"
+    description="Créez la première remorque du parc."
+    title="Aucune remorque en base"
+  />
+  }
+  } @else if (remorques.hasValue() && visibleRemorques().length === 0) {
+  <app-list-empty-state
+    (action)="clearFilters()"
+    actionLabel="Réinitialiser les filtres"
+    description="Réinitialisez la recherche ou le filtre de statut pour revoir la liste."
+    title="Aucune remorque pour ce filtre"
+  />
+  } @else if (remorques.hasValue()) {
+  <div
+    appListRowKeyboard
+    [(activeId)]="activeRowId"
+    [rows]="keyboardRows()"
+    aria-label="Liste des remorques — flèches pour naviguer, Entrée pour ouvrir"
+    class="list-table-panel"
+  >
+    <table class="w-full min-w-xl text-left text-sm">
+      <thead class="list-table-head">
+        <tr>
+          <th class="px-4 py-3 font-medium" scope="col">Immatriculation</th>
+          <th class="px-4 py-3 font-medium" scope="col">Carrosserie</th>
+          <th class="px-4 py-3 font-medium" scope="col">Capacité</th>
+          <th class="px-4 py-3 font-medium" scope="col">Statut</th>
+          <th class="px-4 py-3 font-medium" scope="col">
+            <span class="sr-only">Actions</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (remorque of visibleRemorques(); track remorque.id) {
+        <tr
+          [attr.aria-selected]="activeRowId() === remorque.id"
+          [class.bg-pine/5]="activeRowId() === remorque.id"
+          class="list-row border-b border-line last:border-0 hover:bg-canvas"
+        >
+          <td class="px-4 py-3">
+            <a
+              [routerLink]="['/remorques', remorque.id]"
+              class="font-mono text-xs text-pine underline-offset-2 hover:underline"
+            >
+              {{ remorque.immatriculation }}
+            </a>
+          </td>
+          <td class="px-4 py-3 text-ink">
+            {{ remorqueCarrosserieLabel(remorque.carrosserie) }}
+          </td>
+          <td class="px-4 py-3 font-mono text-xs tabular-nums text-muted">
+            {{ remorque.volumeUtileM3 }} m³ · {{ remorque.chargeUtileKg }} kg
+          </td>
+          <td class="px-4 py-3">
+            <app-statut-chip
+              [label]="remorqueStatutLabel(remorque.statut)"
+              [tone]="remorqueStatutTone(remorque.statut)"
+            />
+          </td>
+          <td class="px-4 py-3 text-right">
+            <a
+              [routerLink]="['/remorques', remorque.id]"
+              class="list-row-action text-sm font-medium text-pine underline-offset-2 hover:underline"
+            >
+              Ouvrir
+            </a>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (remorques.value().totalElements) {
+  <p class="font-mono text-sm tabular-nums text-muted">
+    {{ visibleRemorques().length }}
+    affichée(s) /
+    {{ remorques.value().totalElements }}
+    remorque(s)
+  </p>
+  }
+  <app-list-pagination
+    [(page)]="page"
+    [totalPages]="remorques.value().totalPages"
+  />
+  }
+</div>

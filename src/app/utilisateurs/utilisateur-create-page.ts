@@ -2,6 +2,7 @@ import { Component, inject, signal } from "@angular/core";
 import { FormField, form, required, submit } from "@angular/forms/signals";
 import { Router, RouterLink } from "@angular/router";
 import { httpErrorMessage } from "../core/api/http-error";
+import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
 import { ToastService } from "../shared/ui/toast";
 import { type Role, roleLabel } from "../core/auth/role";
 import { firstFieldError } from "../core/forms/first-field-error";
@@ -15,7 +16,7 @@ import {
 import { UtilisateurApi } from "./utilisateur-api";
 
 @Component({
-  imports: [FormField, RouterLink],
+  imports: [FormField, RouterLink, ...FORM_PAGE_IMPORTS],
   selector: "app-utilisateur-create-page",
   templateUrl: "./utilisateur-create-page.html",
 })

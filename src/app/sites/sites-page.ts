@@ -74,6 +74,7 @@ export class SitesPage {
   protected readonly actifFilter = signal<string | null>(null);
   protected readonly page = signal(0);
   protected readonly selectedSiteId = signal<string | null>(null);
+  protected readonly mapVisible = signal(false);
 
   protected readonly sites = httpResource<PageResponse<Site>>(() => ({
     params: {
@@ -118,6 +119,12 @@ export class SitesPage {
     listKeyboardRows(this.visibleSites(), (site) => `/sites/${site.id}`)
   );
 
+  protected readonly listWithMapLayoutClass = computed(() =>
+    this.mapVisible()
+      ? "grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]"
+      : ""
+  );
+
   constructor() {
     connectListQueryState(
       this.route,
@@ -146,5 +153,9 @@ export class SitesPage {
 
   protected selectSite(siteId: string): void {
     this.selectedSiteId.set(siteId);
+  }
+
+  protected toggleMapVisible(): void {
+    this.mapVisible.update((visible) => !visible);
   }
 }

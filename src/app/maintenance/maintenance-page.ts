@@ -7,6 +7,7 @@ import {
   inject,
   signal,
 } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
@@ -23,22 +24,28 @@ import {
 } from "../shared/ui/list-row-keyboard";
 import { ListStatutFilter } from "../shared/ui/list-statut-filter";
 import { StatutChip } from "../shared/ui/statut-chip";
+import { MaintenanceTabs } from "./maintenance-tabs";
 import {
   formatDateTime,
   formatMoney,
+  formatOrdreShortId,
   STATUT_OT,
   statutOtLabel,
   statutOtTone,
   type OrdreTravail,
+  type VehiculeLookup,
   typeInterventionLabel,
+  vehiculeLabel,
 } from "./ordre-travail";
 
 const ORDRES_PAGE_SIZE = 20;
+const VEHICULE_LOOKUP_PAGE_SIZE = 50;
 
 @Component({
   imports: [
     RouterLink,
     StatutChip,
+    MaintenanceTabs,
     ListStatutFilter,
     ListPagination,
     ListEmptyState,
@@ -55,9 +62,11 @@ export class MaintenancePage {
 
   protected readonly formatDateTime = formatDateTime;
   protected readonly formatMoney = formatMoney;
+  protected readonly formatOrdreShortId = formatOrdreShortId;
   protected readonly statutOtLabel = statutOtLabel;
   protected readonly statutOtTone = statutOtTone;
   protected readonly typeInterventionLabel = typeInterventionLabel;
+  protected readonly vehiculeLabel = vehiculeLabel;
   protected readonly statutOptions = statutOptionsFrom(
     STATUT_OT,
     statutOtLabel
@@ -66,11 +75,33 @@ export class MaintenancePage {
   protected readonly statutFilter = signal<string | null>(null);
   protected readonly page = signal(0);
   protected readonly activeRowId = signal<string | null>(null);
+  protected readonly vehiculeFilterId = signal<string | null>(null);
 
-  protected readonly ordres = httpResource<PageResponse<OrdreTravail>>(() => ({
-    params: { page: this.page(), size: ORDRES_PAGE_SIZE },
-    url: `${environment.apiBaseUrl}/ordres-travail`,
-  }));
+  protected readonly ordres = httpResource<PageResponse<OrdreTravail>>(() => {
+    const params: Record<string, string | number> = {
+      page: this.page(),
+      size: ORDRES_PAGE_SIZE,
+    };
+    const vehiculeId = this.vehiculeFilterId();
+    if (vehiculeId) {
+      params["vehiculeId"] = vehiculeId;
+    }
+    return {
+      params,
+      url: `${environment.apiBaseUrl}/ordres-travail`,
+    };
+  });
+
+  protected readonly vehicules = httpResource<PageResponse<VehiculeLookup>>(
+    () => ({
+      params: { page: 0, size: VEHICULE_LOOKUP_PAGE_SIZE },
+      url: `${environment.apiBaseUrl}/vehicules`,
+    })
+  );
+
+  protected readonly vehiculeLookups = computed(
+    () => this.vehicules.value()?.content ?? []
+  );
 
   protected readonly visibleOrdres = computed(() => {
     if (!this.ordres.hasValue()) {
@@ -83,9 +114,18 @@ export class MaintenancePage {
     );
   });
 
-  protected readonly errorMessage = computed(() =>
-    httpErrorMessage(this.ordres.error())
-  );
+  protected readonly errorMessage = computed(() => {
+    const error = this.ordres.error();
+    return error ? httpErrorMessage(error) : null;
+  });
+
+  protected readonly filteredVehiculeLabel = computed(() => {
+    const vehiculeId = this.vehiculeFilterId();
+    if (!vehiculeId) {
+      return null;
+    }
+    return vehiculeLabel(vehiculeId, this.vehiculeLookups());
+  });
 
   protected readonly keyboardRows = computed(() =>
     listKeyboardRows(
@@ -106,6 +146,15 @@ export class MaintenancePage {
       { statutValues: STATUT_OT }
     );
 
+    this.route.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((paramMap) => {
+        const vehiculeId = paramMap.get("vehiculeId");
+        this.vehiculeFilterId.set(
+          vehiculeId && vehiculeId.length > 0 ? vehiculeId : null
+        );
+      });
+
     effect(() => {
       syncListKeyboardActiveId(this.keyboardRows(), this.activeRowId);
     });
@@ -114,5 +163,12 @@ export class MaintenancePage {
   protected clearFilters(): void {
     this.statutFilter.set(null);
     this.page.set(0);
+    if (this.vehiculeFilterId()) {
+      void this.router.navigate([], {
+        queryParams: { vehiculeId: null },
+        queryParamsHandling: "merge",
+        replaceUrl: true,
+      });
+    }
   }
 }

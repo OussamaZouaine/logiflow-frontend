@@ -19,7 +19,7 @@ describe("CommandeCreatePage", () => {
     }).compileComponents();
   });
 
-  it("renders the create form", () => {
+  it("renders the create form", async () => {
     const fixture = TestBed.createComponent(CommandeCreatePage);
     fixture.detectChanges();
 
@@ -45,7 +45,9 @@ describe("CommandeCreatePage", () => {
         totalPages: 1,
       });
 
+    await fixture.whenStable();
     fixture.detectChanges();
+
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain("Nouvelle commande");
     expect(compiled.textContent).toContain("Lignes de marchandise");

@@ -1,149 +1,138 @@
-<div class="flex flex-col gap-6">
-  <div class="max-w-lg">
-    <a
-      class="pressable pressable-border inline-flex items-center border border-line px-2.5 py-1.5 text-xs font-medium text-ink"
-      routerLink="/sites"
-    >
-      ← Sites
-    </a>
-    <h1 class="module-page-title mt-4">
-      Nouveau site
-    </h1>
-    <p class="mt-1 text-sm text-muted">Le code ne se modifie plus ensuite.</p>
-  </div>
+<app-form-page-header
+  description="Le code ne se modifie plus ensuite."
+  listLabel="Sites"
+  listLink="/sites"
+  title="Nouveau site"
+/>
 
-  <form (submit)="onSubmit($event)" class="flex flex-col gap-5" novalidate>
-    @if (createForm().touched() && createForm().invalid()) {
-    <z-alert
-      zDescription="Consultez les messages sous chaque champ en surbrillance."
-      zTitle="Certains champs sont à corriger."
-      zType="destructive"
-    />
-    }
-    <div class="flex max-w-lg flex-col gap-5">
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-muted" for="code">Code</label>
+<form (submit)="onSubmit($event)" class="form-page" novalidate>
+  <app-form-validation-summary
+    [show]="createForm().touched() && createForm().invalid()"
+  />
+
+  <div class="form-page__layout form-page__layout--split">
+    <app-form-section title="Identité">
+      <app-form-field
+        [error]="
+          showFieldError(createForm.code())
+            ? firstFieldError(createForm.code().errors())
+            : null
+        "
+        inputId="code"
+        label="Code"
+      >
         <input
-          z-input
           [attr.aria-invalid]="showFieldError(createForm.code()) || null"
+          [class]="fieldClasses(createForm.code())"
           [formField]="createForm.code"
           autocomplete="off"
           id="code"
           placeholder="SITE-LYON-01"
           type="text"
-        >
-        @if (showFieldError(createForm.code())) {
-        <p class="text-xs text-brake" role="alert">
-          {{ firstFieldError(createForm.code().errors()) }}
-        </p>
-        }
-      </div>
+        />
+      </app-form-field>
 
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-muted" for="libelle">
-          Libellé
-        </label>
+      <app-form-field
+        [error]="
+          showFieldError(createForm.libelle())
+            ? firstFieldError(createForm.libelle().errors())
+            : null
+        "
+        inputId="libelle"
+        label="Libellé"
+      >
         <input
-          z-input
           [attr.aria-invalid]="showFieldError(createForm.libelle()) || null"
+          [class]="fieldClasses(createForm.libelle())"
           [formField]="createForm.libelle"
           id="libelle"
           type="text"
-        >
-        @if (showFieldError(createForm.libelle())) {
-        <p class="text-xs text-brake" role="alert">
-          {{ firstFieldError(createForm.libelle().errors()) }}
-        </p>
-        }
-      </div>
+        />
+      </app-form-field>
 
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-muted" for="adresse">
-          Adresse
-        </label>
+      <app-form-field inputId="adresse" label="Adresse">
         <input
-          z-input
           [formField]="createForm.adresse"
+          class="field"
           id="adresse"
           type="text"
-        >
-      </div>
+        />
+      </app-form-field>
 
-      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-medium text-muted" for="latitude">
-            Latitude
-          </label>
-          <input
-            z-input
-            [attr.aria-invalid]="showFieldError(createForm.latitude()) || null"
-            [formField]="createForm.latitude"
-            id="latitude"
-            step="0.0001"
-            type="number"
-          >
-          @if (showFieldError(createForm.latitude())) {
-          <p class="text-xs text-brake" role="alert">
-            {{ firstFieldError(createForm.latitude().errors()) }}
-          </p>
-          }
-        </div>
-        <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-medium text-muted" for="longitude">
-            Longitude
-          </label>
-          <input
-            z-input
-            [attr.aria-invalid]="showFieldError(createForm.longitude()) || null"
-            [formField]="createForm.longitude"
-            id="longitude"
-            step="0.0001"
-            type="number"
-          >
-          @if (showFieldError(createForm.longitude())) {
-          <p class="text-xs text-brake" role="alert">
-            {{ firstFieldError(createForm.longitude().errors()) }}
-          </p>
-          }
-        </div>
-      </div>
-    </div>
-
-    <app-site-localisation-map
-      (coordinatesChange)="onLocalisationChange($event)"
-      [latitude]="draft().latitude"
-      [longitude]="draft().longitude"
-    />
-
-    <div class="flex max-w-lg flex-col gap-5">
       <label class="flex items-center gap-2 text-sm text-ink">
         <input
           (change)="onPoidsLourd($event)"
           [checked]="draft().interditPoidsLourd"
-          class="size-4 accent-pine"
+          class="size-4 rounded accent-pine"
           type="checkbox"
         >
         Interdit aux poids lourds
       </label>
+    </app-form-section>
 
-      @if (formError()) {
-      <z-alert [zDescription]="formError()!" zType="destructive" />
-      }
+    <app-form-section
+      description="Cliquez sur la carte ou déplacez le repère. Les coordonnées se mettent à jour automatiquement."
+      title="Localisation"
+    >
+      <app-site-localisation-map
+        (coordinatesChange)="onLocalisationChange($event)"
+        [latitude]="draft().latitude"
+        [longitude]="draft().longitude"
+        [showHeader]="false"
+      />
 
-      <div class="flex flex-wrap gap-3">
-        <button z-button class="pressable min-h-11" type="submit" zSize="lg">
-          Enregistrer
-        </button>
-        <a
-          z-button
-          class="pressable min-h-11"
-          routerLink="/sites"
-          zSize="lg"
-          zType="outline"
+      <div class="form-page__coords fiche-inset">
+        <app-form-field
+          [error]="
+            showFieldError(createForm.latitude())
+              ? firstFieldError(createForm.latitude().errors())
+              : null
+          "
+          inputId="latitude"
+          label="Latitude"
         >
-          Annuler
-        </a>
+          <input
+            [attr.aria-invalid]="showFieldError(createForm.latitude()) || null"
+            [class]="fieldClasses(createForm.latitude())"
+            [formField]="createForm.latitude"
+            id="latitude"
+            step="0.0001"
+            type="number"
+          />
+        </app-form-field>
+
+        <app-form-field
+          [error]="
+            showFieldError(createForm.longitude())
+              ? firstFieldError(createForm.longitude().errors())
+              : null
+          "
+          inputId="longitude"
+          label="Longitude"
+        >
+          <input
+            [attr.aria-invalid]="showFieldError(createForm.longitude()) || null"
+            [class]="fieldClasses(createForm.longitude())"
+            [formField]="createForm.longitude"
+            id="longitude"
+            step="0.0001"
+            type="number"
+          />
+        </app-form-field>
       </div>
-    </div>
-  </form>
-</div>
+    </app-form-section>
+  </div>
+
+  @if (formError()) {
+  <div class="alert-panel" role="alert">{{ formError() }}</div>
+  }
+
+  <app-form-actions>
+    <button class="btn-primary pressable min-h-11 px-5" type="submit">
+      Enregistrer
+    </button>
+    <a class="btn-outline pressable min-h-11 px-5" routerLink="/sites">
+      Annuler
+    </a>
+  </app-form-actions>
+</form>

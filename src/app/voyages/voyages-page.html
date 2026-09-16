@@ -7,10 +7,7 @@
       </p>
     </div>
     @if (canPlan()) {
-    <a
-      class="pressable min-h-11 bg-pine px-4 py-2.5 text-center text-sm font-medium tracking-wide text-surface"
-      routerLink="/voyages/nouveau"
-    >
+    <a class="btn-primary pressable" routerLink="/voyages/nouveau">
       Nouveau voyage
     </a>
     }
@@ -35,10 +32,7 @@
     <app-map-aside-skeleton />
   </div>
   } @else if (voyages.error()) {
-  <div
-    class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
-    role="alert"
-  >
+  <div class="alert-panel" role="alert">
     <p>{{ errorMessage() }}</p>
     <button
       (click)="voyages.reload()"
@@ -84,7 +78,7 @@
         [(activeId)]="selectedVoyageId"
         [rows]="keyboardRows()"
         aria-label="Liste des voyages — flèches pour naviguer, Entrée pour ouvrir"
-        class="overflow-x-auto border border-line bg-surface"
+        class="list-table-panel"
       >
         <table class="w-full min-w-xl text-left text-sm">
           <thead
@@ -161,7 +155,7 @@
       />
     </div>
 
-    <aside class="flex min-h-80 flex-col gap-2 border border-line bg-surface">
+    <aside class="surface-panel flex min-h-80 flex-col gap-2">
       <div class="border-b border-line px-4 py-3">
         <h2 class="text-sm font-medium text-ink">Carte des sites</h2>
         <p class="mt-0.5 text-xs text-muted">{{ mapHint() }}</p>

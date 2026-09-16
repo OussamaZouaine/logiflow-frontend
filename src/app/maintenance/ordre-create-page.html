@@ -1,41 +1,23 @@
-<div class="flex max-w-lg flex-col gap-6">
-  <div>
-    <a
-      class="pressable pressable-border inline-flex items-center border border-line px-2.5 py-1.5 text-xs font-medium text-ink"
-      routerLink="/maintenance"
-    >
-      ← Maintenance
-    </a>
-    <h1 class="module-page-title mt-4">
-      Nouvel ordre de travail
-    </h1>
-    <p class="mt-1 text-sm text-muted">
-      Créé au statut Planifié. Le véhicule doit déjà exister.
-    </p>
-  </div>
+<app-form-page-header
+  description="Créé au statut Planifié. Le véhicule doit déjà exister."
+  listLabel="Maintenance"
+  listLink="/maintenance"
+  title="Nouvel ordre de travail"
+/>
 
-  @if (vehicules.isLoading()) {
-  <p class="text-sm text-muted" role="status">Chargement des véhicules…</p>
-  } @else if (lookupsError()) {
-  <div
-    class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
-    role="alert"
-  >
-    <p>{{ lookupsError() }}</p>
-  </div>
-  } @else if (vehicules.hasValue()) {
-  <form (submit)="onSubmit($event)" class="flex flex-col gap-5" novalidate>
-    @if (createForm().touched() && createForm().invalid()) {
-    <div
-      class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
-      role="alert"
-    >
-      <p class="font-medium">Certains champs sont à corriger.</p>
-      <p class="mt-1 text-xs text-brake/90">
-        Consultez les messages sous chaque champ en surbrillance.
-      </p>
-    </div>
-    }
+@if (vehicules.isLoading()) {
+<p class="text-sm text-muted" role="status">Chargement des véhicules…</p>
+} @else if (lookupsError()) {
+<div class="alert-panel" role="alert">
+  <p>{{ lookupsError() }}</p>
+</div>
+} @else if (vehicules.hasValue()) {
+<form (submit)="onSubmit($event)" class="form-page" novalidate>
+  <app-form-validation-summary
+    [show]="createForm().touched() && createForm().invalid()"
+  />
+
+  <app-form-section title="Intervention">
     <div class="flex flex-col gap-1.5">
       <label class="text-xs font-medium text-muted" for="vehiculeId">
         Véhicule
@@ -75,7 +57,7 @@
       }
     </div>
 
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+    <div class="form-page__coords">
       <div class="flex flex-col gap-1.5">
         <label class="text-xs font-medium text-muted" for="datePlanifiee">
           Date planifiée
@@ -85,7 +67,7 @@
           [class]="fieldClasses(createForm.datePlanifiee())"
           id="datePlanifiee"
           type="datetime-local"
-        >
+        />
         @if (showFieldError(createForm.datePlanifiee())) {
         <p class="text-xs text-brake" role="alert">
           {{ firstFieldError(createForm.datePlanifiee().errors()) }}
@@ -102,7 +84,7 @@
           id="montant"
           step="0.01"
           type="number"
-        >
+        />
         @if (showFieldError(createForm.montant())) {
         <p class="text-xs text-brake" role="alert">
           {{ firstFieldError(createForm.montant().errors()) }}
@@ -110,30 +92,19 @@
         }
       </div>
     </div>
+  </app-form-section>
 
-    @if (formError()) {
-    <p
-      class="border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
-      role="alert"
-    >
-      {{ formError() }}
-    </p>
-    }
-
-    <div class="flex flex-wrap gap-3">
-      <button
-        class="pressable min-h-11 bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
-        type="submit"
-      >
-        Enregistrer
-      </button>
-      <a
-        class="pressable pressable-border inline-flex min-h-11 items-center border border-line px-4 py-2.5 text-sm font-medium text-ink"
-        routerLink="/maintenance"
-      >
-        Annuler
-      </a>
-    </div>
-  </form>
+  @if (formError()) {
+  <div class="alert-panel" role="alert">{{ formError() }}</div>
   }
-</div>
+
+  <app-form-actions>
+    <button class="btn-primary pressable min-h-11 px-5" type="submit">
+      Enregistrer
+    </button>
+    <a class="btn-outline pressable min-h-11 px-5" routerLink="/maintenance">
+      Annuler
+    </a>
+  </app-form-actions>
+</form>
+}

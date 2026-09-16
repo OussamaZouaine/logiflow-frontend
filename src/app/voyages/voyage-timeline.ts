@@ -53,7 +53,9 @@ function dated(
 /** Chronological ops timeline from voyage payload + événements (no new API). */
 export function voyageTimelineEntries(
   voyage: Voyage,
-  evenements: readonly EvenementVoyage[]
+  evenements: readonly EvenementVoyage[],
+  resolveChauffeurLabel: (chauffeurId: string) => string = (chauffeurId) =>
+    `${chauffeurId.slice(0, 8)}…`
 ): OpsTimelineEntry[] {
   const entries: SortableEntry[] = [
     dated("planned-depart", "planned", "Départ prévu", voyage.departPrevu),
@@ -93,7 +95,7 @@ export function voyageTimelineEntries(
         "actual",
         `Affectation · ${roleLabel(affectation.role)}`,
         affectation.dateAffectation,
-        `Chauffeur ${affectation.chauffeurId.slice(0, 8)}…`
+        resolveChauffeurLabel(affectation.chauffeurId)
       )
     );
   }

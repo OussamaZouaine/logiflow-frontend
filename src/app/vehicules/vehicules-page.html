@@ -7,10 +7,7 @@
         <span class="font-mono text-ink">AA-123-AA</span>
       </p>
     </div>
-    <a
-      class="pressable min-h-11 bg-pine px-4 py-2.5 text-center text-sm font-medium tracking-wide text-surface"
-      routerLink="/vehicules/nouveau"
-    >
+    <a class="btn-primary pressable" routerLink="/vehicules/nouveau">
       Nouveau véhicule
     </a>
   </div>
@@ -31,10 +28,7 @@
   @if (vehicules.isLoading()) {
   <app-list-table-skeleton label="Chargement des véhicules" />
   } @else if (vehicules.error()) {
-  <div
-    class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
-    role="alert"
-  >
+  <div class="alert-panel" role="alert">
     <p>{{ errorMessage() }}</p>
     <button
       (click)="vehicules.reload()"
@@ -73,7 +67,7 @@
     [(activeId)]="activeRowId"
     [rows]="keyboardRows()"
     aria-label="Liste des véhicules — flèches pour naviguer, Entrée pour ouvrir"
-    class="overflow-x-auto border border-line bg-surface"
+    class="list-table-panel"
   >
     <table class="w-full min-w-xl text-left text-sm">
       <thead

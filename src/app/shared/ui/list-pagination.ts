@@ -12,12 +12,12 @@ import {
     @if (totalPages() > 1) {
     <nav
       aria-label="Pagination"
-      class="flex items-center justify-between gap-3 border border-line bg-surface px-4 py-3"
+      class="surface-panel flex items-center justify-between gap-3 px-4 py-3"
     >
       <button
         (click)="goPrevious()"
         [disabled]="page() <= 0"
-        class="pressable border border-line px-3 py-1.5 text-sm font-medium text-ink disabled:cursor-not-allowed disabled:opacity-40"
+        class="btn-outline pressable min-h-9 px-3 py-1.5 text-sm disabled:cursor-not-allowed disabled:opacity-40"
         type="button"
       >
         Précédent
@@ -28,7 +28,7 @@ import {
       <button
         (click)="goNext()"
         [disabled]="page() >= totalPages() - 1"
-        class="pressable border border-line px-3 py-1.5 text-sm font-medium text-ink disabled:cursor-not-allowed disabled:opacity-40"
+        class="btn-outline pressable min-h-9 px-3 py-1.5 text-sm disabled:cursor-not-allowed disabled:opacity-40"
         type="button"
       >
         Suivant

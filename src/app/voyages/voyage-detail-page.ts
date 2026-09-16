@@ -4,11 +4,21 @@ import { RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
+import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
 import { FicheHeader } from "../shared/ui/fiche-header";
 import { ToastService } from "../shared/ui/toast";
 import { OpsTimeline } from "../shared/ui/ops-timeline";
 import { StatutChip } from "../shared/ui/statut-chip";
 import { voyageStatutTone } from "../tableau/apercu";
+import {
+  chauffeurLabelFromLookup,
+  type ChauffeurListItem,
+} from "../chauffeurs/chauffeur";
+import {
+  vehiculeLabel,
+  type VehiculeLookup,
+} from "../maintenance/ordre-travail";
+import { type RemorqueListItem } from "../remorques/remorque";
 import {
   type EvenementVoyage,
   formatInstant,
@@ -34,7 +44,7 @@ interface DossierLink {
 }
 
 @Component({
-  imports: [RouterLink, FicheHeader, OpsTimeline, StatutChip],
+  imports: [RouterLink, FicheHeader, OpsTimeline, StatutChip, ...FORM_PAGE_IMPORTS],
   selector: "app-voyage-detail-page",
   templateUrl: "./voyage-detail-page.html",
 })
@@ -64,6 +74,35 @@ export class VoyageDetailPage {
     url: `${environment.apiBaseUrl}/voyages/${this.id()}`,
   }));
 
+  protected readonly vehicules = httpResource<PageResponse<VehiculeLookup>>(
+    () => ({
+      params: { page: 0, size: 50 },
+      url: `${environment.apiBaseUrl}/vehicules`,
+    })
+  );
+
+  protected readonly remorques = httpResource<PageResponse<RemorqueListItem>>(
+    () => ({
+      params: { page: 0, size: 50 },
+      url: `${environment.apiBaseUrl}/remorques`,
+    })
+  );
+
+  protected readonly chauffeurs = httpResource<
+    PageResponse<ChauffeurListItem>
+  >(() => ({
+    params: { page: 0, size: 50 },
+    url: `${environment.apiBaseUrl}/chauffeurs`,
+  }));
+
+  protected readonly chauffeursById = computed(() => {
+    const map = new Map<string, Pick<ChauffeurListItem, "matricule" | "nom" | "prenom">>();
+    for (const chauffeur of this.chauffeurs.value()?.content ?? []) {
+      map.set(chauffeur.id, chauffeur);
+    }
+    return map;
+  });
+
   protected readonly dossiers = httpResource<PageResponse<DossierLink>>(() => ({
     params: { page: 0, size: 50 },
     url: `${environment.apiBaseUrl}/dossiers`,
@@ -86,7 +125,11 @@ export class VoyageDetailPage {
     if (!voyage) {
       return [];
     }
-    return voyageTimelineEntries(voyage, this.evenements.value() ?? []);
+    return voyageTimelineEntries(
+      voyage,
+      this.evenements.value() ?? [],
+      (chauffeurId) => chauffeurLabelFromLookup(chauffeurId, this.chauffeursById())
+    );
   });
 
   protected readonly loadError = computed(() =>
@@ -100,6 +143,39 @@ export class VoyageDetailPage {
 
   protected dossierLabel(dossierId: string): string {
     return this.dossiersById().get(dossierId)?.reference ?? dossierId;
+  }
+
+  protected titulaireChauffeurId(): string | null {
+    const voyage = this.voyage.value();
+    if (!voyage) {
+      return null;
+    }
+    return (
+      voyage.affectations.find((affectation) => affectation.role === "TITULAIRE")
+        ?.chauffeurId ?? voyage.affectations[0]?.chauffeurId ?? null
+    );
+  }
+
+  protected chauffeurLabel(chauffeurId: string): string {
+    return chauffeurLabelFromLookup(chauffeurId, this.chauffeursById());
+  }
+
+  protected affectedVehiculeLabel(): string {
+    const voyage = this.voyage.value();
+    if (!voyage) {
+      return "";
+    }
+    return vehiculeLabel(
+      voyage.vehiculeId,
+      this.vehicules.value()?.content ?? []
+    );
+  }
+
+  protected affectedRemorqueLabel(remorqueId: string): string {
+    const remorque = this.remorques
+      .value()
+      ?.content.find((entry) => entry.id === remorqueId);
+    return remorque?.immatriculation ?? remorqueId;
   }
 
   protected onEventType(event: Event): void {

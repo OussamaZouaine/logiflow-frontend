@@ -3,10 +3,7 @@
     @if (vehicule.isLoading()) {
     <p class="text-sm text-muted" role="status">Chargement…</p>
     } @else if (vehicule.error()) {
-    <div
-      class="border border-brake/25 bg-brake/5 px-4 py-3 text-sm text-brake"
-      role="alert"
-    >
+    <div class="alert-panel" role="alert">
       <p>{{ loadError() }}</p>
       <button
         (click)="vehicule.reload()"
@@ -38,157 +35,420 @@
   </app-fiche-header>
 
   @if (vehicule.hasValue()) {
-  <section class="max-w-lg border border-line bg-surface p-5">
-    <h2 class="text-xl font-medium tracking-tight text-ink">
-      Compteurs
-    </h2>
-    <p class="mt-1 text-sm text-muted">Le relevé ne peut pas reculer.</p>
-    <form (submit)="saveCompteurs($event)" class="mt-5 flex flex-col gap-5">
-      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-medium text-muted" for="kilometrage">
-            Kilométrage
-          </label>
-          <input
-            [formField]="compteursForm.kilometrage"
-            class="field"
-            id="kilometrage"
-            step="1"
-            type="number"
-          >
+  <div class="flex max-w-2xl flex-col gap-6">
+    <app-form-section
+      description="Relevé kilométrique et horamètre — les valeurs ne peuvent pas reculer."
+      title="Compteurs"
+    >
+      <form (submit)="saveCompteurs($event)" novalidate>
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <app-form-field inputId="kilometrage" label="Kilométrage">
+            <input
+              [formField]="compteursForm.kilometrage"
+              class="field"
+              id="kilometrage"
+              step="1"
+              type="number"
+            >
+          </app-form-field>
+          <app-form-field inputId="heuresMoteur" label="Heures moteur">
+            <input
+              [formField]="compteursForm.heuresMoteur"
+              class="field"
+              id="heuresMoteur"
+              step="1"
+              type="number"
+            >
+          </app-form-field>
         </div>
-        <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-medium text-muted" for="heuresMoteur">
-            Heures moteur
-          </label>
-          <input
-            [formField]="compteursForm.heuresMoteur"
-            class="field"
-            id="heuresMoteur"
-            step="1"
-            type="number"
-          >
+        @if (compteursError()) {
+        <div class="alert-panel" role="alert">
+          {{ compteursError() }}
         </div>
-      </div>
-      @if (compteursError()) {
-      <p
-        class="border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
-        role="alert"
-      >
-        {{ compteursError() }}
-      </p>
-      }
-      <button
-        class="pressable min-h-11 w-fit bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
-        type="submit"
-      >
-        Enregistrer le relevé
-      </button>
-    </form>
-  </section>
+        }
+        <app-form-actions>
+          <button class="btn-primary pressable min-h-11 px-5" type="submit">
+            Enregistrer le relevé
+          </button>
+        </app-form-actions>
+      </form>
+    </app-form-section>
 
-  <section class="border border-line bg-surface p-5">
-    <div class="flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <h2 class="text-xl font-medium tracking-tight text-ink">
-          Documents
-        </h2>
-        <p class="mt-1 text-sm text-muted">
-          Remplace la liste complète à l'enregistrement.
-        </p>
-      </div>
-      <button
-        (click)="addDocument()"
-        class="pressable pressable-border border border-line px-3 py-1.5 text-xs font-medium text-ink"
-        type="button"
-      >
-        Ajouter
-      </button>
-    </div>
-
-    @if (documents().length === 0) {
-    <p class="mt-4 text-sm text-muted">Aucun document.</p>
-    } @else {
-    <ul class="mt-4 flex flex-col gap-3">
-      @for (document of documents(); track $index) {
-      <li
-        class="grid grid-cols-1 gap-2 border border-line p-3 sm:grid-cols-[8rem_1fr_9rem_auto] sm:items-end"
-      >
-        <div class="flex flex-col gap-1.5">
-          <label
-            [for]="'doc-type-' + $index"
-            class="text-xs font-medium text-muted"
-          >
-            Type
-          </label>
-          <select
-            (change)="onDocumentType($index, $event)"
-            [id]="'doc-type-' + $index"
-            [value]="document.type"
-            class="field"
-          >
-            @for (type of documentTypes; track type) {
-            <option [value]="type">{{ documentTypeLabel(type) }}</option>
-            }
-          </select>
-        </div>
-        <div class="flex flex-col gap-1.5">
-          <label
-            [for]="'doc-ref-' + $index"
-            class="text-xs font-medium text-muted"
-          >
-            Référence
-          </label>
-          <input
-            (input)="onDocumentReference($index, $event)"
-            [id]="'doc-ref-' + $index"
-            [value]="document.reference"
-            class="field"
-            type="text"
-          >
-        </div>
-        <div class="flex flex-col gap-1.5">
-          <label
-            [for]="'doc-exp-' + $index"
-            class="text-xs font-medium text-muted"
-          >
-            Expiration
-          </label>
-          <input
-            (change)="onDocumentExpiration($index, $event)"
-            (input)="onDocumentExpiration($index, $event)"
-            [id]="'doc-exp-' + $index"
-            [value]="document.dateExpiration"
-            class="field"
-            type="date"
-          >
-        </div>
+    <app-form-section
+      description="Carte grise, assurance, contrôle technique — pièces rattachées à ce véhicule."
+      title="Documents"
+    >
+      @if (documents.isLoading()) {
+      <p class="text-sm text-muted" role="status">Chargement…</p>
+      } @else if (documents.error()) {
+      <div class="alert-panel" role="alert">
+        <p>{{ documentsLoadError() }}</p>
         <button
-          (click)="removeDocument($index)"
-          class="pressable pressable-border h-11 border border-line px-3 text-xs font-medium text-ink"
+          (click)="documents.reload()"
+          class="pressable mt-2 font-medium text-ink underline underline-offset-2"
           type="button"
         >
-          Retirer
+          Réessayer
         </button>
-      </li>
+      </div>
+      } @else if (documents.hasValue()) {
+      @if (documents.value().length === 0) {
+      <p class="text-sm text-muted">Aucun document.</p>
+      } @else {
+      <ul class="flex flex-col gap-2">
+        @for (document of documents.value(); track document.id) {
+        <li
+          class="flex flex-wrap items-end justify-between gap-3 rounded-lg border border-line/80 bg-canvas px-3 py-3"
+        >
+          <div class="min-w-0 flex-1 text-sm">
+            <p class="font-medium text-ink">
+              {{ documentTypeLabel(document.typeDocument) }}
+            </p>
+            <p class="mt-1 text-muted">{{ document.reference }}</p>
+            <p class="mt-1 font-mono text-xs tabular-nums text-muted">
+              Expire le {{ formatDocumentExpiration(document.dateExpiration) }}
+            </p>
+            @if (document.url) {
+            <a
+              [href]="document.url"
+              class="mt-2 inline-block text-xs text-pine underline-offset-2 hover:underline"
+              rel="noopener"
+              target="_blank"
+            >
+              Ouvrir le fichier
+            </a>
+            }
+          </div>
+          <button
+            (click)="deleteDocument(document.id)"
+            class="btn-danger-outline pressable h-11 px-3 text-xs"
+            type="button"
+          >
+            Supprimer
+          </button>
+        </li>
+        }
+      </ul>
       }
-    </ul>
-    } @if (documentsError()) {
-    <p
-      class="mt-4 border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake"
-      role="alert"
-    >
-      {{ documentsError() }}
-    </p>
-    }
 
-    <button
-      (click)="saveDocuments()"
-      class="pressable mt-4 min-h-11 bg-pine px-4 py-2.5 text-sm font-medium tracking-wide text-surface"
-      type="button"
+      <details class="fiche-disclosure fiche-inset">
+        <summary class="text-sm font-medium text-ink">
+          Téléverser un document
+        </summary>
+        <form
+          (submit)="uploadDocument($event)"
+          class="mt-4"
+          novalidate
+        >
+          <app-form-field inputId="documentFichier" label="Fichier">
+            <input
+              (change)="onFileSelected($event)"
+              accept=".pdf,.png,.jpg,.jpeg,.webp"
+              class="field"
+              id="documentFichier"
+              type="file"
+            >
+          </app-form-field>
+          <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <app-form-field inputId="uploadType" label="Type">
+              <select
+                (change)="onUploadType($event)"
+                [value]="uploadDraft().typeDocument"
+                class="field"
+                id="uploadType"
+              >
+                @for (type of documentTypes; track type) {
+                <option [value]="type">{{ documentTypeLabel(type) }}</option>
+                }
+              </select>
+            </app-form-field>
+            <app-form-field inputId="uploadReference" label="Référence">
+              <input
+                (input)="onUploadReference($event)"
+                [value]="uploadDraft().reference"
+                class="field"
+                id="uploadReference"
+                type="text"
+              >
+            </app-form-field>
+            <app-form-field inputId="uploadExpiration" label="Expiration">
+              <input
+                (change)="onUploadExpiration($event)"
+                (input)="onUploadExpiration($event)"
+                [value]="uploadDraft().dateExpiration"
+                class="field"
+                id="uploadExpiration"
+                type="date"
+              >
+            </app-form-field>
+          </div>
+          @if (uploadError()) {
+          <div class="alert-panel" role="alert">
+            {{ uploadError() }}
+          </div>
+          }
+          <app-form-actions>
+            <button class="btn-primary pressable min-h-11 px-5" type="submit">
+              Téléverser
+            </button>
+          </app-form-actions>
+        </form>
+      </details>
+      }
+    </app-form-section>
+
+    <app-form-section
+      description="Dernier enregistrement pour ce véhicule. Le statut (Bon, À planifier…) est dérivé côté serveur à partir du score et des km avant échéance."
+      title="Score de santé"
     >
-      Enregistrer les documents
-    </button>
-  </section>
+      @if (scoreSante.isLoading()) {
+      <p class="text-sm text-muted" role="status">Chargement…</p>
+      } @else if (scoreSante.error()) {
+      <div class="alert-panel" role="alert">
+        <p>{{ scoreLoadError() }}</p>
+        <button
+          (click)="scoreSante.reload()"
+          class="pressable mt-2 font-medium text-ink underline underline-offset-2"
+          type="button"
+        >
+          Réessayer
+        </button>
+      </div>
+      } @else if (scoreSante.hasValue() && scoreSante.value()) {
+      <div class="flex flex-wrap items-center gap-3">
+        <app-statut-chip
+          [label]="statutSanteLabel(scoreSante.value()!.statut)"
+          [tone]="statutSanteTone(scoreSante.value()!.statut)"
+        />
+        <span class="font-mono text-sm tabular-nums text-ink">
+          {{ scoreSante.value()!.score }}/100
+        </span>
+      </div>
+      @if (scoreSante.value()!.necessiteIntervention && canMaintenance()) {
+      <p class="text-sm text-amber">
+        Intervention recommandée — créez un ordre de travail si ce n'est pas déjà
+        fait.
+      </p>
+      }
+      <dl class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+        <div>
+          <dt class="text-xs text-muted">Enregistré le</dt>
+          <dd class="mt-0.5 text-ink">
+            {{ formatScoreDate(scoreSante.value()!.calculeLe) }}
+          </dd>
+        </div>
+        <div>
+          <dt class="text-xs text-muted">Échéance projetée</dt>
+          <dd class="mt-0.5 text-ink">
+            {{ formatScoreDate(scoreSante.value()!.dateEcheanceProjetee) }}
+          </dd>
+        </div>
+        <div>
+          <dt class="text-xs text-muted">Km avant échéance</dt>
+          <dd class="mt-0.5 font-mono tabular-nums text-ink">
+            {{ scoreSante.value()!.kmAvantEcheance.toLocaleString("fr-FR") }}
+          </dd>
+        </div>
+        @if (scoreSante.value()!.recommandation) {
+        <div class="sm:col-span-2">
+          <dt class="text-xs text-muted">Recommandation</dt>
+          <dd class="mt-0.5 text-ink">
+            {{ scoreSante.value()!.recommandation }}
+          </dd>
+        </div>
+        }
+      </dl>
+      } @else if (scoreSante.hasValue()) {
+      <p class="text-sm text-muted">Aucun score enregistré.</p>
+      }
+
+      @if (canMaintenance()) {
+      <details class="fiche-disclosure fiche-inset">
+        <summary class="text-sm font-medium text-ink">
+          Enregistrer un score
+        </summary>
+        <p class="mt-2 text-xs text-muted">
+          Saisissez le score (0–100), les km restants avant échéance et la date
+          projetée. Le serveur calcule le statut de santé.
+        </p>
+        <form (submit)="enregistrerScore($event)" class="mt-4" novalidate>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <app-form-field inputId="score" label="Score (0–100)">
+              <input
+                [formField]="scoreForm.score"
+                class="field"
+                id="score"
+                step="0.1"
+                type="number"
+              >
+            </app-form-field>
+            <app-form-field inputId="kmAvantEcheance" label="Km avant échéance">
+              <input
+                [formField]="scoreForm.kmAvantEcheance"
+                class="field"
+                id="kmAvantEcheance"
+                step="1"
+                type="number"
+              >
+            </app-form-field>
+          </div>
+          <app-form-field inputId="dateEcheance" label="Échéance projetée">
+            <input
+              [formField]="scoreForm.dateEcheanceProjetee"
+              class="field"
+              id="dateEcheance"
+              type="date"
+            >
+          </app-form-field>
+          <app-form-field inputId="recommandation" label="Recommandation (optionnel)">
+            <input
+              [formField]="scoreForm.recommandation"
+              class="field"
+              id="recommandation"
+              type="text"
+            >
+          </app-form-field>
+          @if (scoreError()) {
+          <div class="alert-panel" role="alert">
+            {{ scoreError() }}
+          </div>
+          }
+          <app-form-actions>
+            <button class="btn-primary pressable min-h-11 px-5" type="submit">
+              Enregistrer le score
+            </button>
+          </app-form-actions>
+        </form>
+      </details>
+      }
+    </app-form-section>
+
+    @if (canMaintenance()) {
+    <app-form-section
+      description="Les plans d'entretien décrivent la périodicité préventive ; les ordres de travail exécutent une intervention. Un plan ne crée pas d'ordre automatiquement."
+      title="Maintenance"
+    >
+      <div class="flex flex-col gap-6">
+        <div>
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h3 class="text-sm font-medium text-ink">Plans d'entretien</h3>
+            <a
+              [queryParams]="{ vehiculeId: id() }"
+              class="btn-outline pressable min-h-9 px-3 py-1.5 text-xs"
+              routerLink="/maintenance/plans/nouveau"
+            >
+              Nouveau plan
+            </a>
+          </div>
+
+          @if (plansEntretien.isLoading()) {
+          <p class="mt-3 text-sm text-muted" role="status">Chargement…</p>
+          } @else if (plansEntretien.error()) {
+          <div class="alert-panel mt-3" role="alert">
+            <p>{{ plansLoadError() }}</p>
+            <button
+              (click)="plansEntretien.reload()"
+              class="pressable mt-2 font-medium text-ink underline underline-offset-2"
+              type="button"
+            >
+              Réessayer
+            </button>
+          </div>
+          } @else if (plansEntretienList().length === 0) {
+          <p class="mt-3 text-sm text-muted">Aucun plan pour ce véhicule.</p>
+          } @else {
+          <ul class="mt-3 flex flex-col gap-2">
+            @for (plan of plansEntretienList(); track plan.id) {
+            <li>
+              <a
+                [routerLink]="['/maintenance/plans', plan.id]"
+                class="pressable flex flex-wrap items-baseline justify-between gap-2 rounded-lg border border-line/80 bg-canvas px-3 py-2.5 text-sm hover:border-pine/30 hover:bg-pine/5"
+              >
+                <span class="font-medium text-ink">{{ plan.libelle }}</span>
+                <span class="font-mono text-xs tabular-nums text-muted">
+                  {{ formatPeriodicite(plan) }}
+                </span>
+              </a>
+            </li>
+            }
+          </ul>
+          }
+        </div>
+
+        <div class="border-t border-line pt-6">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h3 class="text-sm font-medium text-ink">Ordres de travail</h3>
+            <a
+              [queryParams]="{ vehiculeId: id() }"
+              class="btn-primary pressable min-h-9 px-3 py-1.5 text-xs"
+              routerLink="/maintenance/nouveau"
+            >
+              Nouvel ordre
+            </a>
+          </div>
+
+          @if (ordresTravail.isLoading()) {
+          <p class="mt-3 text-sm text-muted" role="status">Chargement…</p>
+          } @else if (ordresTravail.error()) {
+          <div class="alert-panel mt-3" role="alert">
+            <p>{{ ordresLoadError() }}</p>
+            <button
+              (click)="ordresTravail.reload()"
+              class="pressable mt-2 font-medium text-ink underline underline-offset-2"
+              type="button"
+            >
+              Réessayer
+            </button>
+          </div>
+          } @else if (ordresTravailList().length === 0) {
+          <p class="mt-3 text-sm text-muted">Aucun ordre pour ce véhicule.</p>
+          } @else {
+          <ul class="mt-3 flex flex-col gap-2">
+            @for (ordre of ordresTravailList(); track ordre.id) {
+            <li>
+              <a
+                [routerLink]="['/maintenance', ordre.id]"
+                class="pressable flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line/80 bg-canvas px-3 py-2.5 text-sm hover:border-pine/30 hover:bg-pine/5"
+              >
+                <span class="font-mono text-xs text-pine">
+                  #{{ formatOrdreShortId(ordre.id) }}
+                </span>
+                <span class="text-ink">
+                  {{ typeInterventionLabel(ordre.type) }}
+                </span>
+                <app-statut-chip
+                  [label]="statutOtLabel(ordre.statut)"
+                  [tone]="statutOtTone(ordre.statut)"
+                />
+                <span class="font-mono text-xs tabular-nums text-muted">
+                  {{ formatDateTime(ordre.datePlanifiee) }}
+                </span>
+              </a>
+            </li>
+            }
+          </ul>
+          }
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-x-4 gap-y-2 text-xs">
+        <a
+          [queryParams]="{ vehiculeId: id() }"
+          class="pressable font-medium text-pine underline-offset-2 hover:underline"
+          routerLink="/maintenance"
+        >
+          Tous les ordres
+        </a>
+        <a
+          [queryParams]="{ vehiculeId: id() }"
+          class="pressable font-medium text-pine underline-offset-2 hover:underline"
+          routerLink="/maintenance/plans"
+        >
+          Tous les plans
+        </a>
+      </div>
+    </app-form-section>
+    }
+  </div>
   }
 </div>

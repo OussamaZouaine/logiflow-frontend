@@ -20,7 +20,7 @@ import {
         type="search"
       />
       <button
-        class="pressable pressable-border shrink-0 border border-line px-4 py-2 text-sm font-medium text-ink"
+        class="btn-outline pressable shrink-0 px-4 py-2 text-sm"
         type="submit"
       >
         Chercher

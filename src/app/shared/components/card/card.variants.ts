@@ -1,8 +1,8 @@
 import { cva, type VariantProps } from "class-variance-authority";
 
-/** LogiFlow cards: square borders, line stroke — matches existing tiles. */
+/** LogiFlow cards: rounded, soft elevation. */
 export const cardVariants = cva(
-  "group/card flex flex-col gap-4 overflow-hidden rounded-none border border-border bg-card py-4 text-sm text-card-foreground has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0",
+  "group/card flex flex-col gap-4 overflow-hidden rounded-xl border border-border bg-card py-4 text-sm text-card-foreground shadow-[0_1px_2px_oklch(0_0_0/0.04),0_8px_24px_oklch(0_0_0/0.04)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0",
   {
     variants: {
       zSize: {
@@ -36,5 +36,5 @@ export const cardContentVariants = cva(
 );
 
 export const cardFooterVariants = cva(
-  "flex items-center rounded-none bg-secondary/50 p-4 group-data-[size=sm]/card:p-3",
+  "flex items-center rounded-b-xl bg-secondary/50 p-4 group-data-[size=sm]/card:p-3",
 );
