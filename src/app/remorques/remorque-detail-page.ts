@@ -21,20 +21,23 @@ import {
   isDocumentType,
   type Document,
 } from "../documents/document";
-import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
-import { FicheHeader } from "../shared/ui/fiche-header";
+import { enumToSelectOptions } from "../shared/ui/field-select";
+import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
 import { ToastService } from "../shared/ui/toast";
 import { StatutChip } from "../shared/ui/statut-chip";
 import {
-  remorqueCarrosserieLabel,
+  carrosserieDisplay,
+  formatMarqueModele,
+  formatRemorqueDate,
   remorqueStatutLabel,
   remorqueStatutTone,
+  typeRemorqueDisplay,
   type Remorque,
 } from "./remorque";
 import { RemorqueApi } from "./remorque-api";
 
 @Component({
-  imports: [FormField, FicheHeader, StatutChip, ...FORM_PAGE_IMPORTS],
+  imports: [FormField, StatutChip, ...FICHE_PAGE_IMPORTS],
   selector: "app-remorque-detail-page",
   templateUrl: "./remorque-detail-page.html",
 })
@@ -46,11 +49,18 @@ export class RemorqueDetailPage {
   readonly id = input.required<string>();
 
   protected readonly documentTypes = DOCUMENT_TYPES;
+  protected readonly documentTypeOptions = enumToSelectOptions(
+    DOCUMENT_TYPES,
+    documentTypeLabel
+  );
   protected readonly documentTypeLabel = documentTypeLabel;
   protected readonly formatDocumentExpiration = formatDocumentExpiration;
-  protected readonly remorqueCarrosserieLabel = remorqueCarrosserieLabel;
+  protected readonly carrosserieDisplay = carrosserieDisplay;
+  protected readonly formatMarqueModele = formatMarqueModele;
+  protected readonly formatRemorqueDate = formatRemorqueDate;
   protected readonly remorqueStatutLabel = remorqueStatutLabel;
   protected readonly remorqueStatutTone = remorqueStatutTone;
+  protected readonly typeRemorqueDisplay = typeRemorqueDisplay;
   protected readonly firstFieldError = firstFieldError;
   protected readonly showFieldError = showFieldError;
   protected readonly fieldClasses = fieldClasses;
@@ -113,10 +123,8 @@ export class RemorqueDetailPage {
     });
   }
 
-  protected onUploadType(event: Event): void {
-    const { target } = event;
-    if (target instanceof HTMLSelectElement && isDocumentType(target.value)) {
-      const typeDocument = target.value;
+  protected onUploadType(typeDocument: string): void {
+    if (isDocumentType(typeDocument)) {
       this.uploadDraft.update((draft) => ({
         ...draft,
         typeDocument,
@@ -134,14 +142,11 @@ export class RemorqueDetailPage {
     }
   }
 
-  protected onUploadExpiration(event: Event): void {
-    const { target } = event;
-    if (target instanceof HTMLInputElement) {
-      this.uploadDraft.update((draft) => ({
-        ...draft,
-        dateExpiration: target.value,
-      }));
-    }
+  protected onUploadExpirationIso(isoDate: string): void {
+    this.uploadDraft.update((draft) => ({
+      ...draft,
+      dateExpiration: isoDate,
+    }));
   }
 
   protected onFileSelected(event: Event): void {

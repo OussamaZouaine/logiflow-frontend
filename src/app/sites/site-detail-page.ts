@@ -17,8 +17,7 @@ import {
 } from "@angular/forms/signals";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
-import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
-import { FicheHeader } from "../shared/ui/fiche-header";
+import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
 import { ToastService } from "../shared/ui/toast";
 import { firstFieldError } from "../core/forms/first-field-error";
 import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
@@ -35,13 +34,7 @@ import {
 } from "./site-localisation-map";
 
 @Component({
-  imports: [
-    FicheHeader,
-    FormField,
-    SiteLocalisationMap,
-    StatutChip,
-    ...FORM_PAGE_IMPORTS,
-  ],
+  imports: [FormField, SiteLocalisationMap, StatutChip, ...FICHE_PAGE_IMPORTS],
   selector: "app-site-detail-page",
   templateUrl: "./site-detail-page.html",
 })
@@ -91,14 +84,11 @@ export class SiteDetailPage {
     });
   }
 
-  protected onPoidsLourd(event: Event): void {
-    const { target } = event;
-    if (target instanceof HTMLInputElement) {
-      this.draft.update((current) => ({
-        ...current,
-        interditPoidsLourd: target.checked,
-      }));
-    }
+  protected onPoidsLourdChange(checked: boolean): void {
+    this.draft.update((current) => ({
+      ...current,
+      interditPoidsLourd: checked,
+    }));
   }
 
   protected onLocalisationChange(coords: SiteLocalisationCoordinates): void {

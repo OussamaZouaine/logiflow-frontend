@@ -1,5 +1,8 @@
 import type { ApercuTone } from "../tableau/apercu";
 
+export const SCORE_SANTE_MIN = 0;
+export const SCORE_SANTE_MAX = 100;
+
 export const STATUT_SANTE = [
   "BON",
   "SURVEILLER",
@@ -44,6 +47,10 @@ export function emptyScoreSanteDraft(): ScoreSanteDraft {
     recommandation: "",
     score: 85,
   };
+}
+
+export function isScoreSanteInRange(score: number): boolean {
+  return score >= SCORE_SANTE_MIN && score <= SCORE_SANTE_MAX;
 }
 
 export function draftToWrite(

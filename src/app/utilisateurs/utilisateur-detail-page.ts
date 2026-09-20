@@ -11,8 +11,7 @@ import { FormField, form, required, submit } from "@angular/forms/signals";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import { type Role, roleLabel } from "../core/auth/role";
-import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
-import { FicheHeader } from "../shared/ui/fiche-header";
+import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
 import { ToastService } from "../shared/ui/toast";
 import { firstFieldError } from "../core/forms/first-field-error";
 import {
@@ -32,7 +31,7 @@ import {
 import { UtilisateurApi } from "./utilisateur-api";
 
 @Component({
-  imports: [FormField, FicheHeader, StatutChip, ...FORM_PAGE_IMPORTS],
+  imports: [FormField, StatutChip, ...FICHE_PAGE_IMPORTS],
   selector: "app-utilisateur-detail-page",
   templateUrl: "./utilisateur-detail-page.html",
 })

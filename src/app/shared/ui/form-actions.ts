@@ -1,13 +1,15 @@
-import { ChangeDetectionStrategy, Component } from "@angular/core";
+import { ChangeDetectionStrategy, Component, input } from "@angular/core";
 
-/** Sticky save / cancel bar that stays visible while long forms scroll. */
+/** Sticky save / cancel bar; use inline inside nested section forms. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    class:
-      "form-actions sticky bottom-0 z-10 -mx-6 mt-2 flex flex-wrap items-center gap-3 border-t border-line bg-canvas/95 px-6 py-4 backdrop-blur-sm",
+    class: "form-actions",
+    "[class.form-actions--inline]": "inline()",
   },
   selector: "app-form-actions",
   template: `<ng-content />`,
 })
-export class FormActions {}
+export class FormActions {
+  readonly inline = input(false);
+}

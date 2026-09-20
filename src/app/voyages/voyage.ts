@@ -1,3 +1,11 @@
+import { isFieldSelectNone } from "../shared/ui/field-select";
+import {
+  datetimeLocalToIso,
+  toDatetimeLocal,
+} from "../shared/ui/iso-datetime";
+
+export { datetimeLocalToIso, toDatetimeLocal };
+
 export const TYPE_VOYAGES = [
   "SIMPLE",
   "GROUPAGE",
@@ -44,6 +52,10 @@ export const TYPE_EVENEMENTS = [
 ] as const;
 export type TypeEvenement = (typeof TYPE_EVENEMENTS)[number];
 
+export const AFFECTATION_ROLES = ["TITULAIRE", "RENFORT"] as const;
+export type AffectationRole = (typeof AFFECTATION_ROLES)[number];
+
+/** Étape telle que définie dans `Etape` (OpenAPI). */
 export interface Etape {
   chargeApresKg: number;
   distanceDepuisPrecedenteKm: number;
@@ -53,6 +65,7 @@ export interface Etape {
   type: TypeEtape;
 }
 
+/** Trajet tel que défini dans `Trajet` (OpenAPI). */
 export interface Trajet {
   distanceTotaleKm: number;
   dureeConduiteMin: number;
@@ -60,12 +73,14 @@ export interface Trajet {
   etapes: Etape[];
 }
 
+/** Affectation telle que définie dans `Affectation` (OpenAPI). */
 export interface Affectation {
   chauffeurId: string;
   dateAffectation: string;
-  role: "TITULAIRE" | "RENFORT";
+  role: AffectationRole;
 }
 
+/** Voyage tel que renvoyé par l'API (`VoyageResponse`). */
 export interface Voyage {
   affectations: Affectation[];
   arriveePrevue: string;
@@ -82,6 +97,7 @@ export interface Voyage {
   vehiculeId: string;
 }
 
+/** Corps de création, calqué sur `VoyageRequest` côté backend. */
 export interface VoyageWrite {
   affectations: Affectation[];
   arriveePrevue: string;
@@ -106,11 +122,26 @@ export interface VoyageDraft {
   vehiculeId: string;
 }
 
+export interface GeoPoint {
+  latitude: number;
+  longitude: number;
+}
+
+/** Événement tel que renvoyé par l'API (`EvenementVoyageResponse`). */
 export interface EvenementVoyage {
   commentaire: string | null;
   horodatage: string;
   id: string;
-  position: { latitude: number; longitude: number } | null;
+  position: GeoPoint | null;
+  type: TypeEvenement;
+  voyageId: string;
+}
+
+/** Corps de déclaration, calqué sur `EvenementVoyageRequest`. */
+export interface EvenementVoyageWrite {
+  commentaire: string | null;
+  horodatage: string;
+  position: GeoPoint | null;
   type: TypeEvenement;
   voyageId: string;
 }
@@ -158,14 +189,47 @@ export function emptyVoyageDraft(): VoyageDraft {
   };
 }
 
+export function validateDossierIds(dossierIds: readonly string[]): string | null {
+  if (dossierIds.length === 0) {
+    return "Sélectionnez au moins un dossier au statut Créé.";
+  }
+  return null;
+}
+
+export function totalChargeKgFromDossiers(
+  dossierIds: readonly string[],
+  dossiersById: ReadonlyMap<string, Pick<VoyageLookupDossier, "poidsBrutKg">>
+): number {
+  return dossierIds.reduce(
+    (sum, id) => sum + (dossiersById.get(id)?.poidsBrutKg ?? 0),
+    0
+  );
+}
+
+export function formatVehiculeLookupLabel(
+  vehicule: Pick<VoyageLookupVehicule, "immatriculation" | "statut">
+): string {
+  return `${vehicule.immatriculation} — ${vehicule.statut}`;
+}
+
+export function formatDossierVoyageLabel(
+  dossier: Pick<VoyageLookupDossier, "poidsBrutKg" | "reference" | "volumeM3">
+): string {
+  return `${dossier.reference} — ${dossier.poidsBrutKg} kg · ${dossier.volumeM3} m³`;
+}
+
+/** Maps UI draft to POST /voyages — see {@link VoyageApi} for API contract. */
 export function draftToWrite(
   draft: VoyageDraft,
-  dossierIds: readonly string[]
+  dossierIds: readonly string[],
+  dossiersById: ReadonlyMap<string, Pick<VoyageLookupDossier, "poidsBrutKg">> =
+    new Map()
 ): VoyageWrite {
   const departPrevu = datetimeLocalToIso(draft.departPrevu);
   const arriveePrevue = datetimeLocalToIso(draft.arriveePrevue);
   const spanMin = minutesBetween(draft.departPrevu, draft.arriveePrevue);
   const dureeTotaleMin = Math.max(draft.dureeConduiteMin, spanMin);
+  const chargeApresKg = totalChargeKgFromDossiers(dossierIds, dossiersById);
   return {
     affectations: [
       {
@@ -178,14 +242,14 @@ export function draftToWrite(
     departPrevu,
     dossierIds: [...dossierIds],
     portee: draft.portee,
-    remorqueId: draft.remorqueId.trim().length > 0 ? draft.remorqueId : null,
+    remorqueId: isFieldSelectNone(draft.remorqueId) ? null : draft.remorqueId.trim(),
     trajet: {
       distanceTotaleKm: draft.distanceTotaleKm,
       dureeConduiteMin: draft.dureeConduiteMin,
       dureeTotaleMin,
       etapes: [
         {
-          chargeApresKg: 500,
+          chargeApresKg,
           distanceDepuisPrecedenteKm: 0,
           eta: departPrevu,
           etd: departPrevu,
@@ -293,6 +357,19 @@ export function typeEtapeLabel(type: TypeEtape): string {
   }
 }
 
+export function affectationRoleLabel(role: AffectationRole): string {
+  switch (role) {
+    case "TITULAIRE":
+      return "Titulaire";
+    case "RENFORT":
+      return "Renfort";
+    default: {
+      const _exhaustive: never = role;
+      return _exhaustive;
+    }
+  }
+}
+
 export function typeEvenementLabel(type: TypeEvenement): string {
   switch (type) {
     case "DEPART":
@@ -331,23 +408,6 @@ export function formatInstant(value: string): string {
 
 export function remplissageLabel(taux: number): string {
   return `${Math.round(taux * 100)} %`;
-}
-
-export function toDatetimeLocal(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-}
-
-export function datetimeLocalToIso(value: string): string {
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    throw new Error("Date invalide.");
-  }
-  return parsed.toISOString();
 }
 
 function minutesBetween(fromLocal: string, toLocal: string): number {

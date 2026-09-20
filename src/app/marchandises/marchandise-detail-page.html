@@ -1,75 +1,51 @@
-<div class="flex flex-col gap-8">
+<div class="fiche-page">
   <app-fiche-header listLabel="Marchandises" listLink="/marchandises">
     @if (marchandise.isLoading()) {
-    <p class="text-sm text-muted" role="status">Chargement…</p>
+    <p class="fiche-load-hint" role="status">Chargement…</p>
     } @else if (marchandise.error()) {
-    <div class="alert-panel" role="alert">
-      <p>{{ loadError() }}</p>
-      <button
-        (click)="marchandise.reload()"
-        class="pressable mt-2 font-medium text-ink underline underline-offset-2"
-        type="button"
-      >
-        Réessayer
-      </button>
-    </div>
+    <app-fiche-error
+      (retry)="marchandise.reload()"
+      [message]="loadError()"
+    />
     } @else if (marchandise.hasValue()) {
-    <div class="flex flex-wrap items-center gap-3">
-      <h1 class="fiche-page-title fiche-page-title--mono">
-        {{ marchandise.value().code }}
-      </h1>
+    <app-fiche-title-row [mono]="true" [title]="marchandise.value().code">
       <app-statut-chip
         [label]="actifLabel(marchandise.value().actif)"
         [tone]="actifTone(marchandise.value().actif)"
       />
-    </div>
-    <p class="mt-1 text-sm text-muted">{{ marchandise.value().libelle }}</p>
+    </app-fiche-title-row>
+    <p class="fiche-meta">{{ marchandise.value().libelle }}</p>
     }
   </app-fiche-header>
 
   @if (marchandise.hasValue()) {
   <app-form-section title="Fiche">
-    <dl class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-      <div class="sm:col-span-2">
-        <dt class="text-xs text-muted">Libellé</dt>
-        <dd class="mt-0.5 text-ink">{{ marchandise.value().libelle }}</dd>
-      </div>
-      <div>
-        <dt class="text-xs text-muted">Famille</dt>
-        <dd class="mt-0.5 text-ink">
-          {{ marchandise.value().famille ?? "—" }}
-        </dd>
-      </div>
-      <div>
-        <dt class="text-xs text-muted">Gerbable</dt>
-        <dd class="mt-0.5 text-ink">
-          {{ gerbableLabel(marchandise.value().gerbable) }}
-        </dd>
-      </div>
-      <div>
-        <dt class="text-xs text-muted">Classe ADR</dt>
-        <dd class="mt-0.5 text-ink">
-          {{ marchandise.value().classeAdr ?? "—" }}
-        </dd>
-      </div>
-      <div>
-        <dt class="text-xs text-muted">Numéro ONU</dt>
-        <dd class="mt-0.5 font-mono text-xs text-ink">
-          {{ marchandise.value().numeroOnu ?? "—" }}
-        </dd>
-      </div>
-    </dl>
+    <app-fiche-field-grid>
+      <app-fiche-field [span]="2" label="Libellé">
+        {{ marchandise.value().libelle }}
+      </app-fiche-field>
+      <app-fiche-field label="Famille">
+        {{ marchandise.value().famille ?? "—" }}
+      </app-fiche-field>
+      <app-fiche-field label="Gerbable">
+        {{ gerbableLabel(marchandise.value().gerbable) }}
+      </app-fiche-field>
+      <app-fiche-field label="Classe ADR">
+        {{ marchandise.value().classeAdr ?? "—" }}
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="Numéro ONU">
+        {{ marchandise.value().numeroOnu ?? "—" }}
+      </app-fiche-field>
+    </app-fiche-field-grid>
   </app-form-section>
 
   @if (marchandise.value().actif) {
-  <app-form-section
+  <app-fiche-danger-zone
     description="Pas de suppression physique. Désactivation = retrait du catalogue actif."
     title="Désactivation"
   >
     @if (deactivateError()) {
-    <div class="alert-panel" role="alert">
-      {{ deactivateError() }}
-    </div>
+    <div class="alert-panel" role="alert">{{ deactivateError() }}</div>
     }
     <button
       (click)="desactiver()"
@@ -78,12 +54,11 @@
     >
       Désactiver
     </button>
-  </app-form-section>
+  </app-fiche-danger-zone>
   } @else {
-  <p class="max-w-lg rounded-lg border border-line/80 bg-canvas px-4 py-3 text-sm text-muted">
+  <p class="fiche-meta max-w-lg rounded-xl border border-line/80 bg-canvas px-4 py-3">
     Cette marchandise est inactive et n'apparaît plus dans les sélecteurs de
     commande.
   </p>
-  }
-  }
+  } }
 </div>

@@ -8,10 +8,12 @@ import type { Dossier, DossierWrite, StatutDossier } from "./dossier";
  * Dossier HTTP surface: POST create, GET list/detail, PUT statut.
  * No update payload — lifecycle only via statut after creation.
  *
- * Create payload (`DossierWrite`): each `lignesMarchandise[]` entry must use
- * `marchandiseId` (catalog FK), not a free-text designation. Optional ADR/gerbable
- * fields override marchandise defaults. Segments need geolocated `siteId` + ISO
- * `fenetre.debut` / `fenetre.fin`.
+ * Create payload (`DossierRequest` / `DossierWrite`):
+ * - Required: `commandeId`, `typeTransport`, `familleMarchandise`,
+ *   `lignesMarchandise` (min 1), `segments` (min 1).
+ * - Each ligne uses `marchandiseId` (catalog FK). Optional ADR/gerbable override
+ *   marchandise defaults.
+ * - Segments need geolocated `siteId` + ISO `fenetre.debut` / `fenetre.fin`.
  */
 @Service()
 export class DossierApi {

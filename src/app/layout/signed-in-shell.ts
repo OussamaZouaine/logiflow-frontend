@@ -1,3 +1,4 @@
+import { CdkScrollable } from "@angular/cdk/scrolling";
 import {
   Component,
   computed,
@@ -16,6 +17,7 @@ import {
 } from "@angular/router";
 import { NgIcon, provideIcons } from "@ng-icons/core";
 import {
+  lucideBuilding2,
   lucideClipboardList,
   lucideContainer,
   lucideFolderOpen,
@@ -55,9 +57,18 @@ import { ToastHost } from "../shared/ui/toast";
 import { CopilotePanel } from "./copilote-panel";
 
 @Component({
-  imports: [NgIcon, RouterLink, RouterLinkActive, RouterOutlet, ToastHost, CopilotePanel],
+  imports: [
+    CdkScrollable,
+    NgIcon,
+    RouterLink,
+    RouterLinkActive,
+    RouterOutlet,
+    ToastHost,
+    CopilotePanel,
+  ],
   providers: [
     provideIcons({
+      lucideBuilding2,
       lucideClipboardList,
       lucideContainer,
       lucideFolderOpen,

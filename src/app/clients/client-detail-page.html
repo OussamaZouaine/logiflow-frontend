@@ -1,0 +1,48 @@
+<div class="fiche-page">
+  <app-fiche-header listLabel="Clients" listLink="/clients">
+    @if (client.isLoading()) {
+    <p class="fiche-load-hint" role="status">Chargement…</p>
+    } @else if (client.error()) {
+    <app-fiche-error (retry)="client.reload()" [message]="loadError()" />
+    } @else if (client.hasValue()) {
+    <app-fiche-title-row [mono]="true" [title]="client.value().code">
+      <app-statut-chip
+        [label]="actifLabel(client.value().actif)"
+        [tone]="actifTone(client.value().actif)"
+      />
+    </app-fiche-title-row>
+    <p class="fiche-meta">{{ client.value().raisonSociale }}</p>
+    }
+  </app-fiche-header>
+
+  @if (client.hasValue()) {
+  <app-form-section title="Fiche">
+    <app-fiche-field-grid>
+      <app-fiche-field [span]="2" label="Raison sociale">
+        {{ client.value().raisonSociale }}
+      </app-fiche-field>
+    </app-fiche-field-grid>
+  </app-form-section>
+
+  @if (client.value().actif) {
+  <app-fiche-danger-zone
+    description="Pas de suppression physique. Désactivation = retrait des sélecteurs actifs."
+    title="Désactivation"
+  >
+    @if (deactivateError()) {
+    <div class="alert-panel" role="alert">{{ deactivateError() }}</div>
+    }
+    <button
+      (click)="desactiver()"
+      class="btn-danger-outline pressable w-fit"
+      type="button"
+    >
+      Désactiver
+    </button>
+  </app-fiche-danger-zone>
+  } @else {
+  <p class="fiche-meta max-w-lg rounded-xl border border-line/80 bg-canvas px-4 py-3">
+    Ce client est inactif et n'apparaît plus dans les sélecteurs de commande.
+  </p>
+  } }
+</div>

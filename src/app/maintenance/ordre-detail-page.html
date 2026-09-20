@@ -1,29 +1,20 @@
-<div class="flex flex-col gap-8">
+<div class="fiche-page">
   <app-fiche-header listLabel="Maintenance" listLink="/maintenance">
     @if (ordre.isLoading()) {
-    <p class="text-sm text-muted" role="status">Chargement…</p>
+    <p class="fiche-load-hint" role="status">Chargement…</p>
     } @else if (ordre.error()) {
-    <div class="alert-panel" role="alert">
-      <p>{{ loadError() }}</p>
-      <button
-        (click)="ordre.reload()"
-        class="pressable mt-2 font-medium text-ink underline underline-offset-2"
-        type="button"
-      >
-        Réessayer
-      </button>
-    </div>
+    <app-fiche-error
+      (retry)="ordre.reload()"
+      [message]="loadError()"
+    />
     } @else if (ordre.hasValue()) {
-    <div class="flex flex-wrap items-center gap-3">
-      <h1 class="fiche-page-title">
-        {{ typeInterventionLabel(ordre.value().type) }}
-      </h1>
+    <app-fiche-title-row [title]="typeInterventionLabel(ordre.value().type)">
       <app-statut-chip
         [label]="statutOtLabel(ordre.value().statut)"
         [tone]="statutOtTone(ordre.value().statut)"
       />
-    </div>
-    <p class="mt-1 font-mono text-sm tabular-nums text-muted">
+    </app-fiche-title-row>
+    <p class="fiche-meta font-mono tabular-nums">
       #{{ formatOrdreShortId(ordre.value().id) }}
       · planifié le {{ formatDateTime(ordre.value().datePlanifiee) }}
     </p>
@@ -45,7 +36,7 @@
           {{ formatMoney(ordre.value().cout) }}
         </dd>
       </div>
-      @if (ordre.value().statut === "TERMINE") {
+      @if (ordre.value().statut === "TERMINE" && ordre.value().dureeReelleMin > 0) {
       <div>
         <dt class="text-xs text-muted">Durée réelle</dt>
         <dd class="mt-0.5 font-mono tabular-nums text-ink">

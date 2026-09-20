@@ -1,0 +1,131 @@
+<div class="flex flex-col gap-6">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <h1 class="module-page-title">Clients</h1>
+      <p class="mt-1 text-sm text-muted">
+        Tiers donneurs d'ordre pour les commandes de transport.
+      </p>
+    </div>
+    <a class="btn-primary pressable" routerLink="/clients/nouveau">
+      Nouveau client
+    </a>
+  </div>
+
+  <div class="flex flex-col gap-3">
+    <app-list-search-bar
+      [(draft)]="searchDraft"
+      [(query)]="search"
+      inputId="client-search"
+      placeholder="Code ou raison sociale…"
+    />
+    <app-list-statut-filter
+      [(selected)]="actifFilter"
+      [options]="actifOptions"
+      ariaLabel="Filtrer par activité"
+    />
+  </div>
+
+  @if (clients.isLoading()) {
+  <app-list-table-skeleton [columns]="4" label="Chargement des clients" />
+  } @else if (clients.error()) {
+  <div class="alert-panel" role="alert">
+    <p>{{ errorMessage() }}</p>
+    <button
+      (click)="clients.reload()"
+      class="pressable mt-2 font-medium text-ink underline underline-offset-2"
+      type="button"
+    >
+      Réessayer
+    </button>
+  </div>
+  } @else if (clients.hasValue() && clients.value().content.length === 0) {
+  @if (search()) {
+  <app-list-empty-state
+    (action)="clearFilters()"
+    actionLabel="Effacer la recherche"
+    description="Aucun client ne correspond à « {{ search() }} »."
+    title="Aucun résultat"
+  />
+  } @else {
+  <app-list-empty-state
+    actionLabel="Nouveau client"
+    actionLink="/clients/nouveau"
+    description="Créez le premier client du référentiel."
+    title="Aucun client en base"
+  />
+  }
+  } @else if (clients.hasValue() && visibleClients().length === 0) {
+  <app-list-empty-state
+    (action)="clearFilters()"
+    actionLabel="Réinitialiser les filtres"
+    description="Réinitialisez la recherche ou le filtre d'activité pour revoir la liste."
+    title="Aucun client pour ce filtre"
+  />
+  } @else if (clients.hasValue()) {
+  <div
+    appListRowKeyboard
+    [(activeId)]="activeRowId"
+    [rows]="keyboardRows()"
+    aria-label="Liste des clients — flèches pour naviguer, Entrée pour ouvrir"
+    class="list-table-panel"
+  >
+    <table class="w-full min-w-xl text-left text-sm">
+      <thead class="list-table-head">
+        <tr>
+          <th class="px-4 py-3 font-medium" scope="col">Code</th>
+          <th class="px-4 py-3 font-medium" scope="col">Raison sociale</th>
+          <th class="px-4 py-3 font-medium" scope="col">Statut</th>
+          <th class="px-4 py-3 font-medium" scope="col">
+            <span class="sr-only">Actions</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (client of visibleClients(); track client.id) {
+        <tr
+          [attr.aria-selected]="activeRowId() === client.id"
+          [class.bg-pine/5]="activeRowId() === client.id"
+          class="list-row border-b border-line last:border-0 hover:bg-canvas"
+        >
+          <td class="px-4 py-3">
+            <a
+              [routerLink]="['/clients', client.id]"
+              class="font-mono text-xs text-pine underline-offset-2 hover:underline"
+            >
+              {{ client.code }}
+            </a>
+          </td>
+          <td class="px-4 py-3 text-ink">{{ client.raisonSociale }}</td>
+          <td class="px-4 py-3">
+            <app-statut-chip
+              [label]="actifLabel(client.actif)"
+              [tone]="actifTone(client.actif)"
+            />
+          </td>
+          <td class="px-4 py-3 text-right">
+            <a
+              [routerLink]="['/clients', client.id]"
+              class="list-row-action text-sm font-medium text-pine underline-offset-2 hover:underline"
+            >
+              Ouvrir
+            </a>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (clients.value().totalElements) {
+  <p class="font-mono text-sm tabular-nums text-muted">
+    {{ visibleClients().length }}
+    affiché(s) /
+    {{ clients.value().totalElements }}
+    client(s)
+  </p>
+  }
+  <app-list-pagination
+    [(page)]="page"
+    [totalPages]="clients.value().totalPages"
+  />
+  }
+</div>

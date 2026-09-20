@@ -4,8 +4,7 @@ import { RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
-import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
-import { FicheHeader } from "../shared/ui/fiche-header";
+import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
 import {
   formatPeriodicite,
   type PlanEntretien,
@@ -16,7 +15,7 @@ import type { VehiculeLookup } from "./ordre-travail";
 const LOOKUP_PAGE_SIZE = 50;
 
 @Component({
-  imports: [FicheHeader, RouterLink, ...FORM_PAGE_IMPORTS],
+  imports: [RouterLink, ...FICHE_PAGE_IMPORTS],
   selector: "app-plan-entretien-detail-page",
   templateUrl: "./plan-entretien-detail-page.html",
 })

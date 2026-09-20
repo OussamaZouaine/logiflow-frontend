@@ -4,6 +4,10 @@ import { FormField, form, min, required, submit } from "@angular/forms/signals";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
+import {
+  enumToSelectOptions,
+  type FieldSelectOption,
+} from "../shared/ui/field-select";
 import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
 import { ToastService } from "../shared/ui/toast";
 import type { PageResponse } from "../core/api/page-response";
@@ -32,6 +36,10 @@ export class OrdreCreatePage {
   private readonly toast = inject(ToastService);
 
   protected readonly types = TYPE_INTERVENTIONS;
+  protected readonly typeSelectOptions = enumToSelectOptions(
+    TYPE_INTERVENTIONS,
+    typeInterventionLabel
+  );
   protected readonly typeInterventionLabel = typeInterventionLabel;
   protected readonly firstFieldError = firstFieldError;
   protected readonly showFieldError = showFieldError;
@@ -52,6 +60,15 @@ export class OrdreCreatePage {
 
   protected readonly vehiculeOptions = computed(
     () => this.vehicules.value()?.content ?? []
+  );
+
+  protected readonly vehiculeSelectOptions = computed<
+    readonly FieldSelectOption[]
+  >(() =>
+    this.vehiculeOptions().map((vehicule) => ({
+      label: vehicule.immatriculation,
+      value: vehicule.id,
+    }))
   );
 
   protected readonly draft = signal(emptyOrdreDraft());

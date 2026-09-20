@@ -1,5 +1,5 @@
 <app-form-page-header
-  description="L'immatriculation et le type ne se modifient plus ensuite."
+  description="Carte grise, capacités et groupe froid. L'immatriculation et le type ne se modifient plus ensuite."
   listLabel="Véhicules"
   listLink="/vehicules"
   title="Nouveau véhicule"
@@ -10,48 +10,137 @@
     [show]="createForm().touched() && createForm().invalid()"
   />
 
-  <app-form-section title="Fiche">
-    <app-form-field
-      [error]="
-        showFieldError(createForm.immatriculation())
-          ? firstFieldError(createForm.immatriculation().errors())
-          : null
-      "
-      inputId="immatriculation"
-      label="Immatriculation"
-    >
-      <input
-        [attr.aria-invalid]="showFieldError(createForm.immatriculation()) || null"
-        [class]="fieldClasses(createForm.immatriculation())"
-        [formField]="createForm.immatriculation"
-        autocomplete="off"
-        id="immatriculation"
-        placeholder="AA-123-AA"
-        type="text"
-      />
-    </app-form-field>
-
-    <app-form-field
-      [error]="
-        showFieldError(createForm.type())
-          ? firstFieldError(createForm.type().errors())
-          : null
-      "
-      inputId="type"
-      label="Type"
-    >
-      <select
-        [attr.aria-invalid]="showFieldError(createForm.type()) || null"
-        [class]="fieldClasses(createForm.type())"
-        [formField]="createForm.type"
-        id="type"
+  <app-form-section title="Identification">
+    <div class="form-page__coords">
+      <app-form-field
+        [error]="
+          showFieldError(createForm.immatriculation())
+            ? firstFieldError(createForm.immatriculation().errors())
+            : null
+        "
+        inputId="immatriculation"
+        label="Immatriculation *"
       >
-        @for (type of types; track type) {
-        <option [value]="type">{{ typeLabel(type) }}</option>
-        }
-      </select>
-    </app-form-field>
+        <input
+          [attr.aria-invalid]="showFieldError(createForm.immatriculation()) || null"
+          [class]="fieldClasses(createForm.immatriculation())"
+          [formField]="createForm.immatriculation"
+          autocomplete="off"
+          id="immatriculation"
+          placeholder="AA-123-AA"
+          type="text"
+        >
+      </app-form-field>
 
+      <app-form-field
+        [error]="
+          showFieldError(createForm.type())
+            ? firstFieldError(createForm.type().errors())
+            : null
+        "
+        inputId="type"
+        label="Type *"
+      >
+        <app-field-select
+          [formField]="createForm.type"
+          [invalid]="showFieldError(createForm.type())"
+          [options]="typeOptions"
+          inputId="type"
+        />
+      </app-form-field>
+    </div>
+
+    <div class="form-page__coords">
+      <app-form-field inputId="numeroParc" label="N° parc">
+        <input
+          [class]="fieldClasses(createForm.numeroParc())"
+          [formField]="createForm.numeroParc"
+          autocomplete="off"
+          id="numeroParc"
+          placeholder="P-042"
+          type="text"
+        >
+      </app-form-field>
+
+      <app-form-field
+        [error]="
+          showFieldError(createForm.vin())
+            ? firstFieldError(createForm.vin().errors())
+            : null
+        "
+        inputId="vin"
+        label="VIN"
+      >
+        <input
+          [attr.aria-invalid]="showFieldError(createForm.vin()) || null"
+          [class]="fieldClasses(createForm.vin())"
+          [formField]="createForm.vin"
+          autocomplete="off"
+          id="vin"
+          placeholder="17 caractères"
+          type="text"
+        >
+      </app-form-field>
+    </div>
+  </app-form-section>
+
+  <app-form-section title="Marque et énergie">
+    <div class="form-page__coords">
+      <app-form-field inputId="marque" label="Marque">
+        <input
+          [class]="fieldClasses(createForm.marque())"
+          [formField]="createForm.marque"
+          autocomplete="off"
+          id="marque"
+          placeholder="Renault Trucks"
+          type="text"
+        >
+      </app-form-field>
+
+      <app-form-field inputId="modele" label="Modèle">
+        <input
+          [class]="fieldClasses(createForm.modele())"
+          [formField]="createForm.modele"
+          autocomplete="off"
+          id="modele"
+          placeholder="T 480"
+          type="text"
+        >
+      </app-form-field>
+    </div>
+
+    <div class="form-page__coords">
+      <app-form-field
+        [error]="
+          showFieldError(createForm.anneeMiseEnCirculation())
+            ? firstFieldError(createForm.anneeMiseEnCirculation().errors())
+            : null
+        "
+        inputId="anneeMiseEnCirculation"
+        label="Année de mise en circulation"
+      >
+        <input
+          [attr.aria-invalid]="showFieldError(createForm.anneeMiseEnCirculation()) || null"
+          [class]="fieldClasses(createForm.anneeMiseEnCirculation())"
+          [formField]="createForm.anneeMiseEnCirculation"
+          id="anneeMiseEnCirculation"
+          step="1"
+          type="number"
+        >
+      </app-form-field>
+
+      <app-form-field inputId="energie" label="Énergie">
+        <app-field-select
+          [formField]="createForm.energie"
+          [options]="energieOptions"
+          inputId="energie"
+          placeholder="Non renseignée"
+        />
+      </app-form-field>
+    </div>
+  </app-form-section>
+
+  <app-form-section title="Poids et dimensions">
     <div class="form-page__coords">
       <app-form-field
         [error]="
@@ -60,7 +149,7 @@
             : null
         "
         inputId="ptacKg"
-        label="PTAC (kg)"
+        label="PTAC (kg) *"
       >
         <input
           [attr.aria-invalid]="showFieldError(createForm.ptacKg()) || null"
@@ -69,7 +158,7 @@
           id="ptacKg"
           step="1"
           type="number"
-        />
+        >
       </app-form-field>
 
       <app-form-field
@@ -79,7 +168,7 @@
             : null
         "
         inputId="chargeUtileKg"
-        label="Charge utile (kg)"
+        label="Charge utile (kg) *"
       >
         <input
           [attr.aria-invalid]="showFieldError(createForm.chargeUtileKg()) || null"
@@ -88,9 +177,209 @@
           id="chargeUtileKg"
           step="1"
           type="number"
+        >
+      </app-form-field>
+    </div>
+
+    <div class="form-page__coords">
+      <app-form-field
+        [error]="
+          showFieldError(createForm.poidsVideKg())
+            ? firstFieldError(createForm.poidsVideKg().errors())
+            : null
+        "
+        inputId="poidsVideKg"
+        label="Poids à vide (kg)"
+      >
+        <input
+          [attr.aria-invalid]="showFieldError(createForm.poidsVideKg()) || null"
+          [class]="fieldClasses(createForm.poidsVideKg())"
+          [formField]="createForm.poidsVideKg"
+          id="poidsVideKg"
+          step="1"
+          type="number"
+        >
+      </app-form-field>
+
+      <app-form-field
+        [error]="
+          showFieldError(createForm.nbPositionsPalettes())
+            ? firstFieldError(createForm.nbPositionsPalettes().errors())
+            : null
+        "
+        inputId="nbPositionsPalettes"
+        label="Positions palettes"
+      >
+        <input
+          [attr.aria-invalid]="showFieldError(createForm.nbPositionsPalettes()) || null"
+          [class]="fieldClasses(createForm.nbPositionsPalettes())"
+          [formField]="createForm.nbPositionsPalettes"
+          id="nbPositionsPalettes"
+          step="1"
+          type="number"
+        >
+      </app-form-field>
+    </div>
+
+    <div class="form-page__coords">
+      <app-form-field
+        [error]="
+          showFieldError(createForm.longueurM())
+            ? firstFieldError(createForm.longueurM().errors())
+            : null
+        "
+        inputId="longueurM"
+        label="Longueur (m)"
+      >
+        <input
+          [attr.aria-invalid]="showFieldError(createForm.longueurM()) || null"
+          [class]="fieldClasses(createForm.longueurM())"
+          [formField]="createForm.longueurM"
+          id="longueurM"
+          step="0.01"
+          type="number"
+        >
+      </app-form-field>
+
+      <app-form-field
+        [error]="
+          showFieldError(createForm.largeurM())
+            ? firstFieldError(createForm.largeurM().errors())
+            : null
+        "
+        inputId="largeurM"
+        label="Largeur (m)"
+      >
+        <input
+          [attr.aria-invalid]="showFieldError(createForm.largeurM()) || null"
+          [class]="fieldClasses(createForm.largeurM())"
+          [formField]="createForm.largeurM"
+          id="largeurM"
+          step="0.01"
+          type="number"
+        >
+      </app-form-field>
+    </div>
+
+    <div class="form-page__coords">
+      <app-form-field
+        [error]="
+          showFieldError(createForm.hauteurM())
+            ? firstFieldError(createForm.hauteurM().errors())
+            : null
+        "
+        inputId="hauteurM"
+        label="Hauteur (m)"
+      >
+        <input
+          [attr.aria-invalid]="showFieldError(createForm.hauteurM()) || null"
+          [class]="fieldClasses(createForm.hauteurM())"
+          [formField]="createForm.hauteurM"
+          id="hauteurM"
+          step="0.01"
+          type="number"
+        >
+      </app-form-field>
+
+      <app-form-field inputId="volumeUtileM3" label="Volume utile (m³)">
+        <input
+          [value]="
+            volumeUtileCalcule() === null
+              ? ''
+              : volumeUtileCalcule()!.toLocaleString('fr-FR')
+          "
+          aria-readonly="true"
+          class="field"
+          disabled
+          id="volumeUtileM3"
+          placeholder="—"
+          type="text"
+        >
+        <p class="text-xs text-muted">Calculé automatiquement : L × l × h.</p>
+      </app-form-field>
+    </div>
+  </app-form-section>
+
+  <app-form-section title="Carrosserie et froid">
+    <app-form-field inputId="typeCarrosserie" label="Type carrosserie">
+      <app-field-select
+        [formField]="createForm.typeCarrosserie"
+        [options]="carrosserieOptions"
+        inputId="typeCarrosserie"
+        placeholder="Non renseigné"
+      />
+    </app-form-field>
+
+    <label class="flex cursor-pointer items-center gap-2 text-sm text-ink">
+      <input
+        [formField]="createForm.groupeFroid"
+        class="size-4 accent-pine"
+        id="groupeFroid"
+        type="checkbox"
+      >
+      Groupe froid
+    </label>
+
+    @if (draft().groupeFroid) {
+    <div class="form-page__coords">
+      <app-form-field inputId="temperatureMin" label="Température min (°C)">
+        <input
+          [class]="fieldClasses(createForm.temperatureMin())"
+          [formField]="createForm.temperatureMin"
+          id="temperatureMin"
+          step="0.1"
+          type="number"
+        >
+      </app-form-field>
+
+      <app-form-field
+        [error]="
+            showFieldError(createForm.temperatureMax())
+              ? firstFieldError(createForm.temperatureMax().errors())
+              : null
+          "
+        inputId="temperatureMax"
+        label="Température max (°C)"
+      >
+        <input
+          [attr.aria-invalid]="showFieldError(createForm.temperatureMax()) || null"
+          [class]="fieldClasses(createForm.temperatureMax())"
+          [formField]="createForm.temperatureMax"
+          id="temperatureMax"
+          step="0.1"
+          type="number"
+        >
+      </app-form-field>
+    </div>
+    }
+  </app-form-section>
+
+  <app-form-section title="Dates">
+    <div class="form-page__coords">
+      <app-form-field
+        inputId="datePremiereMiseCirculation"
+        label="1ʳᵉ mise en circulation"
+      >
+        <app-iso-date-input
+          [formField]="createForm.datePremiereMiseCirculation"
+          inputId="datePremiereMiseCirculation"
+        />
+      </app-form-field>
+
+      <app-form-field inputId="dateAcquisition" label="Acquisition">
+        <app-iso-date-input
+          [formField]="createForm.dateAcquisition"
+          inputId="dateAcquisition"
         />
       </app-form-field>
     </div>
+
+    <app-form-field inputId="dateMiseEnService" label="Mise en service">
+      <app-iso-date-input
+        [formField]="createForm.dateMiseEnService"
+        inputId="dateMiseEnService"
+      />
+    </app-form-field>
   </app-form-section>
 
   @if (formError()) {

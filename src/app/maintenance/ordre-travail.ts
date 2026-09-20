@@ -1,4 +1,9 @@
+import { eurMoney, formatMoney, type Money } from "../core/api/money";
 import type { ApercuTone } from "../tableau/apercu";
+import { toDatetimeLocal } from "../shared/ui/iso-datetime";
+
+export type { Money };
+export { formatMoney };
 
 export const TYPE_INTERVENTIONS = [
   "ENTRETIEN_PREVENTIF",
@@ -11,11 +16,6 @@ export type TypeIntervention = (typeof TYPE_INTERVENTIONS)[number];
 
 export const STATUT_OT = ["PLANIFIE", "EN_COURS", "TERMINE", "ANNULE"] as const;
 export type StatutOT = (typeof STATUT_OT)[number];
-
-export interface Money {
-  devise: string;
-  montant: number;
-}
 
 export interface OrdreTravail {
   cout: Money;
@@ -75,7 +75,7 @@ export function emptyOrdreDraft(): OrdreDraft {
 
 export function draftToWrite(draft: OrdreDraft): OrdreTravailWrite {
   return {
-    coutEstime: { devise: "EUR", montant: draft.montant },
+    coutEstime: eurMoney(draft.montant),
     datePlanifiee: toLocalDateTime(draft.datePlanifiee),
     type: draft.type,
     vehiculeId: draft.vehiculeId,
@@ -139,10 +139,6 @@ export function statutOtTone(statut: StatutOT): ApercuTone {
   }
 }
 
-export function formatMoney(money: Money): string {
-  return `${money.montant.toLocaleString("fr-FR")} ${money.devise}`;
-}
-
 export function formatDateTime(value: string): string {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) {
@@ -173,15 +169,6 @@ export function formatDureeReelleMin(minutes: number): string {
     return `${hours} h`;
   }
   return `${hours} h ${remainder} min`;
-}
-
-export function toDatetimeLocal(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
 function toLocalDateTime(value: string): string {

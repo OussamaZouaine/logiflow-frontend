@@ -1,0 +1,138 @@
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  forwardRef,
+  input,
+  output,
+  signal,
+  ViewEncapsulation,
+} from "@angular/core";
+import { NG_VALUE_ACCESSOR, type ControlValueAccessor } from "@angular/forms";
+import type { ClassValue } from "clsx";
+import {
+  ZardSelectItemComponent,
+} from "@/shared/components/select/select-item.component";
+import { ZardSelectComponent } from "@/shared/components/select/select.component";
+import type { ZardSelectPositionVariants } from "@/shared/components/select/select.variants";
+import { mergeClasses } from "@/shared/utils/merge-classes";
+
+/** Sentinel for optional selects (Zard rejects empty string item values). */
+export const FIELD_SELECT_NONE = "__none__";
+
+export interface FieldSelectOption {
+  disabled?: boolean;
+  label: string;
+  value: string;
+}
+
+export function isFieldSelectNone(value: string): boolean {
+  return value.length === 0 || value === FIELD_SELECT_NONE;
+}
+
+export function enumToSelectOptions<T extends string>(
+  values: readonly T[],
+  label: (value: T) => string
+): readonly FieldSelectOption[] {
+  return values.map((value) => ({ label: label(value), value }));
+}
+
+export function withNoneSelectOption(
+  noneLabel: string,
+  options: readonly FieldSelectOption[]
+): readonly FieldSelectOption[] {
+  return [{ label: noneLabel, value: FIELD_SELECT_NONE }, ...options];
+}
+
+@Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
+  selector: "app-field-select",
+  imports: [ZardSelectComponent, ZardSelectItemComponent],
+  template: `
+    <z-select
+      [attr.id]="inputId()"
+      [class]="selectClasses()"
+      [zDisabled]="isDisabled()"
+      [zInvalid]="invalid() ?? false"
+      [zPlaceholder]="placeholder()"
+      [zPosition]="position()"
+      [zValue]="internalValue()"
+      (zValueChange)="onSelectChange($event)"
+    >
+      @for (option of options(); track option.value) {
+        <z-select-item [zDisabled]="option.disabled ?? false" [zValue]="option.value">
+          {{ option.label }}
+        </z-select-item>
+      }
+    </z-select>
+  `,
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => FieldSelectComponent),
+      multi: true,
+    },
+  ],
+})
+export class FieldSelectComponent implements ControlValueAccessor {
+  readonly inputId = input.required<string>();
+  readonly placeholder = input("Choisir…");
+  readonly invalid = input<boolean | null>(null);
+  readonly position = input<ZardSelectPositionVariants>("popper");
+  readonly inputClass = input<ClassValue>("");
+  readonly options = input<readonly FieldSelectOption[]>([]);
+  /** Standalone binding when `[formField]` is not used. */
+  readonly selectValue = input<string | undefined>(undefined);
+  readonly selectValueChange = output<string>();
+
+  protected readonly internalValue = signal("");
+  protected readonly isDisabled = signal(false);
+
+  protected readonly selectClasses = computed(() =>
+    mergeClasses(
+      "w-full [&_[data-slot=select-trigger]]:min-h-11 [&_[data-slot=select-trigger]]:h-auto",
+      this.inputClass()
+    )
+  );
+
+  private onChange: (value: string) => void = () => undefined;
+  private onTouched: () => void = () => undefined;
+
+  constructor() {
+    effect(() => {
+      const external = this.selectValue();
+      if (external !== undefined && external !== this.internalValue()) {
+        this.internalValue.set(external);
+      }
+    });
+  }
+
+  writeValue(value: string | null): void {
+    this.internalValue.set(value ?? "");
+  }
+
+  registerOnChange(fn: (value: string) => void): void {
+    this.onChange = fn;
+  }
+
+  registerOnTouched(fn: () => void): void {
+    this.onTouched = fn;
+  }
+
+  setDisabledState(isDisabled: boolean): void {
+    this.isDisabled.set(isDisabled);
+  }
+
+  protected onSelectChange(value: string | string[]): void {
+    const next = Array.isArray(value) ? (value[0] ?? "") : value;
+    if (next === this.internalValue()) {
+      return;
+    }
+    this.internalValue.set(next);
+    this.onChange(next);
+    this.selectValueChange.emit(next);
+    this.onTouched();
+  }
+}

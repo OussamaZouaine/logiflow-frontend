@@ -2,7 +2,9 @@ import { HttpClient } from "@angular/common/http";
 import { inject, Service } from "@angular/core";
 import { firstValueFrom } from "rxjs";
 import { environment } from "../../environments/environment";
-import type { Client, Commande, CommandeWrite } from "./commande";
+import { ClientApi } from "../clients/client-api";
+import type { Client, ClientWrite } from "../clients/client";
+import type { Commande, CommandeWrite } from "./commande";
 
 /**
  * Commande HTTP surface: POST create, GET list/detail, PUT confirmer, PUT annuler.
@@ -12,17 +14,20 @@ import type { Client, Commande, CommandeWrite } from "./commande";
  * Backend next: CommandeRepositoryAdapter still save()s a new JPA row (version 0).
  * A second confirmer/annuler 500s (optimistic lock) until it updates in place
  * like VehiculeRepositoryAdapter.
- *
- * Clients have no list endpoint — create a client first, or paste an existing id.
  */
 @Service()
 export class CommandeApi {
   private readonly http = inject(HttpClient);
+  private readonly clientApi = inject(ClientApi);
   private readonly baseUrl = `${environment.apiBaseUrl}/commandes`;
 
-  createClient(body: { code: string; raisonSociale: string }): Promise<Client> {
+  createClient(body: ClientWrite): Promise<Client> {
+    return this.clientApi.create(body);
+  }
+
+  getClient(id: string): Promise<Client> {
     return firstValueFrom(
-      this.http.post<Client>(`${environment.apiBaseUrl}/clients`, body)
+      this.http.get<Client>(`${environment.apiBaseUrl}/clients/${id}`)
     );
   }
 

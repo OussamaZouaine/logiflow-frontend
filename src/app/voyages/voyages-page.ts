@@ -40,8 +40,15 @@ import {
   typeVoyageLabel,
   type Voyage,
 } from "./voyage";
-import { voyageSiteMarkers } from "./voyage-sites-map-markers";
+import { ItineraireApi } from "../ia/itineraire-api";
+import { canCalculerItineraire } from "../ia/itineraire";
+import type { GeoMapPathPoint } from "../shared/ui/geo-markers-map";
 import { GeoMarkersMap } from "../shared/ui/geo-markers-map";
+import {
+  voyageItinerairePath,
+  voyageItinerairePoints,
+  voyageSiteMarkers,
+} from "./voyage-sites-map-markers";
 
 const VOYAGES_PAGE_SIZE = 20;
 const LOOKUP_PAGE_SIZE = 100;
@@ -67,6 +74,7 @@ export class VoyagesPage {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly itineraireApi = inject(ItineraireApi);
 
   protected readonly formatInstant = formatInstant;
   protected readonly porteeLabel = porteeLabel;
@@ -82,6 +90,9 @@ export class VoyagesPage {
   protected readonly statutFilter = signal<string | null>(null);
   protected readonly page = signal(0);
   protected readonly selectedVoyageId = signal<string | null>(null);
+  protected readonly mapRoadPath = signal<readonly GeoMapPathPoint[]>([]);
+  protected readonly mapRoadPathLoading = signal(false);
+  protected readonly mapRoadPathUnavailable = signal(false);
 
   protected readonly canPlan = computed(() =>
     this.session.hasAnyRole(VOYAGES_PLAN_ROLES)
@@ -132,26 +143,66 @@ export class VoyagesPage {
   });
 
   protected readonly mapMarkers = computed(() => {
-    if (!(this.dossiers.hasValue() && this.sites.hasValue())) {
+    const lookup = this.voyageMapLookup();
+    if (!lookup) {
       return [];
     }
-    const dossiersById = new Map(
-      this.dossiers.value().content.map((dossier) => [dossier.id, dossier] as const)
+    return voyageSiteMarkers(
+      this.selectedVoyage(),
+      lookup.dossiersById,
+      lookup.sitesById
     );
-    const sitesById = new Map(
-      this.sites.value().content.map((site) => [site.id, site] as const)
+  });
+
+  protected readonly mapStops = computed(() => {
+    const lookup = this.voyageMapLookup();
+    if (!lookup) {
+      return [];
+    }
+    return voyageItinerairePoints(
+      this.selectedVoyage(),
+      lookup.dossiersById,
+      lookup.sitesById
     );
-    return voyageSiteMarkers(this.selectedVoyage(), dossiersById, sitesById);
+  });
+
+  protected readonly mapPath = computed(() => {
+    const road = this.mapRoadPath();
+    if (road.length >= 2) {
+      return road;
+    }
+    const lookup = this.voyageMapLookup();
+    if (!lookup) {
+      return [];
+    }
+    return voyageItinerairePath(
+      this.selectedVoyage(),
+      lookup.dossiersById,
+      lookup.sitesById
+    );
   });
 
   protected readonly mapHint = computed(() => {
     if (this.selectedVoyageId() === null) {
-      return "Sélectionnez un voyage pour afficher ses sites.";
+      return "Sélectionnez un voyage pour afficher son itinéraire.";
     }
-    if (this.mapMarkers().length === 0) {
-      return "Aucun site géolocalisé pour ce voyage.";
+    const stopCount = this.mapMarkers().length;
+    if (stopCount === 0) {
+      return "Aucun arrêt géolocalisé pour ce voyage.";
     }
-    return `${this.mapMarkers().length} site(s) sur le trajet.`;
+    if (stopCount === 1) {
+      return "1 arrêt — ajoutez un second dossier pour tracer l'itinéraire.";
+    }
+    if (this.mapRoadPathLoading()) {
+      return `${stopCount} arrêt(s) — calcul de l'itinéraire routier…`;
+    }
+    if (this.mapRoadPath().length >= 2) {
+      return `${stopCount} arrêt(s) — itinéraire routier (OSRM).`;
+    }
+    if (this.mapRoadPathUnavailable()) {
+      return `${stopCount} arrêt(s) — routage indisponible, tracé direct affiché.`;
+    }
+    return `${stopCount} arrêt(s) sur le trajet.`;
   });
 
   protected readonly errorMessage = computed(() =>
@@ -182,6 +233,45 @@ export class VoyagesPage {
     effect(() => {
       syncListKeyboardActiveId(this.keyboardRows(), this.selectedVoyageId);
     });
+
+    effect((onCleanup) => {
+      const stops = this.mapStops();
+      this.mapRoadPath.set([]);
+      this.mapRoadPathUnavailable.set(false);
+
+      if (!canCalculerItineraire(stops)) {
+        this.mapRoadPathLoading.set(false);
+        return;
+      }
+
+      let cancelled = false;
+      onCleanup(() => {
+        cancelled = true;
+      });
+
+      this.mapRoadPathLoading.set(true);
+      void this.itineraireApi
+        .calculerGeometrie(stops)
+        .then((result) => {
+          if (cancelled) {
+            return;
+          }
+          this.mapRoadPath.set(result.geometrie);
+          this.mapRoadPathUnavailable.set(result.geometrie.length < 2);
+        })
+        .catch(() => {
+          if (cancelled) {
+            return;
+          }
+          this.mapRoadPath.set([]);
+          this.mapRoadPathUnavailable.set(true);
+        })
+        .finally(() => {
+          if (!cancelled) {
+            this.mapRoadPathLoading.set(false);
+          }
+        });
+    });
   }
 
   protected clearFilters(): void {
@@ -193,5 +283,24 @@ export class VoyagesPage {
 
   protected selectVoyage(voyageId: string): void {
     this.selectedVoyageId.set(voyageId);
+  }
+
+  private voyageMapLookup(): {
+    dossiersById: Map<string, Dossier>;
+    sitesById: Map<string, Site>;
+  } | null {
+    if (!(this.dossiers.hasValue() && this.sites.hasValue())) {
+      return null;
+    }
+    return {
+      dossiersById: new Map(
+        this.dossiers
+          .value()
+          .content.map((dossier) => [dossier.id, dossier] as const)
+      ),
+      sitesById: new Map(
+        this.sites.value().content.map((site) => [site.id, site] as const)
+      ),
+    };
   }
 }

@@ -2,26 +2,28 @@ import { httpResource } from "@angular/common/http";
 import { Component, computed, inject, input, signal } from "@angular/core";
 import { RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
+import {
+  type ChauffeurListItem,
+  chauffeurLabelFromLookup,
+} from "../chauffeurs/chauffeur";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
-import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
-import { FicheHeader } from "../shared/ui/fiche-header";
-import { ToastService } from "../shared/ui/toast";
+import {
+  type VehiculeLookup,
+  vehiculeLabel,
+} from "../maintenance/ordre-travail";
+import type { RemorqueListItem } from "../remorques/remorque";
+import { enumToSelectOptions } from "../shared/ui/field-select";
+import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
 import { OpsTimeline } from "../shared/ui/ops-timeline";
 import { StatutChip } from "../shared/ui/statut-chip";
+import { ToastService } from "../shared/ui/toast";
 import { voyageStatutTone } from "../tableau/apercu";
 import {
-  chauffeurLabelFromLookup,
-  type ChauffeurListItem,
-} from "../chauffeurs/chauffeur";
-import {
-  vehiculeLabel,
-  type VehiculeLookup,
-} from "../maintenance/ordre-travail";
-import { type RemorqueListItem } from "../remorques/remorque";
-import {
+  affectationRoleLabel,
   type EvenementVoyage,
   formatInstant,
+  type GeoPoint,
   isTypeEvenement,
   nextStatuts,
   porteeLabel,
@@ -44,7 +46,7 @@ interface DossierLink {
 }
 
 @Component({
-  imports: [RouterLink, FicheHeader, OpsTimeline, StatutChip, ...FORM_PAGE_IMPORTS],
+  imports: [RouterLink, OpsTimeline, StatutChip, ...FICHE_PAGE_IMPORTS],
   selector: "app-voyage-detail-page",
   templateUrl: "./voyage-detail-page.html",
 })
@@ -54,6 +56,7 @@ export class VoyageDetailPage {
 
   readonly id = input.required<string>();
 
+  protected readonly affectationRoleLabel = affectationRoleLabel;
   protected readonly formatInstant = formatInstant;
   protected readonly nextStatuts = nextStatuts;
   protected readonly porteeLabel = porteeLabel;
@@ -64,11 +67,17 @@ export class VoyageDetailPage {
   protected readonly typeEvenementLabel = typeEvenementLabel;
   protected readonly typeVoyageLabel = typeVoyageLabel;
   protected readonly eventTypes = TYPE_EVENEMENTS;
+  protected readonly eventTypeOptions = enumToSelectOptions(
+    TYPE_EVENEMENTS,
+    typeEvenementLabel
+  );
 
   protected readonly statutError = signal<string | null>(null);
   protected readonly eventError = signal<string | null>(null);
   protected readonly eventType = signal<TypeEvenement>("DEPART");
   protected readonly eventComment = signal("");
+  protected readonly eventLatitude = signal("");
+  protected readonly eventLongitude = signal("");
 
   protected readonly voyage = httpResource<Voyage>(() => ({
     url: `${environment.apiBaseUrl}/voyages/${this.id()}`,
@@ -88,15 +97,18 @@ export class VoyageDetailPage {
     })
   );
 
-  protected readonly chauffeurs = httpResource<
-    PageResponse<ChauffeurListItem>
-  >(() => ({
-    params: { page: 0, size: 50 },
-    url: `${environment.apiBaseUrl}/chauffeurs`,
-  }));
+  protected readonly chauffeurs = httpResource<PageResponse<ChauffeurListItem>>(
+    () => ({
+      params: { page: 0, size: 50 },
+      url: `${environment.apiBaseUrl}/chauffeurs`,
+    })
+  );
 
   protected readonly chauffeursById = computed(() => {
-    const map = new Map<string, Pick<ChauffeurListItem, "matricule" | "nom" | "prenom">>();
+    const map = new Map<
+      string,
+      Pick<ChauffeurListItem, "matricule" | "nom" | "prenom">
+    >();
     for (const chauffeur of this.chauffeurs.value()?.content ?? []) {
       map.set(chauffeur.id, chauffeur);
     }
@@ -128,7 +140,8 @@ export class VoyageDetailPage {
     return voyageTimelineEntries(
       voyage,
       this.evenements.value() ?? [],
-      (chauffeurId) => chauffeurLabelFromLookup(chauffeurId, this.chauffeursById())
+      (chauffeurId) =>
+        chauffeurLabelFromLookup(chauffeurId, this.chauffeursById())
     );
   });
 
@@ -151,8 +164,11 @@ export class VoyageDetailPage {
       return null;
     }
     return (
-      voyage.affectations.find((affectation) => affectation.role === "TITULAIRE")
-        ?.chauffeurId ?? voyage.affectations[0]?.chauffeurId ?? null
+      voyage.affectations.find(
+        (affectation) => affectation.role === "TITULAIRE"
+      )?.chauffeurId ??
+      voyage.affectations[0]?.chauffeurId ??
+      null
     );
   }
 
@@ -178,10 +194,9 @@ export class VoyageDetailPage {
     return remorque?.immatriculation ?? remorqueId;
   }
 
-  protected onEventType(event: Event): void {
-    const { target } = event;
-    if (target instanceof HTMLSelectElement && isTypeEvenement(target.value)) {
-      this.eventType.set(target.value);
+  protected onEventType(value: string): void {
+    if (isTypeEvenement(value)) {
+      this.eventType.set(value);
     }
   }
 
@@ -190,6 +205,39 @@ export class VoyageDetailPage {
     if (target instanceof HTMLInputElement) {
       this.eventComment.set(target.value);
     }
+  }
+
+  protected onEventLatitude(event: Event): void {
+    const { target } = event;
+    if (target instanceof HTMLInputElement) {
+      this.eventLatitude.set(target.value);
+    }
+  }
+
+  protected onEventLongitude(event: Event): void {
+    const { target } = event;
+    if (target instanceof HTMLInputElement) {
+      this.eventLongitude.set(target.value);
+    }
+  }
+
+  protected useCurrentLocation(): void {
+    if (!navigator.geolocation) {
+      this.eventError.set(
+        "La géolocalisation n'est pas disponible sur ce navigateur."
+      );
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        this.eventLatitude.set(String(position.coords.latitude));
+        this.eventLongitude.set(String(position.coords.longitude));
+        this.eventError.set(null);
+      },
+      () => {
+        this.eventError.set("Impossible d'obtenir la position actuelle.");
+      }
+    );
   }
 
   protected async changerStatut(valeur: StatutVoyage): Promise<void> {
@@ -209,18 +257,52 @@ export class VoyageDetailPage {
     event.preventDefault();
     this.eventError.set(null);
     const commentaire = this.eventComment().trim();
+    const position = this.parseEventPosition();
+    if (position === undefined) {
+      return;
+    }
     try {
       await this.api.declarerEvenement({
         commentaire: commentaire.length > 0 ? commentaire : null,
         horodatage: new Date().toISOString(),
+        position,
         type: this.eventType(),
         voyageId: this.id(),
       });
       this.eventComment.set("");
+      this.eventLatitude.set("");
+      this.eventLongitude.set("");
       this.evenements.reload();
       this.toast.success("Événement enregistré.");
     } catch (error) {
       this.eventError.set(httpErrorMessage(error));
     }
+  }
+
+  private parseEventPosition(): GeoPoint | null | undefined {
+    const latRaw = this.eventLatitude().trim();
+    const lngRaw = this.eventLongitude().trim();
+    if (latRaw.length === 0 && lngRaw.length === 0) {
+      return null;
+    }
+    const latitude = Number(latRaw);
+    const longitude = Number(lngRaw);
+    if (Number.isNaN(latitude) || latRaw.length === 0) {
+      this.eventError.set("La latitude doit être un nombre valide.");
+      return undefined;
+    }
+    if (Number.isNaN(longitude) || lngRaw.length === 0) {
+      this.eventError.set("La longitude doit être un nombre valide.");
+      return undefined;
+    }
+    if (latitude < -90 || latitude > 90) {
+      this.eventError.set("La latitude doit être comprise entre -90 et 90.");
+      return undefined;
+    }
+    if (longitude < -180 || longitude > 180) {
+      this.eventError.set("La longitude doit être comprise entre -180 et 180.");
+      return undefined;
+    }
+    return { latitude, longitude };
   }
 }

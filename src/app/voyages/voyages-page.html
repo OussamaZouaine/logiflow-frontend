@@ -157,17 +157,18 @@
 
     <aside class="surface-panel flex min-h-80 flex-col gap-2">
       <div class="border-b border-line px-4 py-3">
-        <h2 class="text-sm font-medium text-ink">Carte des sites</h2>
+        <h2 class="text-sm font-medium text-ink">Itinéraire</h2>
         <p class="mt-0.5 text-xs text-muted">{{ mapHint() }}</p>
       </div>
       <div class="min-h-0 flex-1 p-2">
         <app-geo-markers-map
           [ariaLabel]="
             selectedVoyage()
-              ? 'Sites du voyage ' + selectedVoyage()!.reference
-              : 'Carte des sites du voyage'
+              ? 'Itinéraire du voyage ' + selectedVoyage()!.reference
+              : 'Carte de l\'itinéraire du voyage'
           "
           [markers]="mapMarkers()"
+          [path]="mapPath()"
           class="block h-full min-h-72"
         />
       </div>

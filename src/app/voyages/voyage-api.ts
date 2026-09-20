@@ -4,15 +4,20 @@ import { firstValueFrom } from "rxjs";
 import { environment } from "../../environments/environment";
 import type {
   EvenementVoyage,
+  EvenementVoyageWrite,
   StatutVoyage,
-  TypeEvenement,
   Voyage,
   VoyageWrite,
 } from "./voyage";
 
 /**
- * Voyage HTTP surface: POST create, GET list/detail, PUT statut.
+ * Voyage HTTP surface: POST create, GET list/detail, PUT statut, POST événements.
  * No DELETE — cancel via statut ANNULE.
+ *
+ * Create payload (`VoyageRequest` / `VoyageWrite`):
+ * - Required: `typeVoyage`, `portee`, `departPrevu`, `arriveePrevue`, `vehiculeId`,
+ *   `dossierIds` (min 1), `trajet`, `affectations` (min 1).
+ * - `remorqueId` optional.
  *
  * Backend next: VoyageRepositoryAdapter still save()s a new JPA row (version 0).
  * A second statut change 500s (optimistic lock) until it updates in place
@@ -35,12 +40,7 @@ export class VoyageApi {
     );
   }
 
-  declarerEvenement(body: {
-    commentaire: string | null;
-    horodatage: string;
-    type: TypeEvenement;
-    voyageId: string;
-  }): Promise<EvenementVoyage> {
+  declarerEvenement(body: EvenementVoyageWrite): Promise<EvenementVoyage> {
     return firstValueFrom(
       this.http.post<EvenementVoyage>(
         `${environment.apiBaseUrl}/evenements-voyage`,

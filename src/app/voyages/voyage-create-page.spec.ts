@@ -59,8 +59,11 @@ describe("VoyageCreatePage", () => {
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
+    const page = fixture.componentInstance as unknown as {
+      chauffeurSelectOptions: () => readonly { label: string }[];
+    };
     expect(compiled.textContent).toContain("Nouveau voyage");
-    expect(compiled.textContent).toContain("CH-001 — Jean Martin");
+    expect(page.chauffeurSelectOptions()[0]?.label).toBe("CH-001 — Jean Martin");
     expect(compiled.querySelector("#vehiculeId")).toBeTruthy();
     expect(compiled.textContent).toContain("Calculer via IA");
     expect(compiled.textContent).toContain("Suggérer un groupage");
@@ -167,10 +170,10 @@ describe("VoyageCreatePage", () => {
       'input[type="checkbox"]:checked'
     );
     expect(checkboxes.length).toBe(2);
-    const typeSelect = compiled.querySelector(
-      "#typeVoyage"
-    ) as HTMLSelectElement;
-    expect(typeSelect.value).toBe("GROUPAGE");
+    const page = fixture.componentInstance as unknown as {
+      draft: () => { typeVoyage: string };
+    };
+    expect(page.draft().typeVoyage).toBe("GROUPAGE");
     http.verify();
   });
 
@@ -299,6 +302,7 @@ describe("VoyageCreatePage", () => {
     calcReq.flush({
       distanceKm: 462.7,
       dureeMin: 285.4,
+      geometrie: [],
       segments: [],
     });
 

@@ -18,357 +18,331 @@
   />
 
   <app-form-section title="Dossier">
-    <div class="flex flex-col gap-1.5">
-      <label class="text-xs font-medium text-muted" for="commandeId">
-        Commande confirmée
-      </label>
-      <select
+    <app-form-field
+      [error]="
+        showFieldError(createForm.commandeId())
+          ? firstFieldError(createForm.commandeId().errors())
+          : null
+      "
+      inputId="commandeId"
+      label="Commande confirmée *"
+    >
+      <app-field-select
         [formField]="createForm.commandeId"
-        [class]="fieldClasses(createForm.commandeId())"
-        id="commandeId"
-      >
-        <option value="">Choisir une commande…</option>
-        @for (commande of commandeOptions(); track commande.id) {
-        <option [value]="commande.id">
-          {{ commande.reference }}
-          — {{ commande.dateSouhaitee }}
-        </option>
-        }
-      </select>
-      @if (showFieldError(createForm.commandeId())) {
-      <p class="text-xs text-brake" role="alert">
-        {{ firstFieldError(createForm.commandeId().errors()) }}
-      </p>
-      }
+        [invalid]="showFieldError(createForm.commandeId())"
+        [options]="commandeSelectOptions()"
+        inputId="commandeId"
+        placeholder="Choisir une commande…"
+      />
       @if (commandeOptions().length === 0) {
       <p class="text-xs text-muted">
         Aucune commande confirmée — confirmez une commande d'abord.
       </p>
       }
-    </div>
+    </app-form-field>
 
     <div class="form-page__coords">
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-muted" for="typeTransport">
-          Type de transport
-        </label>
-        <select
+      <app-form-field inputId="typeTransport" label="Type de transport *">
+        <app-field-select
           [formField]="createForm.typeTransport"
-          class="field"
-          id="typeTransport"
-        >
-          @for (type of types; track type) {
-          <option [value]="type">{{ typeTransportLabel(type) }}</option>
-          }
-        </select>
-      </div>
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-muted" for="nbPalettes">
-          Palettes
-        </label>
+          [options]="typeTransportOptions"
+          inputId="typeTransport"
+        />
+      </app-form-field>
+
+      <app-form-field
+        [error]="
+          showFieldError(createForm.nbPalettes())
+            ? firstFieldError(createForm.nbPalettes().errors())
+            : null
+        "
+        inputId="nbPalettes"
+        label="Palettes"
+      >
         <input
-          [formField]="createForm.nbPalettes"
+          [attr.aria-invalid]="showFieldError(createForm.nbPalettes()) || null"
           [class]="fieldClasses(createForm.nbPalettes())"
+          [formField]="createForm.nbPalettes"
           id="nbPalettes"
           inputmode="numeric"
           type="number"
-        />
-        @if (showFieldError(createForm.nbPalettes())) {
-        <p class="text-xs text-brake" role="alert">
-          {{ firstFieldError(createForm.nbPalettes().errors()) }}
-        </p>
-        }
-      </div>
+        >
+      </app-form-field>
     </div>
 
-    <div class="flex flex-col gap-1.5">
-      <label class="text-xs font-medium text-muted" for="familleMarchandise">
-        Famille de marchandise
-      </label>
+    <app-form-field
+      [error]="
+        showFieldError(createForm.familleMarchandise())
+          ? firstFieldError(createForm.familleMarchandise().errors())
+          : null
+      "
+      inputId="familleMarchandise"
+      label="Famille de marchandise *"
+    >
       <input
-        [formField]="createForm.familleMarchandise"
+        [attr.aria-invalid]="showFieldError(createForm.familleMarchandise()) || null"
         [class]="fieldClasses(createForm.familleMarchandise())"
+        [formField]="createForm.familleMarchandise"
         id="familleMarchandise"
         type="text"
-      />
-      @if (showFieldError(createForm.familleMarchandise())) {
-      <p class="text-xs text-brake" role="alert">
-        {{ firstFieldError(createForm.familleMarchandise().errors()) }}
-      </p>
-      }
-    </div>
+      >
+    </app-form-field>
 
     <div class="form-page__coords">
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-muted" for="carrosserieRequise">
-          Carrosserie (optionnel)
-        </label>
-        <select
+      <app-form-field inputId="carrosserieRequise" label="Carrosserie">
+        <app-field-select
           [formField]="createForm.carrosserieRequise"
-          class="field"
-          id="carrosserieRequise"
-        >
-          <option value="">Aucune contrainte</option>
-          @for (carrosserie of carrosseries; track carrosserie) {
-          <option [value]="carrosserie">
-            {{ carrosserieRequiseLabel(carrosserie) }}
-          </option>
-          }
-        </select>
-      </div>
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-muted" for="temperatureRequise">
-          Température °C (optionnel)
-        </label>
+          [options]="carrosserieSelectOptions"
+          inputId="carrosserieRequise"
+          placeholder="Aucune contrainte"
+        />
+      </app-form-field>
+
+      <app-form-field inputId="temperatureRequise" label="Température °C">
         <input
           [formField]="createForm.temperatureRequise"
           class="field"
           id="temperatureRequise"
           inputmode="decimal"
+          placeholder="Optionnel"
           type="text"
-        />
-      </div>
+        >
+      </app-form-field>
     </div>
 
-    <label class="flex items-center gap-2 text-sm text-ink">
+    <label class="flex cursor-pointer items-center gap-2 text-sm text-ink">
       <input
         (change)="onGroupable($event)"
         [checked]="draft().groupable"
         class="size-4 accent-pine"
         type="checkbox"
-      />
+      >
       Éligible au groupage
     </label>
   </app-form-section>
 
-  <app-form-section title="Ligne de marchandise">
-    <fieldset class="fiche-inset flex flex-col gap-4 border-0 p-0">
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-muted" for="marchandiseId">
-          Marchandise
-        </label>
-        <select
-          [formField]="createForm.marchandiseId"
-          [class]="fieldClasses(createForm.marchandiseId())"
-          id="marchandiseId"
-        >
-          <option value="">Choisir une marchandise…</option>
-          @for (marchandise of marchandiseOptions(); track marchandise.id) {
-          <option [value]="marchandise.id">
-            {{ formatMarchandiseLabel(marchandise) }}
-          </option>
-          }
-        </select>
-        @if (showFieldError(createForm.marchandiseId())) {
-        <p class="text-xs text-brake" role="alert">
-          {{ firstFieldError(createForm.marchandiseId().errors()) }}
-        </p>
-        }
-      </div>
+  <app-form-section title="Lignes de marchandise">
+    <div class="flex flex-wrap items-baseline justify-between gap-2">
+      <p class="text-sm text-muted">
+        Au moins une ligne liée au catalogue marchandises.
+      </p>
+      <button
+        (click)="addLigne()"
+        class="btn-outline pressable px-2.5 py-1.5 text-xs"
+        type="button"
+      >
+        Ajouter une ligne
+      </button>
+    </div>
+    @if (marchandiseOptions().length === 0) {
+    <p class="text-sm text-muted">
+      Aucune marchandise active dans le catalogue.
+    </p>
+    }
+    @for (ligne of draft().lignes; track $index) {
+    <fieldset class="fiche-inset flex flex-col gap-4 p-4">
+      <legend class="px-1 text-xs font-medium text-muted">
+        Ligne {{ $index + 1 }}
+      </legend>
+      <app-form-field
+        [inputId]="'marchandiseId-' + $index"
+        label="Marchandise *"
+      >
+        <app-field-select
+          (selectValueChange)="updateLigneMarchandise($index, $event)"
+          [inputId]="'marchandiseId-' + $index"
+          [options]="marchandiseSelectOptions()"
+          [selectValue]="ligne.marchandiseId"
+          placeholder="Choisir…"
+        />
+      </app-form-field>
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-medium text-muted" for="poidsKg">
-            Poids kg
-          </label>
+        <app-form-field [inputId]="'poidsKg-' + $index" label="Poids (kg)">
           <input
-            [formField]="createForm.poidsKg"
-            [class]="fieldClasses(createForm.poidsKg())"
-            id="poidsKg"
+            (input)="updateLigneNumber($index, 'poidsKg', $event)"
+            [id]="'poidsKg-' + $index"
+            [value]="ligne.poidsKg"
+            class="field tabular-nums"
             inputmode="decimal"
+            step="0.01"
             type="number"
-          />
-          @if (showFieldError(createForm.poidsKg())) {
-          <p class="text-xs text-brake" role="alert">
-            {{ firstFieldError(createForm.poidsKg().errors()) }}
-          </p>
-          }
-        </div>
-        <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-medium text-muted" for="volumeM3">
-            Volume m³
-          </label>
+          >
+        </app-form-field>
+        <app-form-field [inputId]="'volumeM3-' + $index" label="Volume (m³)">
           <input
-            [formField]="createForm.volumeM3"
-            [class]="fieldClasses(createForm.volumeM3())"
-            id="volumeM3"
+            (input)="updateLigneNumber($index, 'volumeM3', $event)"
+            [id]="'volumeM3-' + $index"
+            [value]="ligne.volumeM3"
+            class="field tabular-nums"
             inputmode="decimal"
+            step="0.01"
             type="number"
-          />
-          @if (showFieldError(createForm.volumeM3())) {
-          <p class="text-xs text-brake" role="alert">
-            {{ firstFieldError(createForm.volumeM3().errors()) }}
-          </p>
-          }
-        </div>
-        <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-medium text-muted" for="nbColis">
-            Colis
-          </label>
+          >
+        </app-form-field>
+        <app-form-field [inputId]="'nbColis-' + $index" label="Colis">
           <input
-            [formField]="createForm.nbColis"
-            [class]="fieldClasses(createForm.nbColis())"
-            id="nbColis"
+            (input)="updateLigneNumber($index, 'nbColis', $event)"
+            [id]="'nbColis-' + $index"
+            [value]="ligne.nbColis"
+            class="field tabular-nums"
             inputmode="numeric"
+            step="1"
             type="number"
-          />
-          @if (showFieldError(createForm.nbColis())) {
-          <p class="text-xs text-brake" role="alert">
-            {{ firstFieldError(createForm.nbColis().errors()) }}
-          </p>
-          }
-        </div>
+          >
+        </app-form-field>
       </div>
-      <label class="flex items-center gap-2 text-sm text-ink">
+      <label class="flex cursor-pointer items-center gap-2 text-sm text-ink">
         <input
-          (change)="onGerbable($event)"
-          [checked]="draft().gerbable"
+          (change)="onLigneGerbable($index, $event)"
+          [checked]="ligne.gerbable"
           class="size-4 accent-pine"
           type="checkbox"
-        />
+        >
         Gerbable
       </label>
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-medium text-muted" for="classeAdr">
-            Classe ADR (optionnel)
-          </label>
+        <app-form-field [inputId]="'classeAdr-' + $index" label="Classe ADR">
           <input
-            [formField]="createForm.classeAdr"
+            (input)="updateLigneText($index, 'classeAdr', $event)"
+            [id]="'classeAdr-' + $index"
+            [value]="ligne.classeAdr"
             class="field"
-            id="classeAdr"
+            placeholder="Optionnel"
             type="text"
-          />
-        </div>
-        <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-medium text-muted" for="numeroOnu">
-            N° ONU (optionnel)
-          </label>
+          >
+        </app-form-field>
+        <app-form-field [inputId]="'numeroOnu-' + $index" label="N° ONU">
           <input
-            [formField]="createForm.numeroOnu"
+            (input)="updateLigneText($index, 'numeroOnu', $event)"
+            [id]="'numeroOnu-' + $index"
+            [value]="ligne.numeroOnu"
             class="field"
-            id="numeroOnu"
+            placeholder="Optionnel"
             type="text"
-          />
-        </div>
+          >
+        </app-form-field>
       </div>
+      @if (draft().lignes.length > 1) {
+      <button
+        (click)="removeLigne($index)"
+        class="btn-danger-outline pressable self-start px-2.5 py-1.5 text-xs"
+        type="button"
+      >
+        Retirer la ligne
+      </button>
+      }
     </fieldset>
+    }
+    @if (lignesError()) {
+    <div class="alert-panel" role="alert">{{ lignesError() }}</div>
+    }
   </app-form-section>
 
   <app-form-section title="Chargement">
-    <div class="flex flex-col gap-1.5">
-      <label class="text-xs font-medium text-muted" for="chargementSiteId">
-        Site
-      </label>
-      <select
+    <app-form-field
+      [error]="
+        showFieldError(createForm.chargementSiteId())
+          ? firstFieldError(createForm.chargementSiteId().errors())
+          : null
+      "
+      inputId="chargementSiteId"
+      label="Site *"
+    >
+      <app-field-select
         [formField]="createForm.chargementSiteId"
-        [class]="fieldClasses(createForm.chargementSiteId())"
-        id="chargementSiteId"
-      >
-        <option value="">Choisir un site…</option>
-        @for (site of siteOptions(); track site.id) {
-        <option [value]="site.id">
-          {{ site.code }} — {{ site.libelle }}
-        </option>
-        }
-      </select>
-      @if (showFieldError(createForm.chargementSiteId())) {
-      <p class="text-xs text-brake" role="alert">
-        {{ firstFieldError(createForm.chargementSiteId().errors()) }}
-      </p>
-      }
-    </div>
+        [invalid]="showFieldError(createForm.chargementSiteId())"
+        [options]="siteSelectOptions()"
+        inputId="chargementSiteId"
+        placeholder="Choisir un site…"
+      />
+    </app-form-field>
     <div class="form-page__coords">
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-muted" for="chargementDebut">
-          Début fenêtre
-        </label>
-        <input
+      <app-form-field
+        [error]="
+          showFieldError(createForm.chargementDebut())
+            ? firstFieldError(createForm.chargementDebut().errors())
+            : null
+        "
+        inputId="chargementDebut"
+        label="Début fenêtre *"
+      >
+        <app-iso-datetime-input
+          [ariaInvalid]="showFieldError(createForm.chargementDebut())"
           [formField]="createForm.chargementDebut"
-          [class]="fieldClasses(createForm.chargementDebut())"
-          id="chargementDebut"
-          type="datetime-local"
+          inputId="chargementDebut"
+          timeAriaLabel="Heure de début de chargement"
         />
-        @if (showFieldError(createForm.chargementDebut())) {
-        <p class="text-xs text-brake" role="alert">
-          {{ firstFieldError(createForm.chargementDebut().errors()) }}
-        </p>
-        }
-      </div>
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-muted" for="chargementFin">
-          Fin fenêtre
-        </label>
-        <input
+      </app-form-field>
+      <app-form-field
+        [error]="
+          showFieldError(createForm.chargementFin())
+            ? firstFieldError(createForm.chargementFin().errors())
+            : null
+        "
+        inputId="chargementFin"
+        label="Fin fenêtre *"
+      >
+        <app-iso-datetime-input
+          [ariaInvalid]="showFieldError(createForm.chargementFin())"
           [formField]="createForm.chargementFin"
-          [class]="fieldClasses(createForm.chargementFin())"
-          id="chargementFin"
-          type="datetime-local"
+          inputId="chargementFin"
+          timeAriaLabel="Heure de fin de chargement"
         />
-        @if (showFieldError(createForm.chargementFin())) {
-        <p class="text-xs text-brake" role="alert">
-          {{ firstFieldError(createForm.chargementFin().errors()) }}
-        </p>
-        }
-      </div>
+      </app-form-field>
     </div>
   </app-form-section>
 
   <app-form-section title="Déchargement">
-    <div class="flex flex-col gap-1.5">
-      <label class="text-xs font-medium text-muted" for="dechargementSiteId">
-        Site
-      </label>
-      <select
+    <app-form-field
+      [error]="
+        showFieldError(createForm.dechargementSiteId())
+          ? firstFieldError(createForm.dechargementSiteId().errors())
+          : null
+      "
+      inputId="dechargementSiteId"
+      label="Site *"
+    >
+      <app-field-select
         [formField]="createForm.dechargementSiteId"
-        [class]="fieldClasses(createForm.dechargementSiteId())"
-        id="dechargementSiteId"
-      >
-        <option value="">Choisir un site…</option>
-        @for (site of siteOptions(); track site.id) {
-        <option [value]="site.id">
-          {{ site.code }} — {{ site.libelle }}
-        </option>
-        }
-      </select>
-      @if (showFieldError(createForm.dechargementSiteId())) {
-      <p class="text-xs text-brake" role="alert">
-        {{ firstFieldError(createForm.dechargementSiteId().errors()) }}
-      </p>
-      }
-    </div>
+        [invalid]="showFieldError(createForm.dechargementSiteId())"
+        [options]="siteSelectOptions()"
+        inputId="dechargementSiteId"
+        placeholder="Choisir un site…"
+      />
+    </app-form-field>
     <div class="form-page__coords">
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-muted" for="dechargementDebut">
-          Début fenêtre
-        </label>
-        <input
+      <app-form-field
+        [error]="
+          showFieldError(createForm.dechargementDebut())
+            ? firstFieldError(createForm.dechargementDebut().errors())
+            : null
+        "
+        inputId="dechargementDebut"
+        label="Début fenêtre *"
+      >
+        <app-iso-datetime-input
+          [ariaInvalid]="showFieldError(createForm.dechargementDebut())"
           [formField]="createForm.dechargementDebut"
-          [class]="fieldClasses(createForm.dechargementDebut())"
-          id="dechargementDebut"
-          type="datetime-local"
+          inputId="dechargementDebut"
+          timeAriaLabel="Heure de début de déchargement"
         />
-        @if (showFieldError(createForm.dechargementDebut())) {
-        <p class="text-xs text-brake" role="alert">
-          {{ firstFieldError(createForm.dechargementDebut().errors()) }}
-        </p>
-        }
-      </div>
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-muted" for="dechargementFin">
-          Fin fenêtre
-        </label>
-        <input
+      </app-form-field>
+      <app-form-field
+        [error]="
+          showFieldError(createForm.dechargementFin())
+            ? firstFieldError(createForm.dechargementFin().errors())
+            : null
+        "
+        inputId="dechargementFin"
+        label="Fin fenêtre *"
+      >
+        <app-iso-datetime-input
+          [ariaInvalid]="showFieldError(createForm.dechargementFin())"
           [formField]="createForm.dechargementFin"
-          [class]="fieldClasses(createForm.dechargementFin())"
-          id="dechargementFin"
-          type="datetime-local"
+          inputId="dechargementFin"
+          timeAriaLabel="Heure de fin de déchargement"
         />
-        @if (showFieldError(createForm.dechargementFin())) {
-        <p class="text-xs text-brake" role="alert">
-          {{ firstFieldError(createForm.dechargementFin().errors()) }}
-        </p>
-        }
-      </div>
+      </app-form-field>
     </div>
   </app-form-section>
 

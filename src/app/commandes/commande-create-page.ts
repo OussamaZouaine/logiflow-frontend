@@ -1,25 +1,43 @@
 import { httpResource } from "@angular/common/http";
 import { Component, computed, inject, signal } from "@angular/core";
-import { FormField, form, min, required, submit } from "@angular/forms/signals";
+import {
+  FormField,
+  form,
+  min,
+  required,
+  submit,
+  validate,
+} from "@angular/forms/signals";
 import { Router, RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
-import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
-import { ToastService } from "../shared/ui/toast";
 import { firstFieldError } from "../core/forms/first-field-error";
 import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
+import { formatClientLabel, type Client } from "../clients/client";
 import { formatMarchandiseLabel, type Marchandise } from "../marchandises/marchandise";
+import { type FieldSelectOption } from "../shared/ui/field-select";
+import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
+import { startOfToday } from "../shared/ui/iso-date";
+import { ToastService } from "../shared/ui/toast";
 import {
   type CommandeDraft,
   draftToWrite,
   emptyCommandeDraft,
   emptyLigneCommandeDraft,
+  isDateTodayOrFuture,
   validateLignesCommande,
 } from "./commande";
 import { CommandeApi } from "./commande-api";
 
 const LOOKUP_PAGE_SIZE = 50;
+
+const CLIENT_SELECT_NEW = "__new_client__";
+
+const clientsLookupRequest = {
+  params: { page: 0, size: LOOKUP_PAGE_SIZE },
+  url: `${environment.apiBaseUrl}/clients`,
+};
 
 const marchandisesLookupRequest = {
   params: { page: 0, size: LOOKUP_PAGE_SIZE },
@@ -43,14 +61,53 @@ export class CommandeCreatePage {
   protected readonly formError = signal<string | null>(null);
   protected readonly lignesError = signal<string | null>(null);
 
+  protected readonly clients = httpResource<PageResponse<Client>>(
+    () => clientsLookupRequest
+  );
+
   protected readonly marchandises = httpResource<PageResponse<Marchandise>>(
     () => marchandisesLookupRequest
   );
+
+  protected readonly clientOptions = computed(() =>
+    (this.clients.value()?.content ?? []).filter((client) => client.actif)
+  );
+
+  protected readonly clientSelectOptions = computed<readonly FieldSelectOption[]>(
+    () => [
+      ...this.clientOptions().map((client) => ({
+        label: formatClientLabel(client),
+        value: client.id,
+      })),
+      {
+        label: "Créer un nouveau client…",
+        value: CLIENT_SELECT_NEW,
+      },
+    ]
+  );
+
+  protected readonly clientSelectValue = computed(() =>
+    this.draft().nouveauClient ? CLIENT_SELECT_NEW : this.draft().clientId
+  );
+
+  protected readonly clientsError = computed(() => {
+    const error = this.clients.error();
+    return error ? httpErrorMessage(error) : null;
+  });
 
   protected readonly marchandiseOptions = computed(() =>
     (this.marchandises.value()?.content ?? []).filter(
       (marchandise) => marchandise.actif
     )
+  );
+
+  protected readonly marchandiseSelectOptions = computed<
+    readonly FieldSelectOption[]
+  >(() =>
+    this.marchandiseOptions().map((marchandise) => ({
+      label: formatMarchandiseLabel(marchandise),
+      value: marchandise.id,
+    }))
   );
 
   protected readonly marchandisesError = computed(() => {
@@ -59,10 +116,11 @@ export class CommandeCreatePage {
   });
 
   protected readonly draft = signal(emptyCommandeDraft());
+  protected readonly minDateSouhaitee = startOfToday();
 
   protected readonly createForm = form(this.draft, (path) => {
     required(path.clientId, {
-      message: "L'identifiant client est obligatoire.",
+      message: "Sélectionnez un client.",
       when: ({ valueOf }) => !valueOf(path.nouveauClient),
     });
     required(path.clientCode, {
@@ -76,29 +134,47 @@ export class CommandeCreatePage {
     required(path.dateSouhaitee, {
       message: "La date souhaitée est obligatoire.",
     });
+    validate(path.dateSouhaitee, (ctx) => {
+      const value = ctx.value();
+      if (value.length === 0 || isDateTodayOrFuture(value)) {
+        return undefined;
+      }
+      return {
+        kind: "datePast",
+        message: "La date souhaitée ne peut pas être dans le passé.",
+      };
+    });
+    required(path.montant, { message: "Le prix négocié est obligatoire." });
     min(path.montant, 0, { message: "Le montant ne peut pas être négatif." });
   });
 
-  protected onNouveauClient(event: Event): void {
-    const { target } = event;
-    if (target instanceof HTMLInputElement) {
+  protected onClientSelectChange(value: string): void {
+    if (value === CLIENT_SELECT_NEW) {
       this.draft.update((current) => ({
         ...current,
-        nouveauClient: target.checked,
+        clientCode: "",
+        clientId: "",
+        clientRaisonSociale: "",
+        nouveauClient: true,
       }));
-    }
-  }
-
-  protected updateLigneMarchandise(index: number, event: Event): void {
-    const { target } = event;
-    if (!(target instanceof HTMLSelectElement)) {
       return;
     }
+
+    this.draft.update((current) => ({
+      ...current,
+      clientCode: "",
+      clientId: value,
+      clientRaisonSociale: "",
+      nouveauClient: false,
+    }));
+  }
+
+  protected updateLigneMarchandise(index: number, marchandiseId: string): void {
     this.draft.update((current) => ({
       ...current,
       lignes: current.lignes.map((ligne, ligneIndex) =>
         ligneIndex === index
-          ? { ...ligne, marchandiseId: target.value }
+          ? { ...ligne, marchandiseId }
           : ligne
       ),
     }));

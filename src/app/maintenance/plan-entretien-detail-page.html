@@ -1,21 +1,15 @@
-<div class="flex flex-col gap-8">
+<div class="fiche-page">
   <app-fiche-header listLabel="Plans d'entretien" listLink="/maintenance/plans">
     @if (plan.isLoading()) {
-    <p class="text-sm text-muted" role="status">Chargement…</p>
+    <p class="fiche-load-hint" role="status">Chargement…</p>
     } @else if (plan.error()) {
-    <div class="alert-panel" role="alert">
-      <p>{{ loadError() }}</p>
-      <button
-        (click)="plan.reload()"
-        class="pressable mt-2 font-medium text-ink underline underline-offset-2"
-        type="button"
-      >
-        Réessayer
-      </button>
-    </div>
+    <app-fiche-error
+      (retry)="plan.reload()"
+      [message]="loadError()"
+    />
     } @else if (plan.hasValue()) {
-    <h1 class="fiche-page-title">{{ plan.value().libelle }}</h1>
-    <p class="mt-1 text-sm text-muted">
+    <app-fiche-title-row [title]="plan.value().libelle" />
+    <p class="fiche-meta">
       Plan préventif — lecture seule en v1.
     </p>
     }

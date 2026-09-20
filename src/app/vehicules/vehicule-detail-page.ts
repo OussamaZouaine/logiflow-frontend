@@ -7,54 +7,72 @@ import {
   input,
   signal,
 } from "@angular/core";
-import { FormField, form, min, required, submit } from "@angular/forms/signals";
+import {
+  FormField,
+  form,
+  max,
+  min,
+  required,
+  submit,
+} from "@angular/forms/signals";
 import { RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
-import { DemoSessionService } from "../core/auth/demo-session";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
+import { DemoSessionService } from "../core/auth/demo-session";
+import { firstFieldError } from "../core/forms/first-field-error";
+import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
 import { WORK_DESTINATIONS } from "../core/nav/work-destination";
-import { DocumentApi } from "../documents/document-api";
 import {
   DOCUMENT_TYPES,
+  type Document,
   documentTypeLabel,
   emptyDocumentUploadDraft,
   formatDocumentExpiration,
   isDocumentType,
-  type Document,
 } from "../documents/document";
-import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
-import { FicheHeader } from "../shared/ui/fiche-header";
-import { ToastService } from "../shared/ui/toast";
-import { StatutChip } from "../shared/ui/statut-chip";
-import { vehiculeStatutTone } from "../tableau/apercu";
+import { DocumentApi } from "../documents/document-api";
 import {
   formatDateTime,
   formatMoney,
   formatOrdreShortId,
+  type OrdreTravail,
   statutOtLabel,
   statutOtTone,
   typeInterventionLabel,
-  type OrdreTravail,
 } from "../maintenance/ordre-travail";
-import {
-  draftToWrite,
-  emptyScoreSanteDraft,
-  formatDate,
-  statutSanteLabel,
-  statutSanteTone,
-  type ScoreSante,
-} from "../maintenance/score-sante";
-import { ScoreSanteApi } from "../maintenance/score-sante-api";
 import {
   formatPeriodicite,
   type PlanEntretien,
 } from "../maintenance/plan-entretien";
-import { statutLabel, typeLabel, type Vehicule } from "./vehicule";
+import {
+  draftToWrite,
+  emptyScoreSanteDraft,
+  formatDate,
+  SCORE_SANTE_MAX,
+  type ScoreSante,
+  statutSanteLabel,
+  statutSanteTone,
+} from "../maintenance/score-sante";
+import { ScoreSanteApi } from "../maintenance/score-sante-api";
+import { enumToSelectOptions } from "../shared/ui/field-select";
+import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
+import { StatutChip } from "../shared/ui/statut-chip";
+import { ToastService } from "../shared/ui/toast";
+import { vehiculeStatutTone } from "../tableau/apercu";
+import {
+  carrosserieDisplay,
+  energieDisplay,
+  formatMarqueModele,
+  formatVehiculeDate,
+  statutLabel,
+  typeLabel,
+  type Vehicule,
+} from "./vehicule";
 import { VehiculeApi } from "./vehicule-api";
 
 @Component({
-  imports: [FormField, FicheHeader, RouterLink, StatutChip, ...FORM_PAGE_IMPORTS],
+  imports: [FormField, RouterLink, StatutChip, ...FICHE_PAGE_IMPORTS],
   selector: "app-vehicule-detail-page",
   templateUrl: "./vehicule-detail-page.html",
 })
@@ -68,10 +86,18 @@ export class VehiculeDetailPage {
   readonly id = input.required<string>();
 
   protected readonly documentTypes = DOCUMENT_TYPES;
+  protected readonly documentTypeOptions = enumToSelectOptions(
+    DOCUMENT_TYPES,
+    documentTypeLabel
+  );
   protected readonly documentTypeLabel = documentTypeLabel;
   protected readonly formatDocumentExpiration = formatDocumentExpiration;
   protected readonly typeLabel = typeLabel;
   protected readonly statutLabel = statutLabel;
+  protected readonly energieDisplay = energieDisplay;
+  protected readonly carrosserieDisplay = carrosserieDisplay;
+  protected readonly formatMarqueModele = formatMarqueModele;
+  protected readonly formatVehiculeDate = formatVehiculeDate;
   protected readonly vehiculeStatutTone = vehiculeStatutTone;
   protected readonly statutSanteLabel = statutSanteLabel;
   protected readonly statutSanteTone = statutSanteTone;
@@ -83,6 +109,9 @@ export class VehiculeDetailPage {
   protected readonly typeInterventionLabel = typeInterventionLabel;
   protected readonly statutOtLabel = statutOtLabel;
   protected readonly statutOtTone = statutOtTone;
+  protected readonly firstFieldError = firstFieldError;
+  protected readonly showFieldError = showFieldError;
+  protected readonly fieldClasses = fieldClasses;
 
   protected readonly canMaintenance = computed(() =>
     this.session.hasAnyRole(WORK_DESTINATIONS.maintenance.roles)
@@ -112,7 +141,7 @@ export class VehiculeDetailPage {
     PageResponse<PlanEntretien> | undefined
   >(() => {
     if (!this.canMaintenance()) {
-      return undefined;
+      return;
     }
     return {
       params: { page: 0, size: 5, vehiculeId: this.id() },
@@ -128,7 +157,7 @@ export class VehiculeDetailPage {
     PageResponse<OrdreTravail> | undefined
   >(() => {
     if (!this.canMaintenance()) {
-      return undefined;
+      return;
     }
     return {
       params: { page: 0, size: 5, vehiculeId: this.id() },
@@ -170,6 +199,9 @@ export class VehiculeDetailPage {
   protected readonly scoreForm = form(this.scoreDraft, (path) => {
     required(path.score, { message: "Le score est obligatoire." });
     min(path.score, 0, { message: "Le score ne peut pas être négatif." });
+    max(path.score, SCORE_SANTE_MAX, {
+      message: `Le score ne peut pas dépasser ${SCORE_SANTE_MAX}.`,
+    });
     required(path.dateEcheanceProjetee, {
       message: "La date d'échéance est obligatoire.",
     });
@@ -210,10 +242,8 @@ export class VehiculeDetailPage {
     });
   }
 
-  protected onUploadType(event: Event): void {
-    const { target } = event;
-    if (target instanceof HTMLSelectElement && isDocumentType(target.value)) {
-      const typeDocument = target.value;
+  protected onUploadType(typeDocument: string): void {
+    if (isDocumentType(typeDocument)) {
       this.uploadDraft.update((draft) => ({
         ...draft,
         typeDocument,
@@ -231,14 +261,11 @@ export class VehiculeDetailPage {
     }
   }
 
-  protected onUploadExpiration(event: Event): void {
-    const { target } = event;
-    if (target instanceof HTMLInputElement) {
-      this.uploadDraft.update((draft) => ({
-        ...draft,
-        dateExpiration: target.value,
-      }));
-    }
+  protected onUploadExpirationIso(isoDate: string): void {
+    this.uploadDraft.update((draft) => ({
+      ...draft,
+      dateExpiration: isoDate,
+    }));
   }
 
   protected onFileSelected(event: Event): void {

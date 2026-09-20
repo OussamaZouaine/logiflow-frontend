@@ -4,8 +4,7 @@ import { RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
-import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
-import { FicheHeader } from "../shared/ui/fiche-header";
+import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
 import { ToastService } from "../shared/ui/toast";
 import { StatutChip } from "../shared/ui/statut-chip";
 import {
@@ -27,7 +26,7 @@ import { OrdreTravailApi } from "./ordre-travail-api";
 const VEHICULE_LOOKUP_PAGE_SIZE = 50;
 
 @Component({
-  imports: [FicheHeader, RouterLink, StatutChip, ...FORM_PAGE_IMPORTS],
+  imports: [RouterLink, StatutChip, ...FICHE_PAGE_IMPORTS],
   selector: "app-ordre-detail-page",
   templateUrl: "./ordre-detail-page.html",
 })

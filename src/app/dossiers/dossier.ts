@@ -1,8 +1,13 @@
+import { isFieldSelectNone } from "../shared/ui/field-select";
 import {
   datetimeLocalToIso,
   formatInstant,
   toDatetimeLocal,
 } from "../voyages/voyage";
+
+function normalizeOptionalSelect(value: string): string {
+  return isFieldSelectNone(value) ? "" : value.trim();
+}
 
 export { formatInstant };
 
@@ -41,11 +46,29 @@ export const STATUT_DOSSIERS = [
 ] as const;
 export type StatutDossier = (typeof STATUT_DOSSIERS)[number];
 
+export const TYPE_DOCUMENTS_TRANSPORT = [
+  "CMR",
+  "FACTURE",
+  "BON_LIVRAISON",
+  "DOUANE",
+  "AUTRE",
+] as const;
+export type TypeDocumentTransport = (typeof TYPE_DOCUMENTS_TRANSPORT)[number];
+
+export const STATUTS_DOCUMENT_TRANSPORT = [
+  "MANQUANT",
+  "FOURNI",
+  "VALIDE",
+] as const;
+export type StatutDocumentTransport =
+  (typeof STATUTS_DOCUMENT_TRANSPORT)[number];
+
 export interface TimeWindow {
   debut: string;
   fin: string;
 }
 
+/** Ligne telle que définie dans `LigneMarchandise` (OpenAPI). */
 export interface LigneMarchandise {
   classeAdr: string | null;
   gerbable: boolean | null;
@@ -64,11 +87,20 @@ export interface Segment {
   type: TypeSegment;
 }
 
+/** Document tel que défini dans `DocumentTransport` (OpenAPI). */
+export interface DocumentTransport {
+  cheminFichier: string;
+  obligatoire: boolean;
+  statut: StatutDocumentTransport;
+  type: TypeDocumentTransport;
+}
+
+/** Dossier tel que renvoyé par l'API (`DossierResponse`). */
 export interface Dossier {
   carrosserieRequise: CarrosserieRequise | null;
   commandeId: string;
   contientAdr: boolean;
-  documents: unknown[];
+  documents: DocumentTransport[];
   familleMarchandise: string;
   groupable: boolean;
   id: string;
@@ -83,10 +115,11 @@ export interface Dossier {
   volumeM3: number;
 }
 
+/** Corps de création, calqué sur `DossierRequest` côté backend. */
 export interface DossierWrite {
   carrosserieRequise: CarrosserieRequise | null;
   commandeId: string;
-  documents: unknown[];
+  documents: DocumentTransport[];
   familleMarchandise: string;
   groupable: boolean;
   lignesMarchandise: LigneMarchandise[];
@@ -96,27 +129,32 @@ export interface DossierWrite {
   typeTransport: TypeTransport;
 }
 
+export interface LigneMarchandiseDraft {
+  classeAdr: string;
+  gerbable: boolean;
+  marchandiseId: string;
+  nbColis: number;
+  numeroOnu: string;
+  poidsKg: number;
+  volumeM3: number;
+}
+
+/** État du formulaire de création. */
 export interface DossierDraft {
   carrosserieRequise: string;
   chargementDebut: string;
   chargementFin: string;
   chargementSiteId: string;
-  classeAdr: string;
   commandeId: string;
   dechargementDebut: string;
   dechargementFin: string;
   dechargementSiteId: string;
   familleMarchandise: string;
-  marchandiseId: string;
-  gerbable: boolean;
   groupable: boolean;
-  nbColis: number;
+  lignes: LigneMarchandiseDraft[];
   nbPalettes: number;
-  numeroOnu: string;
-  poidsKg: number;
   temperatureRequise: string;
   typeTransport: TypeTransport;
-  volumeM3: number;
 }
 
 export interface DossierLookupCommande {
@@ -132,32 +170,17 @@ export interface DossierLookupSite {
   libelle: string;
 }
 
-export function formatSiteLabel(
-  site: Pick<DossierLookupSite, "code" | "libelle">
-): string {
-  return `${site.code} — ${site.libelle}`;
+export function emptyLigneMarchandiseDraft(): LigneMarchandiseDraft {
+  return {
+    classeAdr: "",
+    gerbable: true,
+    marchandiseId: "",
+    nbColis: 10,
+    numeroOnu: "",
+    poidsKg: 500,
+    volumeM3: 2.5,
+  };
 }
-
-export function siteLabelFromLookup(
-  siteId: string,
-  sitesById: ReadonlyMap<string, DossierLookupSite>
-): string {
-  const site = sitesById.get(siteId);
-  return site ? formatSiteLabel(site) : siteId;
-}
-
-const TRANSITIONS: Record<StatutDossier, readonly StatutDossier[]> = {
-  ANNULE: [],
-  CHARGE: ["EN_TRANSIT", "ANNULE"],
-  CLOTURE: [],
-  CREE: ["PLANIFIE", "ANNULE"],
-  EN_CHARGEMENT: ["CHARGE", "ANNULE"],
-  EN_LIVRAISON: ["LIVRE"],
-  EN_TRANSIT: ["EN_LIVRAISON", "INCIDENT"],
-  INCIDENT: ["EN_TRANSIT", "ANNULE"],
-  LIVRE: ["CLOTURE"],
-  PLANIFIE: ["CREE", "EN_CHARGEMENT", "ANNULE"],
-};
 
 export function emptyDossierDraft(commandeId = ""): DossierDraft {
   const chargementDebut = new Date();
@@ -176,49 +199,71 @@ export function emptyDossierDraft(commandeId = ""): DossierDraft {
     chargementDebut: toDatetimeLocal(chargementDebut),
     chargementFin: toDatetimeLocal(chargementFin),
     chargementSiteId: "",
-    classeAdr: "",
     commandeId,
     dechargementDebut: toDatetimeLocal(dechargementDebut),
     dechargementFin: toDatetimeLocal(dechargementFin),
     dechargementSiteId: "",
     familleMarchandise: "Palettes standard",
-    marchandiseId: "",
-    gerbable: true,
     groupable: true,
-    nbColis: 10,
+    lignes: [emptyLigneMarchandiseDraft()],
     nbPalettes: 10,
-    numeroOnu: "",
-    poidsKg: 500,
     temperatureRequise: "",
     typeTransport: "NATIONAL",
-    volumeM3: 2.5,
+  };
+}
+
+export function validateLignesMarchandise(
+  lignes: LigneMarchandiseDraft[]
+): string | null {
+  if (lignes.length === 0) {
+    return "Ajoutez au moins une ligne de marchandise.";
+  }
+  for (const [index, ligne] of lignes.entries()) {
+    if (!ligne.marchandiseId.trim()) {
+      return `Ligne ${index + 1} : choisissez une marchandise du catalogue.`;
+    }
+    if (ligne.poidsKg < 0) {
+      return `Ligne ${index + 1} : le poids ne peut pas être négatif.`;
+    }
+    if (ligne.volumeM3 < 0) {
+      return `Ligne ${index + 1} : le volume ne peut pas être négatif.`;
+    }
+    if (ligne.nbColis < 0) {
+      return `Ligne ${index + 1} : le nombre de colis ne peut pas être négatif.`;
+    }
+  }
+  return null;
+}
+
+function ligneDraftToWrite(ligne: LigneMarchandiseDraft): LigneMarchandise {
+  const classeAdr = ligne.classeAdr.trim();
+  const numeroOnu = ligne.numeroOnu.trim();
+  return {
+    classeAdr: classeAdr.length > 0 ? classeAdr : null,
+    gerbable: ligne.gerbable,
+    marchandiseId: ligne.marchandiseId.trim(),
+    nbColis: ligne.nbColis,
+    numeroOnu: numeroOnu.length > 0 ? numeroOnu : null,
+    poidsKg: ligne.poidsKg,
+    volumeM3: ligne.volumeM3,
   };
 }
 
 /** Maps UI draft to POST /dossiers — see {@link DossierApi} for API contract. */
 export function draftToWrite(draft: DossierDraft): DossierWrite {
-  const classeAdr = draft.classeAdr.trim();
-  const numeroOnu = draft.numeroOnu.trim();
   const temperature = draft.temperatureRequise.trim();
-  const carrosserie = draft.carrosserieRequise.trim();
+  const carrosserie = normalizeOptionalSelect(draft.carrosserieRequise);
 
   return {
-    carrosserieRequise: isCarrosserieRequise(carrosserie) ? carrosserie : null,
+    carrosserieRequise:
+      carrosserie.length > 0 && isCarrosserieRequise(carrosserie)
+        ? carrosserie
+        : null,
     commandeId: draft.commandeId,
     documents: [],
     familleMarchandise: draft.familleMarchandise.trim(),
     groupable: draft.groupable,
-    lignesMarchandise: [
-      {
-        classeAdr: classeAdr.length > 0 ? classeAdr : null,
-        gerbable: draft.gerbable,
-        marchandiseId: draft.marchandiseId.trim(),
-        nbColis: draft.nbColis,
-        numeroOnu: numeroOnu.length > 0 ? numeroOnu : null,
-        poidsKg: draft.poidsKg,
-        volumeM3: draft.volumeM3,
-      },
-    ],
+    lignesMarchandise: draft.lignes.map(ligneDraftToWrite),
     nbPalettes: draft.nbPalettes,
     segments: [
       {
@@ -247,6 +292,33 @@ export function draftToWrite(draft: DossierDraft): DossierWrite {
     typeTransport: draft.typeTransport,
   };
 }
+
+export function formatSiteLabel(
+  site: Pick<DossierLookupSite, "code" | "libelle">
+): string {
+  return `${site.code} — ${site.libelle}`;
+}
+
+export function siteLabelFromLookup(
+  siteId: string,
+  sitesById: ReadonlyMap<string, DossierLookupSite>
+): string {
+  const site = sitesById.get(siteId);
+  return site ? formatSiteLabel(site) : siteId;
+}
+
+const TRANSITIONS: Record<StatutDossier, readonly StatutDossier[]> = {
+  ANNULE: [],
+  CHARGE: ["EN_TRANSIT", "ANNULE"],
+  CLOTURE: [],
+  CREE: ["PLANIFIE", "ANNULE"],
+  EN_CHARGEMENT: ["CHARGE", "ANNULE"],
+  EN_LIVRAISON: ["LIVRE"],
+  EN_TRANSIT: ["EN_LIVRAISON", "INCIDENT"],
+  INCIDENT: ["EN_TRANSIT", "ANNULE"],
+  LIVRE: ["CLOTURE"],
+  PLANIFIE: ["CREE", "EN_CHARGEMENT", "ANNULE"],
+};
 
 export function nextStatuts(statut: StatutDossier): readonly StatutDossier[] {
   return TRANSITIONS[statut];
@@ -323,6 +395,44 @@ export function carrosserieRequiseLabel(
       return "Porte-conteneur";
     default: {
       const _exhaustive: never = carrosserie;
+      return _exhaustive;
+    }
+  }
+}
+
+export function typeDocumentTransportLabel(
+  type: TypeDocumentTransport
+): string {
+  switch (type) {
+    case "CMR":
+      return "CMR";
+    case "FACTURE":
+      return "Facture";
+    case "BON_LIVRAISON":
+      return "Bon de livraison";
+    case "DOUANE":
+      return "Douane";
+    case "AUTRE":
+      return "Autre";
+    default: {
+      const _exhaustive: never = type;
+      return _exhaustive;
+    }
+  }
+}
+
+export function statutDocumentTransportLabel(
+  statut: StatutDocumentTransport
+): string {
+  switch (statut) {
+    case "MANQUANT":
+      return "Manquant";
+    case "FOURNI":
+      return "Fourni";
+    case "VALIDE":
+      return "Validé";
+    default: {
+      const _exhaustive: never = statut;
       return _exhaustive;
     }
   }

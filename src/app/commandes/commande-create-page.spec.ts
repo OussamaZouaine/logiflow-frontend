@@ -25,6 +25,22 @@ describe("CommandeCreatePage", () => {
 
     const http = TestBed.inject(HttpTestingController);
     http
+      .expectOne((req) => req.url === "/api/v1/clients")
+      .flush({
+        content: [
+          {
+            actif: true,
+            code: "CLI-ACME",
+            id: "11111111-1111-1111-1111-111111111111",
+            raisonSociale: "Acme Logistique",
+          },
+        ],
+        pageNumber: 0,
+        pageSize: 50,
+        totalElements: 1,
+        totalPages: 1,
+      });
+    http
       .expectOne((req) => req.url === "/api/v1/marchandises")
       .flush({
         content: [
@@ -51,7 +67,9 @@ describe("CommandeCreatePage", () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain("Nouvelle commande");
     expect(compiled.textContent).toContain("Lignes de marchandise");
-    expect(compiled.querySelector("#clientCode")).toBeTruthy();
+    expect(compiled.textContent).toContain("Choisir un client");
+    expect(compiled.querySelector("#clientSelect")).toBeTruthy();
+    expect(compiled.querySelector("app-iso-date-input")).toBeTruthy();
     expect(compiled.querySelector("#dateSouhaitee")).toBeTruthy();
     http.verify();
   });

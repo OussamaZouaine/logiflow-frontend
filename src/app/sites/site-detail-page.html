@@ -1,28 +1,20 @@
-<div class="flex flex-col gap-5">
+<div class="fiche-page">
   <app-fiche-header listLabel="Sites" listLink="/sites">
     @if (site.isLoading()) {
-    <p class="text-sm text-muted" role="status">Chargement…</p>
+    <p class="fiche-load-hint" role="status">Chargement…</p>
     } @else if (site.error()) {
-    <div class="alert-panel" role="alert">
-      <p>{{ loadError() }}</p>
-      <button
-        (click)="site.reload()"
-        class="pressable mt-2 font-medium text-ink underline underline-offset-2"
-        type="button"
-      >
-        Réessayer
-      </button>
-    </div>
+    <app-fiche-error
+      (retry)="site.reload()"
+      [message]="loadError()"
+    />
     } @else if (site.hasValue()) {
-    <div class="flex flex-wrap items-center gap-3">
-      <h1 class="fiche-page-title">
-        {{ site.value().code }}
-      </h1>
+    <app-fiche-title-row [mono]="true" [title]="site.value().code">
       <app-statut-chip
         [label]="actifLabel(site.value().actif)"
         [tone]="actifTone(site.value().actif)"
       />
-    </div>
+    </app-fiche-title-row>
+    <p class="fiche-meta">{{ site.value().libelle }}</p>
     }
   </app-fiche-header>
 
@@ -58,21 +50,18 @@
         <app-form-field inputId="adresse" label="Adresse">
           <input
             [formField]="editForm.adresse"
-            class="field"
+            [class]="fieldClasses(editForm.adresse())"
             id="adresse"
             type="text"
           />
         </app-form-field>
 
-        <label class="flex items-center gap-2 text-sm text-ink">
-          <input
-            (change)="onPoidsLourd($event)"
-            [checked]="draft().interditPoidsLourd"
-            class="size-4 rounded accent-pine"
-            type="checkbox"
-          >
-          Interdit aux poids lourds
-        </label>
+        <app-fiche-checkbox-row
+          (checkedChange)="onPoidsLourdChange($event)"
+          [checked]="draft().interditPoidsLourd"
+          hint="Exclut ce site des itinéraires poids lourds."
+          label="Interdit aux poids lourds"
+        />
       </app-form-section>
 
       <app-form-section
@@ -140,7 +129,7 @@
   </form>
 
   @if (site.value().actif) {
-  <app-form-section
+  <app-fiche-danger-zone
     description="Le site reste en base, marqué inactif. Pas de suppression physique."
     title="Désactivation"
   >
@@ -154,6 +143,6 @@
     >
       Désactiver
     </button>
-  </app-form-section>
+  </app-fiche-danger-zone>
   } }
 </div>

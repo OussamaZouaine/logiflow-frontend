@@ -80,7 +80,7 @@ describe("VoyagesPage", () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain("VOY-2026-00001");
     expect(compiled.textContent).toContain("Brouillon");
-    expect(compiled.textContent).toContain("Carte des sites");
+    expect(compiled.textContent).toContain("Itinéraire");
     http.verify();
   });
 

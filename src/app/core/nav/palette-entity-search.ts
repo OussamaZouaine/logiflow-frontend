@@ -3,6 +3,8 @@ import type { Marchandise } from "../../marchandises/marchandise";
 import { formatMarchandiseLabel } from "../../marchandises/marchandise";
 import type { Remorque } from "../../remorques/remorque";
 import { formatRemorqueLabel } from "../../remorques/remorque";
+import type { Client } from "../../clients/client";
+import { formatClientLabel } from "../../clients/client";
 import type { Commande } from "../../commandes/commande";
 import { formatCommandeLabel } from "../../commandes/commande";
 import type { PageResponse } from "../api/page-response";
@@ -38,6 +40,7 @@ const PALETTE_ENTITY_SOURCES: readonly PaletteEntitySource[] = [
   { badge: "Marchandise", id: "marchandises", serverSearch: true },
   { badge: "Véhicule", id: "vehicules", serverSearch: true },
   { badge: "Remorque", id: "remorques", serverSearch: true },
+  { badge: "Client", id: "clients", serverSearch: true },
   { badge: "Commande", id: "commandes", serverSearch: true },
   { badge: "Dossier", id: "dossiers", serverSearch: true },
   { badge: "Voyage", id: "voyages", serverSearch: true },
@@ -130,6 +133,18 @@ export function remorqueToPaletteItem(
   );
 }
 
+export function clientToPaletteItem(
+  source: PaletteEntitySource,
+  client: Client
+): PaletteItem {
+  return entityItem(
+    source,
+    formatClientLabel(client),
+    `/clients/${client.id}`,
+    [client.code, client.raisonSociale]
+  );
+}
+
 export function commandeToPaletteItem(
   source: PaletteEntitySource,
   commande: Commande
@@ -208,6 +223,12 @@ export function paletteItemsFromPage(
           (item): item is Remorque => typeof item === "object" && item !== null
         )
         .map((remorque) => remorqueToPaletteItem(source, remorque));
+    case "clients":
+      return content
+        .filter(
+          (item): item is Client => typeof item === "object" && item !== null
+        )
+        .map((client) => clientToPaletteItem(source, client));
     case "commandes":
       return content
         .filter(

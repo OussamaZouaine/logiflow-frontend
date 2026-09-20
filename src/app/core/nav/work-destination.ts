@@ -1,4 +1,5 @@
 import {
+  CLIENTS_ALLOWED_ROLES,
   DOSSIERS_ALLOWED_ROLES,
   MARCHANDISES_ALLOWED_ROLES,
   REMORQUES_ALLOWED_ROLES,
@@ -7,6 +8,7 @@ import {
 } from "../auth/role";
 
 export const WORK_DESTINATION_IDS = [
+  "clients",
   "sites",
   "marchandises",
   "vehicules",
@@ -32,6 +34,16 @@ export interface WorkDestination {
 }
 
 export const WORK_DESTINATIONS: Record<WorkDestinationId, WorkDestination> = {
+  clients: {
+    apiHint: "/api/v1/clients",
+    blurb: "Tiers donneurs d'ordre pour les commandes.",
+    id: "clients",
+    label: "Clients",
+    live: true,
+    path: "clients",
+    roles: CLIENTS_ALLOWED_ROLES,
+    section: "Commercial",
+  },
   commandes: {
     apiHint: "/api/v1/commandes",
     blurb: "Demandes clients à transporter.",
@@ -39,12 +51,7 @@ export const WORK_DESTINATIONS: Record<WorkDestinationId, WorkDestination> = {
     label: "Commandes",
     live: true,
     path: "commandes",
-    roles: [
-      "ADMINISTRATEUR",
-      "RESPONSABLE_EXPLOITATION",
-      "EXPLOITANT",
-      "COMMERCIAL",
-    ],
+    roles: CLIENTS_ALLOWED_ROLES,
     section: "Commercial",
   },
   dossiers: {

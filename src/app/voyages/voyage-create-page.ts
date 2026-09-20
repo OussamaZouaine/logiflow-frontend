@@ -4,6 +4,11 @@ import { FormField, form, min, required, submit } from "@angular/forms/signals";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
+import {
+  enumToSelectOptions,
+  type FieldSelectOption,
+  withNoneSelectOption,
+} from "../shared/ui/field-select";
 import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
 import { ToastService } from "../shared/ui/toast";
 import type { PageResponse } from "../core/api/page-response";
@@ -40,10 +45,13 @@ import type { Site } from "../sites/site";
 import {
   draftToWrite,
   emptyVoyageDraft,
+  formatDossierVoyageLabel,
+  formatVehiculeLookupLabel,
   PORTEES,
   porteeLabel,
   TYPE_VOYAGES,
   typeVoyageLabel,
+  validateDossierIds,
   type VoyageLookupVehicule,
 } from "./voyage";
 import { VoyageApi } from "./voyage-api";
@@ -64,7 +72,14 @@ export class VoyageCreatePage {
   private readonly toast = inject(ToastService);
 
   protected readonly formatChauffeurLabel = formatChauffeurLabel;
+  protected readonly typeVoyageOptions = enumToSelectOptions(
+    TYPE_VOYAGES,
+    typeVoyageLabel
+  );
+  protected readonly porteeOptions = enumToSelectOptions(PORTEES, porteeLabel);
+  protected readonly formatDossierVoyageLabel = formatDossierVoyageLabel;
   protected readonly formatRemorqueLabel = formatRemorqueLabel;
+  protected readonly formatVehiculeLookupLabel = formatVehiculeLookupLabel;
   protected readonly types = TYPE_VOYAGES;
   protected readonly portees = PORTEES;
   protected readonly typeVoyageLabel = typeVoyageLabel;
@@ -176,13 +191,46 @@ export class VoyageCreatePage {
     return this.remorques.value()?.content ?? [];
   });
 
+  protected readonly vehiculeSelectOptions = computed<
+    readonly FieldSelectOption[]
+  >(() =>
+    this.vehiculeOptions().map((vehicule) => ({
+      label: formatVehiculeLookupLabel(vehicule),
+      value: vehicule.id,
+    }))
+  );
+
+  protected readonly remorqueSelectOptions = computed<
+    readonly FieldSelectOption[]
+  >(() =>
+    withNoneSelectOption(
+      "Sans remorque",
+      this.remorqueOptions().map((remorque) => ({
+        label: formatRemorqueLabel(remorque),
+        value: remorque.id,
+      }))
+    )
+  );
+
+  protected readonly chauffeurSelectOptions = computed<
+    readonly FieldSelectOption[]
+  >(() =>
+    this.chauffeurOptions().map((chauffeur) => ({
+      label: formatChauffeurLabel(chauffeur),
+      value: chauffeur.id,
+    }))
+  );
+
   protected readonly remorquesLoading = computed(
     () => this.remorques.isLoading() && !this.remorques.hasValue()
   );
 
   protected readonly dossiersById = computed(() => {
-    const dossiers = this.dossiers.value()?.content ?? [];
-    return new Map(dossiers.map((dossier) => [dossier.id, dossier] as const));
+    const map = new Map<string, Dossier>();
+    for (const dossier of this.dossiers.value()?.content ?? []) {
+      map.set(dossier.id, dossier);
+    }
+    return map;
   });
 
   protected readonly sitesById = computed(() => {
@@ -336,19 +384,21 @@ export class VoyageCreatePage {
   protected async onSubmit(event: SubmitEvent): Promise<void> {
     event.preventDefault();
     this.formError.set(null);
-    this.dossierSelectionError.set(null);
-
-    if (this.selectedDossierIds().length === 0) {
-      this.dossierSelectionError.set(
-        "Sélectionnez au moins un dossier au statut Créé."
-      );
-      return;
-    }
+    this.dossierSelectionError.set(
+      validateDossierIds(this.selectedDossierIds())
+    );
 
     await submit(this.createForm, async () => {
+      if (this.dossierSelectionError()) {
+        return;
+      }
       try {
         const created = await this.api.create(
-          draftToWrite(this.draft(), this.selectedDossierIds())
+          draftToWrite(
+            this.draft(),
+            this.selectedDossierIds(),
+            this.dossiersById()
+          )
         );
         this.toast.success("Voyage créé.");
         await this.router.navigate(["/voyages", created.id]);

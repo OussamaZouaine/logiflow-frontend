@@ -1,122 +1,129 @@
 <app-form-page-header
-  description="Pas de liste clients côté API : créer un client ici, ou coller un identifiant existant. Chaque commande embarque au moins une ligne liée au catalogue marchandises."
+  description="Choisissez un client dans la liste ou créez-en un nouveau. Chaque commande embarque au moins une ligne liée au catalogue marchandises."
   listLabel="Commandes"
   listLink="/commandes"
   title="Nouvelle commande"
 />
 
-@if (marchandises.isLoading()) {
-<p class="text-sm text-muted" role="status">Chargement du catalogue…</p>
-} @else if (marchandisesError()) {
+@if (clients.isLoading() || marchandises.isLoading()) {
+<p class="text-sm text-muted" role="status">Chargement des ressources…</p>
+} @else if (clientsError() || marchandisesError()) {
 <div class="alert-panel" role="alert">
-  <p>{{ marchandisesError() }}</p>
+  <p>{{ clientsError() ?? marchandisesError() }}</p>
 </div>
-} @else if (marchandises.hasValue()) {
+} @else if (clients.hasValue() && marchandises.hasValue()) {
 <form (submit)="onSubmit($event)" class="form-page" novalidate>
   <app-form-validation-summary
     [show]="createForm().touched() && createForm().invalid()"
   />
 
-  <app-form-section title="Commande">
-    <label class="flex items-center gap-2 text-sm text-ink">
-      <input
-        (change)="onNouveauClient($event)"
-        [checked]="draft().nouveauClient"
-        class="size-4 accent-pine"
-        type="checkbox"
+  <app-form-section title="Client">
+    <app-form-field
+      [error]="
+        !draft().nouveauClient && showFieldError(createForm.clientId())
+          ? firstFieldError(createForm.clientId().errors())
+          : null
+      "
+      inputId="clientSelect"
+      label="Client *"
+    >
+      <app-field-select
+        (selectValueChange)="onClientSelectChange($event)"
+        [invalid]="
+          !draft().nouveauClient && showFieldError(createForm.clientId())
+        "
+        [options]="clientSelectOptions()"
+        [selectValue]="clientSelectValue()"
+        inputId="clientSelect"
+        placeholder="Choisir un client…"
       />
-      Nouveau client
-    </label>
+      @if (clientOptions().length === 0) {
+      <p class="text-xs text-muted">
+        Aucun client actif — créez-en un via l'option ci-dessus.
+      </p>
+      }
+    </app-form-field>
 
     @if (draft().nouveauClient) {
-    <div class="flex flex-col gap-1.5">
-      <label class="text-xs font-medium text-muted" for="clientCode">
-        Code client
-      </label>
-      <input
-        [formField]="createForm.clientCode"
-        [class]="fieldClasses(createForm.clientCode())"
-        autocomplete="off"
-        id="clientCode"
-        placeholder="CLI-LYON-01"
-        type="text"
-      />
-      @if (showFieldError(createForm.clientCode())) {
-      <p class="text-xs text-brake" role="alert">
-        {{ firstFieldError(createForm.clientCode().errors()) }}
-      </p>
-      }
-    </div>
-    <div class="flex flex-col gap-1.5">
-      <label class="text-xs font-medium text-muted" for="clientRaisonSociale">
-        Raison sociale
-      </label>
-      <input
-        [formField]="createForm.clientRaisonSociale"
-        [class]="fieldClasses(createForm.clientRaisonSociale())"
-        id="clientRaisonSociale"
-        type="text"
-      />
-      @if (showFieldError(createForm.clientRaisonSociale())) {
-      <p class="text-xs text-brake" role="alert">
-        {{ firstFieldError(createForm.clientRaisonSociale().errors()) }}
-      </p>
-      }
-    </div>
-    } @else {
-    <div class="flex flex-col gap-1.5">
-      <label class="text-xs font-medium text-muted" for="clientId">
-        Identifiant client
-      </label>
-      <input
-        [formField]="createForm.clientId"
-        [class]="fieldClasses(createForm.clientId())"
-        autocomplete="off"
-        id="clientId"
-        type="text"
-      />
-      @if (showFieldError(createForm.clientId())) {
-      <p class="text-xs text-brake" role="alert">
-        {{ firstFieldError(createForm.clientId().errors()) }}
-      </p>
-      }
+    <div class="form-page__coords">
+      <app-form-field
+        [error]="
+          showFieldError(createForm.clientCode())
+            ? firstFieldError(createForm.clientCode().errors())
+            : null
+        "
+        inputId="clientCode"
+        label="Code client *"
+      >
+        <input
+          [attr.aria-invalid]="showFieldError(createForm.clientCode()) || null"
+          [class]="fieldClasses(createForm.clientCode())"
+          [formField]="createForm.clientCode"
+          autocomplete="off"
+          id="clientCode"
+          placeholder="CLI-LYON-01"
+          type="text"
+        >
+      </app-form-field>
+
+      <app-form-field
+        [error]="
+          showFieldError(createForm.clientRaisonSociale())
+            ? firstFieldError(createForm.clientRaisonSociale().errors())
+            : null
+        "
+        inputId="clientRaisonSociale"
+        label="Raison sociale *"
+      >
+        <input
+          [attr.aria-invalid]="showFieldError(createForm.clientRaisonSociale()) || null"
+          [class]="fieldClasses(createForm.clientRaisonSociale())"
+          [formField]="createForm.clientRaisonSociale"
+          id="clientRaisonSociale"
+          type="text"
+        >
+      </app-form-field>
     </div>
     }
+  </app-form-section>
 
+  <app-form-section title="Commande">
     <div class="form-page__coords">
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-muted" for="dateSouhaitee">
-          Date souhaitée
-        </label>
-        <input
+      <app-form-field
+        [error]="
+          showFieldError(createForm.dateSouhaitee())
+            ? firstFieldError(createForm.dateSouhaitee().errors())
+            : null
+        "
+        inputId="dateSouhaitee"
+        label="Date souhaitée *"
+      >
+        <app-iso-date-input
+          [ariaInvalid]="showFieldError(createForm.dateSouhaitee())"
           [formField]="createForm.dateSouhaitee"
-          [class]="fieldClasses(createForm.dateSouhaitee())"
-          id="dateSouhaitee"
-          type="date"
+          [minDate]="minDateSouhaitee"
+          inputId="dateSouhaitee"
         />
-        @if (showFieldError(createForm.dateSouhaitee())) {
-        <p class="text-xs text-brake" role="alert">
-          {{ firstFieldError(createForm.dateSouhaitee().errors()) }}
-        </p>
-        }
-      </div>
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-muted" for="montant">
-          Prix négocié (EUR)
-        </label>
+      </app-form-field>
+
+      <app-form-field
+        [error]="
+          showFieldError(createForm.montant())
+            ? firstFieldError(createForm.montant().errors())
+            : null
+        "
+        inputId="montant"
+        label="Prix négocié (EUR) *"
+      >
         <input
-          [formField]="createForm.montant"
+          [attr.aria-invalid]="showFieldError(createForm.montant()) || null"
           [class]="fieldClasses(createForm.montant())"
+          [formField]="createForm.montant"
           id="montant"
           step="0.01"
           type="number"
-        />
-        @if (showFieldError(createForm.montant())) {
-        <p class="text-xs text-brake" role="alert">
-          {{ firstFieldError(createForm.montant().errors()) }}
-        </p>
-        }
-      </div>
+        >
+      </app-form-field>
     </div>
   </app-form-section>
 
@@ -144,35 +151,20 @@
       <legend class="px-1 text-xs font-medium text-muted">
         Ligne {{ $index + 1 }}
       </legend>
-      <div class="flex flex-col gap-1.5">
-        <label
-          class="text-xs font-medium text-muted"
-          [for]="'marchandiseId-' + $index"
-        >
-          Marchandise
-        </label>
-        <select
-          (change)="updateLigneMarchandise($index, $event)"
-          [id]="'marchandiseId-' + $index"
-          [value]="ligne.marchandiseId"
-          class="field"
-        >
-          <option disabled value="">Choisir…</option>
-          @for (marchandise of marchandiseOptions(); track marchandise.id) {
-          <option [value]="marchandise.id">
-            {{ formatMarchandiseLabel(marchandise) }}
-          </option>
-          }
-        </select>
-      </div>
+      <app-form-field
+        [inputId]="'marchandiseId-' + $index"
+        label="Marchandise *"
+      >
+        <app-field-select
+          (selectValueChange)="updateLigneMarchandise($index, $event)"
+          [inputId]="'marchandiseId-' + $index"
+          [options]="marchandiseSelectOptions()"
+          [selectValue]="ligne.marchandiseId"
+          placeholder="Choisir…"
+        />
+      </app-form-field>
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div class="flex flex-col gap-1.5">
-          <label
-            class="text-xs font-medium text-muted"
-            [for]="'poidsKg-' + $index"
-          >
-            Poids kg
-          </label>
+        <app-form-field [inputId]="'poidsKg-' + $index" label="Poids (kg)">
           <input
             (input)="updateLigneNumber($index, 'poidsKg', $event)"
             [id]="'poidsKg-' + $index"
@@ -181,15 +173,9 @@
             inputmode="decimal"
             step="0.01"
             type="number"
-          />
-        </div>
-        <div class="flex flex-col gap-1.5">
-          <label
-            class="text-xs font-medium text-muted"
-            [for]="'volumeM3-' + $index"
           >
-            Volume m³
-          </label>
+        </app-form-field>
+        <app-form-field [inputId]="'volumeM3-' + $index" label="Volume (m³)">
           <input
             (input)="updateLigneNumber($index, 'volumeM3', $event)"
             [id]="'volumeM3-' + $index"
@@ -198,15 +184,9 @@
             inputmode="decimal"
             step="0.01"
             type="number"
-          />
-        </div>
-        <div class="flex flex-col gap-1.5">
-          <label
-            class="text-xs font-medium text-muted"
-            [for]="'nbColis-' + $index"
           >
-            Colis
-          </label>
+        </app-form-field>
+        <app-form-field [inputId]="'nbColis-' + $index" label="Colis">
           <input
             (input)="updateLigneNumber($index, 'nbColis', $event)"
             [id]="'nbColis-' + $index"
@@ -215,8 +195,8 @@
             inputmode="numeric"
             step="1"
             type="number"
-          />
-        </div>
+          >
+        </app-form-field>
       </div>
       @if (draft().lignes.length > 1) {
       <button
@@ -230,7 +210,7 @@
     </fieldset>
     }
     @if (lignesError()) {
-    <p class="text-xs text-brake" role="alert">{{ lignesError() }}</p>
+    <div class="alert-panel" role="alert">{{ lignesError() }}</div>
     }
   </app-form-section>
 

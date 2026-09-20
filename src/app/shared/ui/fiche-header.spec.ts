@@ -20,6 +20,6 @@ describe("FicheHeader", () => {
     const link = host.querySelector("a");
     expect(link?.textContent?.trim()).toBe("← Voyages");
     expect(link?.getAttribute("href")).toBe("/voyages");
-    expect(host.className).toContain("sticky");
+    expect(host.className).toContain("fiche-header");
   });
 });

@@ -1,11 +1,11 @@
+import { eurMoney, formatMoney, type Money } from "../core/api/money";
+
+export { formatMoney, type Money };
+
 export const STATUT_COMMANDES = ["RECUE", "CONFIRMEE", "ANNULEE"] as const;
 export type StatutCommande = (typeof STATUT_COMMANDES)[number];
 
-export interface Money {
-  devise: string;
-  montant: number;
-}
-
+/** Ligne telle que définie dans `LigneCommande` (OpenAPI). */
 export interface LigneCommande {
   marchandiseId: string;
   nbColis: number;
@@ -13,6 +13,7 @@ export interface LigneCommande {
   volumeM3: number;
 }
 
+/** Commande telle que renvoyée par l'API (`CommandeResponse`). */
 export interface Commande {
   clientId: string;
   dateSouhaitee: string;
@@ -23,6 +24,7 @@ export interface Commande {
   statut: StatutCommande;
 }
 
+/** Corps de création, calqué sur `CommandeRequest` côté backend. */
 export interface CommandeWrite {
   clientId: string;
   dateSouhaitee: string;
@@ -37,12 +39,8 @@ export interface LigneCommandeDraft {
   volumeM3: number;
 }
 
-export interface Client {
-  actif: boolean;
-  code: string;
-  id: string;
-  raisonSociale: string;
-}
+export type { Client, ClientWrite } from "../clients/client";
+export { formatClientLabel } from "../clients/client";
 
 export interface CommandeDraft {
   clientCode: string;
@@ -73,7 +71,7 @@ export function emptyCommandeDraft(): CommandeDraft {
     dateSouhaitee: toDateInput(date),
     lignes: [emptyLigneCommandeDraft()],
     montant: 2000,
-    nouveauClient: true,
+    nouveauClient: false,
   };
 }
 
@@ -100,6 +98,11 @@ export function validateLignesCommande(
   return null;
 }
 
+export function isDateTodayOrFuture(isoDate: string): boolean {
+  const today = toDateInput(new Date());
+  return isoDate >= today;
+}
+
 export function draftToWrite(
   draft: CommandeDraft,
   clientId: string
@@ -113,10 +116,7 @@ export function draftToWrite(
       poidsKg: ligne.poidsKg,
       volumeM3: ligne.volumeM3,
     })),
-    prixNegocie: {
-      devise: "EUR",
-      montant: draft.montant,
-    },
+    prixNegocie: eurMoney(draft.montant),
   };
 }
 
@@ -133,10 +133,6 @@ export function statutCommandeLabel(statut: StatutCommande): string {
       return _exhaustive;
     }
   }
-}
-
-export function formatMoney(money: Money): string {
-  return `${money.montant.toLocaleString("fr-FR")} ${money.devise}`;
 }
 
 export function formatDate(value: string): string {

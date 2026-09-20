@@ -1,72 +1,155 @@
-<div class="flex flex-col gap-8">
+<div class="fiche-page">
   <app-fiche-header listLabel="Remorques" listLink="/remorques">
     @if (remorque.isLoading()) {
-    <p class="text-sm text-muted" role="status">Chargement…</p>
+    <p class="fiche-load-hint" role="status">Chargement…</p>
     } @else if (remorque.error()) {
-    <div class="alert-panel" role="alert">
-      <p>{{ loadError() }}</p>
-      <button
-        (click)="remorque.reload()"
-        class="pressable mt-2 font-medium text-ink underline underline-offset-2"
-        type="button"
-      >
-        Réessayer
-      </button>
-    </div>
+    <app-fiche-error
+      (retry)="remorque.reload()"
+      [message]="loadError()"
+    />
     } @else if (remorque.hasValue()) {
-    <div class="flex flex-wrap items-center gap-3">
-      <h1 class="fiche-page-title fiche-page-title--mono">
-        {{ remorque.value().immatriculation }}
-      </h1>
+    <app-fiche-title-row [mono]="true" [title]="remorque.value().immatriculation">
       <app-statut-chip
         [label]="remorqueStatutLabel(remorque.value().statut)"
         [tone]="remorqueStatutTone(remorque.value().statut)"
       />
-    </div>
-    <p class="mt-1 text-sm text-muted">
-      {{ remorqueCarrosserieLabel(remorque.value().carrosserie) }}
+    </app-fiche-title-row>
+    <p class="fiche-meta">
+      {{ typeRemorqueDisplay(remorque.value().type) }}
+      @if (
+        formatMarqueModele(remorque.value().marque, remorque.value().modele) !== "—"
+      ) {
+      ·
+      {{ formatMarqueModele(remorque.value().marque, remorque.value().modele) }}
+      }
+      @if (remorque.value().numeroParc) {
+      · Parc {{ remorque.value().numeroParc }}
+      }
     </p>
     }
   </app-fiche-header>
 
   @if (remorque.hasValue()) {
-  <app-form-section title="Fiche">
-    <dl class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-      <div>
-        <dt class="text-xs text-muted">Volume utile</dt>
-        <dd class="mt-0.5 font-mono tabular-nums text-ink">
-          {{ remorque.value().volumeUtileM3 }} m³
-        </dd>
-      </div>
-      <div>
-        <dt class="text-xs text-muted">Charge utile</dt>
-        <dd class="mt-0.5 font-mono tabular-nums text-ink">
-          {{ remorque.value().chargeUtileKg }} kg
-        </dd>
-      </div>
-      <div>
-        <dt class="text-xs text-muted">Positions palettes</dt>
-        <dd class="mt-0.5 font-mono tabular-nums text-ink">
-          {{ remorque.value().nbPositionsPalettes }}
-        </dd>
-      </div>
-      <div>
-        <dt class="text-xs text-muted">Groupe froid</dt>
-        <dd class="mt-0.5 text-ink">
-          {{ remorque.value().groupeFroid ? "Oui" : "Non" }}
-        </dd>
-      </div>
-      <div>
-        <dt class="text-xs text-muted">N° parc</dt>
-        <dd class="mt-0.5 text-ink">
-          {{ remorque.value().numeroParc ?? "—" }}
-        </dd>
-      </div>
-      <div>
-        <dt class="text-xs text-muted">Type</dt>
-        <dd class="mt-0.5 text-ink">{{ remorque.value().type ?? "—" }}</dd>
-      </div>
-    </dl>
+  <app-form-section title="Identification">
+    <app-fiche-field-grid>
+      <app-fiche-field [mono]="true" label="Immatriculation">
+        {{ remorque.value().immatriculation }}
+      </app-fiche-field>
+      <app-fiche-field label="Type">
+        {{ typeRemorqueDisplay(remorque.value().type) }}
+      </app-fiche-field>
+      <app-fiche-field label="N° parc">
+        {{ remorque.value().numeroParc ?? "—" }}
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="VIN">
+        {{ remorque.value().vin ?? "—" }}
+      </app-fiche-field>
+    </app-fiche-field-grid>
+  </app-form-section>
+
+  <app-form-section title="Marque">
+    <app-fiche-field-grid>
+      <app-fiche-field label="Marque">
+        {{ remorque.value().marque ?? "—" }}
+      </app-fiche-field>
+      <app-fiche-field label="Modèle">
+        {{ remorque.value().modele ?? "—" }}
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="Année de fabrication">
+        {{ remorque.value().anneeFabrication ?? "—" }}
+      </app-fiche-field>
+    </app-fiche-field-grid>
+  </app-form-section>
+
+  <app-form-section title="Poids et dimensions">
+    <app-fiche-field-grid>
+      <app-fiche-field [mono]="true" label="Charge utile">
+        {{ remorque.value().chargeUtileKg.toLocaleString("fr-FR") }} kg
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="Poids à vide">
+        @if (remorque.value().poidsVideKg != null) {
+        {{ remorque.value().poidsVideKg!.toLocaleString("fr-FR") }} kg
+        } @else {
+        —
+        }
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="Volume utile">
+        {{ remorque.value().volumeUtileM3 }} m³
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="Positions palettes">
+        {{ remorque.value().nbPositionsPalettes }}
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="Longueur">
+        @if (remorque.value().longueurM != null) {
+        {{ remorque.value().longueurM }} m
+        } @else {
+        —
+        }
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="Largeur">
+        @if (remorque.value().largeurM != null) {
+        {{ remorque.value().largeurM }} m
+        } @else {
+        —
+        }
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="Hauteur">
+        @if (remorque.value().hauteurM != null) {
+        {{ remorque.value().hauteurM }} m
+        } @else {
+        —
+        }
+      </app-fiche-field>
+    </app-fiche-field-grid>
+  </app-form-section>
+
+  <app-form-section title="Carrosserie et froid">
+    <app-fiche-field-grid>
+      <app-fiche-field label="Carrosserie">
+        {{ carrosserieDisplay(remorque.value().carrosserie) }}
+      </app-fiche-field>
+      <app-fiche-field label="Groupe froid">
+        {{ remorque.value().groupeFroid ? "Oui" : "Non" }}
+      </app-fiche-field>
+      @if (remorque.value().groupeFroid) {
+      <app-fiche-field [mono]="true" label="Température min">
+        @if (remorque.value().temperatureMin != null) {
+        {{ remorque.value().temperatureMin }} °C
+        } @else {
+        —
+        }
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="Température max">
+        @if (remorque.value().temperatureMax != null) {
+        {{ remorque.value().temperatureMax }} °C
+        } @else {
+        —
+        }
+      </app-fiche-field>
+      }
+    </app-fiche-field-grid>
+  </app-form-section>
+
+  <app-form-section title="Dates">
+    <app-fiche-field-grid>
+      <app-fiche-field label="1ʳᵉ mise en circulation">
+        {{ formatRemorqueDate(remorque.value().datePremiereMiseCirculation) }}
+      </app-fiche-field>
+      <app-fiche-field label="Acquisition">
+        {{ formatRemorqueDate(remorque.value().dateAcquisition) }}
+      </app-fiche-field>
+      <app-fiche-field label="Mise en service">
+        {{ formatRemorqueDate(remorque.value().dateMiseEnService) }}
+      </app-fiche-field>
+      @if (remorque.value().dateSortie) {
+      <app-fiche-field label="Sortie de parc">
+        {{ formatRemorqueDate(remorque.value().dateSortie) }}
+      </app-fiche-field>
+      <app-fiche-field label="Motif de sortie">
+        {{ remorque.value().motifSortie ?? "—" }}
+      </app-fiche-field>
+      }
+    </app-fiche-field-grid>
   </app-form-section>
 
   <app-form-section
@@ -205,16 +288,12 @@
         </app-form-field>
         <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <app-form-field inputId="uploadType" label="Type">
-            <select
-              (change)="onUploadType($event)"
-              [value]="uploadDraft().typeDocument"
-              class="field"
-              id="uploadType"
-            >
-              @for (type of documentTypes; track type) {
-              <option [value]="type">{{ documentTypeLabel(type) }}</option>
-              }
-            </select>
+            <app-field-select
+              (selectValueChange)="onUploadType($event)"
+              [options]="documentTypeOptions"
+              [selectValue]="uploadDraft().typeDocument"
+              inputId="uploadType"
+            />
           </app-form-field>
           <app-form-field inputId="uploadReference" label="Référence">
             <input
@@ -226,14 +305,11 @@
             >
           </app-form-field>
           <app-form-field inputId="uploadExpiration" label="Expiration">
-            <input
-              (change)="onUploadExpiration($event)"
-              (input)="onUploadExpiration($event)"
-              [value]="uploadDraft().dateExpiration"
-              class="field"
-              id="uploadExpiration"
-              type="date"
-            >
+            <app-iso-date-input
+              (isoDateChange)="onUploadExpirationIso($event)"
+              [isoDate]="uploadDraft().dateExpiration"
+              inputId="uploadExpiration"
+            />
           </app-form-field>
         </div>
         @if (uploadError()) {

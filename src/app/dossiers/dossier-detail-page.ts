@@ -1,8 +1,7 @@
 import { httpResource } from "@angular/common/http";
 import { Component, computed, inject, input, signal } from "@angular/core";
 import { RouterLink } from "@angular/router";
-import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
-import { FicheHeader } from "../shared/ui/fiche-header";
+import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
 import { ToastService } from "../shared/ui/toast";
 import { OpsTimeline } from "../shared/ui/ops-timeline";
 import { StatutChip } from "../shared/ui/statut-chip";
@@ -25,10 +24,14 @@ import {
 } from "../marchandises/marchandise";
 import { statutVoyageLabel } from "../voyages/voyage";
 import {
+  carrosserieRequiseLabel,
+  formatInstant,
   formatWindow,
   manualNextStatuts,
   siteLabelFromLookup,
+  statutDocumentTransportLabel,
   statutDossierLabel,
+  typeDocumentTransportLabel,
   type Dossier,
   type DossierLookupSite,
   type StatutDossier,
@@ -48,7 +51,7 @@ interface VoyageLink {
 }
 
 @Component({
-  imports: [RouterLink, FicheHeader, OpsTimeline, StatutChip, ...FORM_PAGE_IMPORTS],
+  imports: [RouterLink, OpsTimeline, StatutChip, ...FICHE_PAGE_IMPORTS],
   selector: "app-dossier-detail-page",
   templateUrl: "./dossier-detail-page.html",
 })
@@ -59,11 +62,15 @@ export class DossierDetailPage {
 
   readonly id = input.required<string>();
 
+  protected readonly carrosserieRequiseLabel = carrosserieRequiseLabel;
+  protected readonly formatInstant = formatInstant;
   protected readonly formatWindow = formatWindow;
   protected readonly manualNextStatuts = manualNextStatuts;
   protected readonly statutDossierLabel = statutDossierLabel;
+  protected readonly statutDocumentTransportLabel = statutDocumentTransportLabel;
   protected readonly dossierStatutTone = dossierStatutTone;
   protected readonly statutVoyageLabel = statutVoyageLabel;
+  protected readonly typeDocumentTransportLabel = typeDocumentTransportLabel;
   protected readonly typeSegmentLabel = typeSegmentLabel;
   protected readonly typeTransportLabel = typeTransportLabel;
 

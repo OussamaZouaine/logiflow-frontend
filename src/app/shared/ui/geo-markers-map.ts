@@ -35,6 +35,13 @@ export interface GeoMapMarker {
   readonly longitude: number;
 }
 
+export interface GeoMapPathPoint {
+  readonly latitude: number;
+  readonly longitude: number;
+}
+
+const ROUTE_POLYLINE_COLOR = "#215544";
+
 @Component({
   selector: "app-geo-markers-map",
   styles: `
@@ -72,6 +79,7 @@ export class GeoMarkersMap implements AfterViewInit {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly markers = input.required<readonly GeoMapMarker[]>();
+  readonly path = input<readonly GeoMapPathPoint[]>([]);
   readonly focusId = input<string | null>(null);
   readonly ariaLabel = input("Carte");
 
@@ -86,11 +94,12 @@ export class GeoMarkersMap implements AfterViewInit {
   constructor() {
     effect(() => {
       const next = this.markers();
+      const path = this.path();
       const focusId = this.focusId();
       if (!this.mapReady()) {
         return;
       }
-      this.renderMarkers(next);
+      this.renderMapContent(next, path);
       this.focusMarker(focusId);
     });
   }
@@ -124,7 +133,7 @@ export class GeoMarkersMap implements AfterViewInit {
 
     this.layer.addTo(this.map);
     this.mapReady.set(true);
-    this.renderMarkers(this.markers());
+    this.renderMapContent(this.markers(), this.path());
     this.focusMarker(this.focusId());
 
     requestAnimationFrame(() => {
@@ -135,21 +144,34 @@ export class GeoMarkersMap implements AfterViewInit {
     });
   }
 
-  private renderMarkers(markers: readonly GeoMapMarker[]): void {
+  private renderMapContent(
+    markers: readonly GeoMapMarker[],
+    path: readonly GeoMapPathPoint[]
+  ): void {
     if (!this.map) {
       return;
     }
 
     this.layer.clearLayers();
     this.markersById.clear();
-    const points: L.LatLngExpression[] = [];
+    const boundsPoints: L.LatLngExpression[] = [];
+
+    const routePoints = this.resolvePathPoints(path, markers);
+    if (routePoints.length >= 2) {
+      L.polyline(routePoints, {
+        color: ROUTE_POLYLINE_COLOR,
+        opacity: 0.88,
+        weight: 4,
+      }).addTo(this.layer);
+      boundsPoints.push(...routePoints);
+    }
 
     for (const marker of markers) {
       if (!isValidLocalisation(marker.latitude, marker.longitude)) {
         continue;
       }
       const latLng = L.latLng(marker.latitude, marker.longitude);
-      points.push(latLng);
+      boundsPoints.push(latLng);
       const leafletMarker = L.marker(latLng, { icon: GEO_MARKER_ICON }).bindPopup(
         marker.label
       );
@@ -159,7 +181,7 @@ export class GeoMarkersMap implements AfterViewInit {
       }
     }
 
-    if (points.length === 0) {
+    if (boundsPoints.length === 0) {
       this.map.setView(
         [
           DEFAULT_SITE_LOCALISATION.latitude,
@@ -170,12 +192,34 @@ export class GeoMarkersMap implements AfterViewInit {
       return;
     }
 
-    if (points.length === 1) {
-      this.map.setView(points[0], SITE_MAP_ZOOM - 2);
+    if (boundsPoints.length === 1) {
+      this.map.setView(boundsPoints[0], SITE_MAP_ZOOM - 2);
       return;
     }
 
-    this.map.fitBounds(L.latLngBounds(points), { padding: [36, 36] });
+    this.map.fitBounds(L.latLngBounds(boundsPoints), { padding: [36, 36] });
+  }
+
+  private resolvePathPoints(
+    path: readonly GeoMapPathPoint[],
+    markers: readonly GeoMapMarker[]
+  ): L.LatLngExpression[] {
+    const source =
+      path.length >= 2
+        ? path
+        : markers.map((marker) => ({
+            latitude: marker.latitude,
+            longitude: marker.longitude,
+          }));
+
+    const points: L.LatLngExpression[] = [];
+    for (const point of source) {
+      if (!isValidLocalisation(point.latitude, point.longitude)) {
+        continue;
+      }
+      points.push(L.latLng(point.latitude, point.longitude));
+    }
+    return points;
   }
 
   private focusMarker(focusId: string | null): void {

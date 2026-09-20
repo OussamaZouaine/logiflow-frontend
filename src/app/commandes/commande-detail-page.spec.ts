@@ -46,6 +46,23 @@ describe("CommandeDetailPage", () => {
         reference: "CMD-2026-000001",
         statut: "RECUE",
       });
+
+    http
+      .expectOne((req) => req.url === "/api/v1/clients")
+      .flush({
+        content: [
+          {
+            actif: true,
+            code: "CLI-ACME",
+            id: "11111111-1111-1111-1111-111111111111",
+            raisonSociale: "Acme Logistique",
+          },
+        ],
+        pageNumber: 0,
+        pageSize: 50,
+        totalElements: 1,
+        totalPages: 1,
+      });
     http
       .expectOne((req) => req.url === "/api/v1/marchandises")
       .flush({
@@ -86,6 +103,7 @@ describe("CommandeDetailPage", () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain("CMD-2026-000001");
+    expect(compiled.textContent).toContain("CLI-ACME");
     expect(compiled.textContent).toContain("Palette EUR");
     expect(compiled.textContent).toContain("Confirmer");
     http.verify();

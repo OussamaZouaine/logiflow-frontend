@@ -1,29 +1,17 @@
-<div class="flex flex-col gap-8">
+<div class="fiche-page">
   <app-fiche-header listLabel="Voyages" listLink="/voyages">
     @if (voyage.isLoading()) {
-    <p class="text-sm text-muted" role="status">Chargement…</p>
+    <p class="fiche-load-hint" role="status">Chargement…</p>
     } @else if (voyage.error()) {
-    <div class="alert-panel" role="alert">
-      <p>{{ loadError() }}</p>
-      <button
-        (click)="voyage.reload()"
-        class="pressable mt-2 font-medium text-ink underline underline-offset-2"
-        type="button"
-      >
-        Réessayer
-      </button>
-    </div>
+    <app-fiche-error (retry)="voyage.reload()" [message]="loadError()" />
     } @else if (voyage.hasValue()) {
-    <div class="flex flex-wrap items-center gap-3">
-      <h1 class="fiche-page-title fiche-page-title--mono">
-        {{ voyage.value().reference }}
-      </h1>
+    <app-fiche-title-row [mono]="true" [title]="voyage.value().reference">
       <app-statut-chip
         [label]="statutVoyageLabel(voyage.value().statut)"
         [tone]="voyageStatutTone(voyage.value().statut)"
       />
-    </div>
-    <p class="mt-1 text-sm text-muted">
+    </app-fiche-title-row>
+    <p class="fiche-meta">
       {{ typeVoyageLabel(voyage.value().typeVoyage) }}
       ·
       {{ porteeLabel(voyage.value().portee) }}
@@ -33,92 +21,97 @@
 
   @if (voyage.hasValue()) {
   <app-form-section title="Fiche">
-    <dl class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-      <div>
-        <dt class="text-xs text-muted">Départ prévu</dt>
-        <dd class="mt-0.5 font-mono tabular-nums text-ink">
-          {{ formatInstant(voyage.value().departPrevu) }}
-        </dd>
-      </div>
-      <div>
-        <dt class="text-xs text-muted">Arrivée prévue</dt>
-        <dd class="mt-0.5 font-mono tabular-nums text-ink">
-          {{ formatInstant(voyage.value().arriveePrevue) }}
-        </dd>
-      </div>
-      <div>
-        <dt class="text-xs text-muted">Véhicule</dt>
-        <dd class="mt-0.5 text-sm text-ink">
-          <a
-            [routerLink]="['/vehicules', voyage.value().vehiculeId]"
-            class="font-mono text-xs text-pine underline-offset-2 hover:underline"
-          >
-            {{ affectedVehiculeLabel() }}
-          </a>
-        </dd>
-      </div>
+    <app-fiche-field-grid>
+      <app-fiche-field [mono]="true" label="Départ prévu">
+        {{ formatInstant(voyage.value().departPrevu) }}
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="Arrivée prévue">
+        {{ formatInstant(voyage.value().arriveePrevue) }}
+      </app-fiche-field>
+      <app-fiche-field label="Véhicule">
+        <a
+          [routerLink]="['/vehicules', voyage.value().vehiculeId]"
+          class="font-mono text-pine underline-offset-2 hover:underline"
+        >
+          {{ affectedVehiculeLabel() }}
+        </a>
+      </app-fiche-field>
       @if (voyage.value().remorqueId; as remorqueId) {
-      <div>
-        <dt class="text-xs text-muted">Remorque</dt>
-        <dd class="mt-0.5 text-sm text-ink">
-          <a
-            [routerLink]="['/remorques', remorqueId]"
-            class="font-mono text-xs text-pine underline-offset-2 hover:underline"
-          >
-            {{ affectedRemorqueLabel(remorqueId) }}
-          </a>
-        </dd>
-      </div>
+      <app-fiche-field label="Remorque">
+        <a
+          [routerLink]="['/remorques', remorqueId]"
+          class="font-mono text-pine underline-offset-2 hover:underline"
+        >
+          {{ affectedRemorqueLabel(remorqueId) }}
+        </a>
+      </app-fiche-field>
       }
-      @if (titulaireChauffeurId(); as chauffeurId) {
-      <div>
-        <dt class="text-xs text-muted">Chauffeur titulaire</dt>
-        <dd class="mt-0.5 text-sm text-ink">
-          {{ chauffeurLabel(chauffeurId) }}
-        </dd>
-      </div>
-      }
-      <div>
-        <dt class="text-xs text-muted">Remplissage</dt>
-        <dd class="mt-0.5 font-mono tabular-nums text-ink">
-          {{ remplissageLabel(voyage.value().tauxRemplissage) }}
-        </dd>
-      </div>
-      <div class="sm:col-span-2">
-        <dt class="text-xs text-muted">Dossiers</dt>
-        <dd class="mt-0.5 text-sm text-ink">
-          <ul class="flex flex-col gap-1">
-            @for (dossierId of voyage.value().dossierIds; track dossierId) {
-            <li>
-              <a
-                [routerLink]="['/dossiers', dossierId]"
-                class="font-mono text-xs text-pine underline-offset-2 hover:underline"
-              >
-                {{ dossierLabel(dossierId) }}
-              </a>
-            </li>
-            }
-          </ul>
-        </dd>
-      </div>
-    </dl>
+      <app-fiche-field [mono]="true" label="Remplissage">
+        {{ remplissageLabel(voyage.value().tauxRemplissage) }}
+      </app-fiche-field>
+      <app-fiche-field [span]="2" label="Dossiers">
+        @if (voyage.value().dossierIds.length === 0) {
+        <span class="text-muted">Aucun dossier lié.</span>
+        } @else {
+        <ul class="flex flex-col gap-1">
+          @for (dossierId of voyage.value().dossierIds; track dossierId) {
+          <li>
+            <a
+              [routerLink]="['/dossiers', dossierId]"
+              class="font-mono text-pine underline-offset-2 hover:underline"
+            >
+              {{ dossierLabel(dossierId) }}
+            </a>
+          </li>
+          }
+        </ul>
+        }
+      </app-fiche-field>
+    </app-fiche-field-grid>
   </app-form-section>
+
+  @if (voyage.value().affectations.length > 0) {
+  <app-form-section title="Équipage">
+    <ul class="flex flex-col gap-2 text-sm">
+      @for (affectation of voyage.value().affectations; track $index) {
+      <li class="fiche-inline-card">
+        <p class="font-medium text-ink">
+          {{ chauffeurLabel(affectation.chauffeurId) }}
+          <span class="text-xs text-muted">
+            — {{ affectationRoleLabel(affectation.role) }}
+          </span>
+        </p>
+        <p class="mt-1 font-mono text-xs tabular-nums text-muted">
+          Affecté le {{ formatInstant(affectation.dateAffectation) }}
+        </p>
+      </li>
+      }
+    </ul>
+  </app-form-section>
+  }
 
   <app-form-section title="Trajet">
     <p class="font-mono text-sm tabular-nums text-muted">
-      {{ voyage.value().trajet.distanceTotaleKm }}
-      km ·
-      {{ voyage.value().trajet.dureeConduiteMin }}
-      min de conduite
+      {{ voyage.value().trajet.distanceTotaleKm }} km ·
+      {{ voyage.value().trajet.dureeConduiteMin }} min de conduite ·
+      {{ voyage.value().trajet.dureeTotaleMin }} min au total
     </p>
     <ol class="flex flex-col gap-3">
       @for (etape of voyage.value().trajet.etapes; track etape.ordre) {
-      <li
-        class="rounded-lg border border-line/80 bg-canvas px-3 py-2 text-sm"
-      >
-        <p class="font-medium text-ink">{{ typeEtapeLabel(etape.type) }}</p>
-        <p class="font-mono text-xs tabular-nums text-muted">
-          {{ formatInstant(etape.eta) }}
+      <li class="fiche-inline-card">
+        <p class="font-medium text-ink">
+          {{ typeEtapeLabel(etape.type) }}
+          <span class="font-mono text-xs text-muted">#{{ etape.ordre }}</span>
+        </p>
+        <p class="mt-1 font-mono text-xs tabular-nums text-muted">
+          ETA {{ formatInstant(etape.eta) }}
+          @if (etape.etd) {
+          · ETD {{ formatInstant(etape.etd) }}
+          }
+        </p>
+        <p class="mt-1 text-xs text-muted">
+          {{ etape.distanceDepuisPrecedenteKm }} km ·
+          {{ etape.chargeApresKg }} kg après étape
         </p>
       </li>
       }
@@ -140,7 +133,7 @@
 
   <app-form-section
     description="Pas de suppression physique. Annulation = statut Annulé."
-    title="Statut"
+    title="Cycle de vie"
   >
     @if (statutError()) {
     <div class="alert-panel" role="alert">
@@ -156,7 +149,7 @@
         class="btn-outline pressable"
         type="button"
       >
-        {{ statutVoyageLabel(statut) }}
+        → {{ statutVoyageLabel(statut) }}
       </button>
       }
     </div>
@@ -173,16 +166,12 @@
 
     <form (submit)="declarerEvenement($event)" novalidate>
       <app-form-field inputId="eventType" label="Type d'événement">
-        <select
-          (change)="onEventType($event)"
-          [value]="eventType()"
-          class="field"
-          id="eventType"
-        >
-          @for (type of eventTypes; track type) {
-          <option [value]="type">{{ typeEvenementLabel(type) }}</option>
-          }
-        </select>
+        <app-field-select
+          (selectValueChange)="onEventType($event)"
+          [options]="eventTypeOptions"
+          [selectValue]="eventType()"
+          inputId="eventType"
+        />
       </app-form-field>
 
       <app-form-field inputId="eventComment" label="Commentaire">
@@ -192,8 +181,42 @@
           class="field"
           id="eventComment"
           type="text"
-        />
+        >
       </app-form-field>
+
+      <div class="form-page__coords">
+        <app-form-field inputId="eventLatitude" label="Latitude">
+          <input
+            (input)="onEventLatitude($event)"
+            [value]="eventLatitude()"
+            class="field"
+            id="eventLatitude"
+            placeholder="48.8566"
+            step="any"
+            type="number"
+          >
+        </app-form-field>
+
+        <app-form-field inputId="eventLongitude" label="Longitude">
+          <input
+            (input)="onEventLongitude($event)"
+            [value]="eventLongitude()"
+            class="field"
+            id="eventLongitude"
+            placeholder="2.3522"
+            step="any"
+            type="number"
+          >
+        </app-form-field>
+      </div>
+
+      <button
+        (click)="useCurrentLocation()"
+        class="btn-outline pressable min-h-11 px-5"
+        type="button"
+      >
+        Position actuelle
+      </button>
 
       @if (eventError()) {
       <div class="alert-panel" role="alert">

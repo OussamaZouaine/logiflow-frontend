@@ -12,20 +12,21 @@ import {
   type Marchandise,
 } from "../marchandises/marchandise";
 import {
+  type Client,
   type Commande,
+  formatClientLabel,
   formatDate,
   formatMoney,
   statutCommandeLabel,
 } from "./commande";
-import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
-import { FicheHeader } from "../shared/ui/fiche-header";
+import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
 import { ToastService } from "../shared/ui/toast";
 import { StatutChip } from "../shared/ui/statut-chip";
 import { commandeStatutTone } from "../tableau/apercu";
 import { CommandeApi } from "./commande-api";
 
 @Component({
-  imports: [RouterLink, FicheHeader, StatutChip, ...FORM_PAGE_IMPORTS],
+  imports: [RouterLink, StatutChip, ...FICHE_PAGE_IMPORTS],
   selector: "app-commande-detail-page",
   templateUrl: "./commande-detail-page.html",
 })
@@ -36,6 +37,7 @@ export class CommandeDetailPage {
 
   readonly id = input.required<string>();
 
+  protected readonly formatClientLabel = formatClientLabel;
   protected readonly formatDate = formatDate;
   protected readonly formatMoney = formatMoney;
   protected readonly statutCommandeLabel = statutCommandeLabel;
@@ -51,6 +53,19 @@ export class CommandeDetailPage {
   protected readonly commande = httpResource<Commande>(() => ({
     url: `${environment.apiBaseUrl}/commandes/${this.id()}`,
   }));
+
+  protected readonly clients = httpResource<PageResponse<Client>>(() => ({
+    params: { page: 0, size: 50 },
+    url: `${environment.apiBaseUrl}/clients`,
+  }));
+
+  protected readonly client = computed(() => {
+    const clientId = this.commande.value()?.clientId;
+    if (!clientId) {
+      return undefined;
+    }
+    return this.clients.value()?.content.find((entry) => entry.id === clientId);
+  });
 
   protected readonly marchandises = httpResource<PageResponse<Marchandise>>(() => ({
     params: { page: 0, size: 50 },

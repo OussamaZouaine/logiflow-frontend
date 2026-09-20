@@ -15,9 +15,19 @@ export interface ItineraireSegment {
   dureeMin: number;
 }
 
+export interface ItineraireGeometriePoint {
+  latitude: number;
+  longitude: number;
+}
+
+export interface ItineraireGeometrie {
+  geometrie: ItineraireGeometriePoint[];
+}
+
 export interface ItineraireCalcule {
   distanceKm: number;
   dureeMin: number;
+  geometrie: ItineraireGeometriePoint[];
   segments: ItineraireSegment[];
 }
 

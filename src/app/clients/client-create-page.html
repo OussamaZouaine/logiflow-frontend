@@ -1,0 +1,65 @@
+<app-form-page-header
+  description="Tiers donneur d'ordre. Le code ne se modifie plus ensuite."
+  listLabel="Clients"
+  listLink="/clients"
+  title="Nouveau client"
+/>
+
+<form (submit)="onSubmit($event)" class="form-page" novalidate>
+  <app-form-validation-summary
+    [show]="createForm().touched() && createForm().invalid()"
+  />
+
+  <app-form-section title="Fiche">
+    <app-form-field
+      [error]="
+        showFieldError(createForm.code())
+          ? firstFieldError(createForm.code().errors())
+          : null
+      "
+      inputId="code"
+      label="Code *"
+    >
+      <input
+        [attr.aria-invalid]="showFieldError(createForm.code()) || null"
+        [class]="fieldClasses(createForm.code())"
+        [formField]="createForm.code"
+        autocomplete="off"
+        id="code"
+        placeholder="CLI-ACME"
+        type="text"
+      />
+    </app-form-field>
+
+    <app-form-field
+      [error]="
+        showFieldError(createForm.raisonSociale())
+          ? firstFieldError(createForm.raisonSociale().errors())
+          : null
+      "
+      inputId="raisonSociale"
+      label="Raison sociale *"
+    >
+      <input
+        [attr.aria-invalid]="showFieldError(createForm.raisonSociale()) || null"
+        [class]="fieldClasses(createForm.raisonSociale())"
+        [formField]="createForm.raisonSociale"
+        id="raisonSociale"
+        type="text"
+      />
+    </app-form-field>
+  </app-form-section>
+
+  @if (formError()) {
+  <div class="alert-panel" role="alert">{{ formError() }}</div>
+  }
+
+  <app-form-actions>
+    <button class="btn-primary pressable min-h-11 px-5" type="submit">
+      Créer
+    </button>
+    <a class="btn-outline pressable min-h-11 px-5" routerLink="/clients">
+      Annuler
+    </a>
+  </app-form-actions>
+</form>

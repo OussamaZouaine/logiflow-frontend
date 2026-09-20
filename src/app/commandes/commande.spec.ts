@@ -1,6 +1,7 @@
 import {
   draftToWrite,
   emptyCommandeDraft,
+  isDateTodayOrFuture,
   validateLignesCommande,
 } from "./commande";
 
@@ -16,14 +17,23 @@ describe("commande helpers", () => {
 
     const body = draftToWrite(draft, "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
 
-    expect(body.lignes).toEqual([
-      {
-        marchandiseId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-        nbColis: 10,
-        poidsKg: 500,
-        volumeM3: 4,
-      },
-    ]);
+    expect(body).toEqual({
+      clientId: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+      dateSouhaitee: draft.dateSouhaitee,
+      lignes: [
+        {
+          marchandiseId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+          nbColis: 10,
+          poidsKg: 500,
+          volumeM3: 4,
+        },
+      ],
+      prixNegocie: { devise: "EUR", montant: 2000 },
+    });
+  });
+
+  it("rejects past dates for dateSouhaitee", () => {
+    expect(isDateTodayOrFuture("1900-01-01")).toBe(false);
   });
 
   it("rejects empty lignes", () => {

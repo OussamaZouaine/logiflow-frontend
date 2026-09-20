@@ -3,8 +3,10 @@ import {
   HttpTestingController,
   provideHttpClientTesting,
 } from "@angular/common/http/testing";
+import type { WritableSignal } from "@angular/core";
 import { TestBed } from "@angular/core/testing";
 import { provideRouter } from "@angular/router";
+import type { DossierDraft } from "./dossier";
 import { DossierCreatePage } from "./dossier-create-page";
 
 const marchandisesPage = {
@@ -92,10 +94,24 @@ describe("DossierCreatePage", () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain("CMD-2026-00001");
-    expect(compiled.textContent).toContain("SITE-PARIS");
-    expect(compiled.textContent).toContain("MARCH-PAL");
+    const page = fixture.componentInstance as unknown as {
+      commandeSelectOptions: () => readonly { label: string }[];
+      marchandiseSelectOptions: () => readonly { label: string }[];
+      siteSelectOptions: () => readonly { label: string }[];
+    };
+    expect(
+      page.commandeSelectOptions().some((option) =>
+        option.label.includes("CMD-2026-00001")
+      )
+    ).toBe(true);
+    expect(
+      page.siteSelectOptions().some((option) => option.label.includes("SITE-PARIS"))
+    ).toBe(true);
+    expect(
+      page.marchandiseSelectOptions().some((option) =>
+        option.label.includes("MARCH-PAL")
+      )
+    ).toBe(true);
     http.verify();
   });
 
@@ -146,25 +162,23 @@ describe("DossierCreatePage", () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    const compiled = fixture.nativeElement as HTMLElement;
-    const commandeSelect = compiled.querySelector(
-      "#commandeId"
-    ) as HTMLSelectElement;
-    commandeSelect.value = "cccccccc-cccc-cccc-cccc-cccccccccccc";
-    commandeSelect.dispatchEvent(new Event("change", { bubbles: true }));
-    commandeSelect.dispatchEvent(new Event("input", { bubbles: true }));
+    const page = fixture.componentInstance as unknown as {
+      draft: WritableSignal<DossierDraft>;
+    };
+    page.draft.update((current) => ({
+      ...current,
+      commandeId: "cccccccc-cccc-cccc-cccc-cccccccccccc",
+    }));
 
     await fixture.whenStable();
     fixture.detectChanges();
 
-    const marchandiseSelect = compiled.querySelector(
-      "#marchandiseId"
-    ) as HTMLSelectElement;
-    expect(marchandiseSelect.value).toBe(
+    expect(page.draft().lignes[0]?.marchandiseId).toBe(
       "dddddddd-dddd-dddd-dddd-dddddddddddd"
     );
 
-    const poidsInput = compiled.querySelector("#poidsKg") as HTMLInputElement;
+    const compiled = fixture.nativeElement as HTMLElement;
+    const poidsInput = compiled.querySelector("#poidsKg-0") as HTMLInputElement;
     expect(poidsInput.value).toBe("600");
 
     http.verify();
@@ -244,7 +258,9 @@ describe("DossierCreatePage", () => {
     expect(compiled.textContent).toContain(
       "Le site de déchargement est obligatoire."
     );
-    expect(compiled.textContent).toContain("La marchandise est obligatoire.");
+    expect(compiled.textContent).toContain(
+      "Ligne 1 : choisissez une marchandise du catalogue."
+    );
     http.verify();
   });
 });

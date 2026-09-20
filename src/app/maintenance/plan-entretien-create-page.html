@@ -1,5 +1,5 @@
 <app-form-page-header
-  description="Périodicité kilométrique et/ou calendaire. Le véhicule doit déjà exister."
+  description="Périodicité kilométrique et/ou calendaire (au moins l'une des deux). Le véhicule doit déjà exister."
   listLabel="Plans d'entretien"
   listLink="/maintenance/plans"
   title="Nouveau plan d'entretien"
@@ -15,77 +15,96 @@
 </div>
 } @else if (vehicules.hasValue()) {
 <form (submit)="onSubmit($event)" class="form-page" novalidate>
-  <app-form-section title="Plan">
-    <div class="flex flex-col gap-1.5">
-      <label class="text-xs font-medium text-muted" for="vehiculeId">
-        Véhicule
-      </label>
-      <select
-        [formField]="createForm.vehiculeId"
-        [class]="fieldClasses(createForm.vehiculeId())"
-        id="vehiculeId"
-      >
-        <option value="">Choisir un véhicule…</option>
-        @for (vehicule of vehiculeOptions(); track vehicule.id) {
-        <option [value]="vehicule.id">{{ vehicule.immatriculation }}</option>
-        }
-      </select>
-      @if (showFieldError(createForm.vehiculeId())) {
-      <p class="text-xs text-brake" role="alert">
-        {{ firstFieldError(createForm.vehiculeId().errors()) }}
-      </p>
-      }
-    </div>
+  <app-form-validation-summary
+    [show]="createForm().touched() && createForm().invalid()"
+  />
 
-    <div class="flex flex-col gap-1.5">
-      <label class="text-xs font-medium text-muted" for="libelle">
-        Libellé
-      </label>
+  <app-form-section title="Plan">
+    <app-form-field
+      [error]="
+        showFieldError(createForm.vehiculeId())
+          ? firstFieldError(createForm.vehiculeId().errors())
+          : null
+      "
+      inputId="vehiculeId"
+      label="Véhicule *"
+    >
+      <app-field-select
+        [formField]="createForm.vehiculeId"
+        [invalid]="showFieldError(createForm.vehiculeId())"
+        [options]="vehiculeSelectOptions()"
+        inputId="vehiculeId"
+        placeholder="Choisir un véhicule…"
+      />
+    </app-form-field>
+
+    <app-form-field
+      [error]="
+        showFieldError(createForm.libelle())
+          ? firstFieldError(createForm.libelle().errors())
+          : null
+      "
+      inputId="libelle"
+      label="Libellé *"
+    >
       <input
         [formField]="createForm.libelle"
         [class]="fieldClasses(createForm.libelle())"
         id="libelle"
         type="text"
       />
-      @if (showFieldError(createForm.libelle())) {
-      <p class="text-xs text-brake" role="alert">
-        {{ firstFieldError(createForm.libelle().errors()) }}
-      </p>
-      }
-    </div>
+    </app-form-field>
 
     <div class="form-page__coords">
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-muted" for="periodiciteKm">
-          Périodicité (km)
-        </label>
+      <app-form-field
+        [error]="
+          showFieldError(createForm.periodiciteKm())
+            ? firstFieldError(createForm.periodiciteKm().errors())
+            : null
+        "
+        inputId="periodiciteKm"
+        label="Périodicité (km)"
+      >
         <input
           [formField]="createForm.periodiciteKm"
           [class]="fieldClasses(createForm.periodiciteKm())"
           id="periodiciteKm"
+          placeholder="Optionnel"
           step="1"
           type="number"
         />
-      </div>
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-muted" for="periodiciteMois">
-          Périodicité (mois)
-        </label>
+      </app-form-field>
+
+      <app-form-field
+        [error]="
+          showFieldError(createForm.periodiciteMois())
+            ? firstFieldError(createForm.periodiciteMois().errors())
+            : null
+        "
+        inputId="periodiciteMois"
+        label="Périodicité (mois)"
+      >
         <input
           [formField]="createForm.periodiciteMois"
           [class]="fieldClasses(createForm.periodiciteMois())"
           id="periodiciteMois"
+          placeholder="Optionnel"
           step="1"
           type="number"
         />
-      </div>
+      </app-form-field>
     </div>
 
     <div class="form-page__coords">
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-muted" for="seuilAlerteKm">
-          Seuil alerte (km)
-        </label>
+      <app-form-field
+        [error]="
+          showFieldError(createForm.seuilAlerteKm())
+            ? firstFieldError(createForm.seuilAlerteKm().errors())
+            : null
+        "
+        inputId="seuilAlerteKm"
+        label="Seuil alerte (km)"
+      >
         <input
           [formField]="createForm.seuilAlerteKm"
           [class]="fieldClasses(createForm.seuilAlerteKm())"
@@ -93,16 +112,17 @@
           step="1"
           type="number"
         />
-        @if (showFieldError(createForm.seuilAlerteKm())) {
-        <p class="text-xs text-brake" role="alert">
-          {{ firstFieldError(createForm.seuilAlerteKm().errors()) }}
-        </p>
-        }
-      </div>
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-muted" for="dureeEstimeeMin">
-          Durée estimée (min)
-        </label>
+      </app-form-field>
+
+      <app-form-field
+        [error]="
+          showFieldError(createForm.dureeEstimeeMin())
+            ? firstFieldError(createForm.dureeEstimeeMin().errors())
+            : null
+        "
+        inputId="dureeEstimeeMin"
+        label="Durée estimée (min)"
+      >
         <input
           [formField]="createForm.dureeEstimeeMin"
           [class]="fieldClasses(createForm.dureeEstimeeMin())"
@@ -110,12 +130,7 @@
           step="1"
           type="number"
         />
-        @if (showFieldError(createForm.dureeEstimeeMin())) {
-        <p class="text-xs text-brake" role="alert">
-          {{ firstFieldError(createForm.dureeEstimeeMin().errors()) }}
-        </p>
-        }
-      </div>
+      </app-form-field>
     </div>
   </app-form-section>
 

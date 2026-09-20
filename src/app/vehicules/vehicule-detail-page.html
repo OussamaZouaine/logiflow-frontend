@@ -1,454 +1,530 @@
-<div class="flex flex-col gap-8">
+<div class="fiche-page">
   <app-fiche-header listLabel="Véhicules" listLink="/vehicules">
     @if (vehicule.isLoading()) {
-    <p class="text-sm text-muted" role="status">Chargement…</p>
+    <p class="fiche-load-hint" role="status">Chargement…</p>
     } @else if (vehicule.error()) {
-    <div class="alert-panel" role="alert">
-      <p>{{ loadError() }}</p>
-      <button
-        (click)="vehicule.reload()"
-        class="pressable mt-2 font-medium text-ink underline underline-offset-2"
-        type="button"
-      >
-        Réessayer
-      </button>
-    </div>
+    <app-fiche-error (retry)="vehicule.reload()" [message]="loadError()" />
     } @else if (vehicule.hasValue()) {
-    <div class="flex flex-wrap items-center gap-3">
-      <h1 class="fiche-page-title fiche-page-title--mono">
-        {{ vehicule.value().immatriculation }}
-      </h1>
+    <app-fiche-title-row
+      [mono]="true"
+      [title]="vehicule.value().immatriculation"
+    >
       <app-statut-chip
         [label]="statutLabel(vehicule.value().statut)"
         [tone]="vehiculeStatutTone(vehicule.value().statut)"
       />
-    </div>
-    <p class="mt-1 text-sm text-muted">
+    </app-fiche-title-row>
+    <p class="fiche-meta">
       {{ typeLabel(vehicule.value().type) }}
-      · PTAC
-      {{ vehicule.value().ptacKg }}
-      kg · utile
-      {{ vehicule.value().chargeUtileKg }}
-      kg
+      @if (formatMarqueModele(vehicule.value().marque, vehicule.value().modele)
+      !== "—") { ·
+      {{ formatMarqueModele(vehicule.value().marque, vehicule.value().modele) }}
+      } @if (vehicule.value().numeroParc) { · Parc
+      {{ vehicule.value().numeroParc }}
+      }
     </p>
     }
   </app-fiche-header>
 
   @if (vehicule.hasValue()) {
-  <div class="flex max-w-2xl flex-col gap-6">
-    <app-form-section
-      description="Relevé kilométrique et horamètre — les valeurs ne peuvent pas reculer."
-      title="Compteurs"
-    >
-      <form (submit)="saveCompteurs($event)" novalidate>
-        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <app-form-field inputId="kilometrage" label="Kilométrage">
+  <app-form-section title="Identification">
+    <app-fiche-field-grid>
+      <app-fiche-field [mono]="true" label="Immatriculation">
+        {{ vehicule.value().immatriculation }}
+      </app-fiche-field>
+      <app-fiche-field label="Type">
+        {{ typeLabel(vehicule.value().type) }}
+      </app-fiche-field>
+      <app-fiche-field label="N° parc">
+        {{ vehicule.value().numeroParc ?? "—" }}
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="VIN">
+        {{ vehicule.value().vin ?? "—" }}
+      </app-fiche-field>
+    </app-fiche-field-grid>
+  </app-form-section>
+
+  <app-form-section title="Marque et énergie">
+    <app-fiche-field-grid>
+      <app-fiche-field label="Marque">
+        {{ vehicule.value().marque ?? "—" }}
+      </app-fiche-field>
+      <app-fiche-field label="Modèle">
+        {{ vehicule.value().modele ?? "—" }}
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="Année de mise en circulation">
+        {{ vehicule.value().anneeMiseEnCirculation ?? "—" }}
+      </app-fiche-field>
+      <app-fiche-field label="Énergie">
+        {{ energieDisplay(vehicule.value().energie) }}
+      </app-fiche-field>
+    </app-fiche-field-grid>
+  </app-form-section>
+
+  <app-form-section title="Poids et dimensions">
+    <app-fiche-field-grid>
+      <app-fiche-field [mono]="true" label="PTAC">
+        {{ vehicule.value().ptacKg.toLocaleString("fr-FR") }}
+        kg
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="Charge utile">
+        {{ vehicule.value().chargeUtileKg.toLocaleString("fr-FR") }}
+        kg
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="Poids à vide">
+        @if (vehicule.value().poidsVideKg != null) {
+        {{ vehicule.value().poidsVideKg!.toLocaleString("fr-FR") }}
+        kg } @else { — }
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="Volume utile">
+        @if (vehicule.value().volumeUtileM3 != null) {
+        {{ vehicule.value().volumeUtileM3 }}
+        m³ } @else { — }
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="Longueur">
+        @if (vehicule.value().longueurM != null) {
+        {{ vehicule.value().longueurM }}
+        m } @else { — }
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="Largeur">
+        @if (vehicule.value().largeurM != null) {
+        {{ vehicule.value().largeurM }}
+        m } @else { — }
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="Hauteur">
+        @if (vehicule.value().hauteurM != null) {
+        {{ vehicule.value().hauteurM }}
+        m } @else { — }
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="Positions palettes">
+        {{ vehicule.value().nbPositionsPalettes ?? "—" }}
+      </app-fiche-field>
+    </app-fiche-field-grid>
+  </app-form-section>
+
+  <app-form-section title="Carrosserie et froid">
+    <app-fiche-field-grid>
+      <app-fiche-field label="Type carrosserie">
+        {{ carrosserieDisplay(vehicule.value().typeCarrosserie) }}
+      </app-fiche-field>
+      <app-fiche-field label="Groupe froid">
+        {{ vehicule.value().groupeFroid ? "Oui" : "Non" }}
+      </app-fiche-field>
+      @if (vehicule.value().groupeFroid) {
+      <app-fiche-field [mono]="true" label="Température min">
+        @if (vehicule.value().temperatureMin != null) {
+        {{ vehicule.value().temperatureMin }}
+        °C } @else { — }
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="Température max">
+        @if (vehicule.value().temperatureMax != null) {
+        {{ vehicule.value().temperatureMax }}
+        °C } @else { — }
+      </app-fiche-field>
+      }
+    </app-fiche-field-grid>
+  </app-form-section>
+
+  <app-form-section title="Dates">
+    <app-fiche-field-grid>
+      <app-fiche-field label="1ʳᵉ mise en circulation">
+        {{ formatVehiculeDate(vehicule.value().datePremiereMiseCirculation) }}
+      </app-fiche-field>
+      <app-fiche-field label="Acquisition">
+        {{ formatVehiculeDate(vehicule.value().dateAcquisition) }}
+      </app-fiche-field>
+      <app-fiche-field label="Mise en service">
+        {{ formatVehiculeDate(vehicule.value().dateMiseEnService) }}
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="Kilométrage">
+        {{ vehicule.value().kilometrage.toLocaleString("fr-FR") }}
+        km
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="Heures moteur">
+        {{ vehicule.value().heuresMoteur.toLocaleString("fr-FR") }}
+        h
+      </app-fiche-field>
+    </app-fiche-field-grid>
+  </app-form-section>
+
+  <app-form-section
+    description="Relevé kilométrique et horamètre — les valeurs ne peuvent pas reculer."
+    title="Compteurs"
+  >
+    <form (submit)="saveCompteurs($event)" novalidate>
+      <div class="form-page__coords fiche-inset">
+        <app-form-field
+          [error]="
+            showFieldError(compteursForm.kilometrage())
+              ? firstFieldError(compteursForm.kilometrage().errors())
+              : null
+          "
+          inputId="kilometrage"
+          label="Kilométrage"
+        >
+          <input
+            [attr.aria-invalid]="
+              showFieldError(compteursForm.kilometrage()) || null
+            "
+            [class]="fieldClasses(compteursForm.kilometrage())"
+            [formField]="compteursForm.kilometrage"
+            id="kilometrage"
+            step="1"
+            type="number"
+          >
+        </app-form-field>
+        <app-form-field
+          [error]="
+            showFieldError(compteursForm.heuresMoteur())
+              ? firstFieldError(compteursForm.heuresMoteur().errors())
+              : null
+          "
+          inputId="heuresMoteur"
+          label="Heures moteur"
+        >
+          <input
+            [attr.aria-invalid]="
+              showFieldError(compteursForm.heuresMoteur()) || null
+            "
+            [class]="fieldClasses(compteursForm.heuresMoteur())"
+            [formField]="compteursForm.heuresMoteur"
+            id="heuresMoteur"
+            step="1"
+            type="number"
+          >
+        </app-form-field>
+      </div>
+      @if (compteursError()) {
+      <div class="alert-panel mt-4" role="alert">{{ compteursError() }}</div>
+      }
+      <app-form-actions [inline]="true">
+        <button class="btn-primary pressable min-h-11 px-5" type="submit">
+          Enregistrer le relevé
+        </button>
+      </app-form-actions>
+    </form>
+  </app-form-section>
+
+  <app-form-section
+    description="Carte grise, assurance, contrôle technique — pièces rattachées à ce véhicule."
+    title="Documents"
+  >
+    @if (documents.isLoading()) {
+    <p class="fiche-load-hint" role="status">Chargement…</p>
+    } @else if (documents.error()) {
+    <app-fiche-error
+      (retry)="documents.reload()"
+      [message]="documentsLoadError()"
+    />
+    } @else if (documents.hasValue()) { @if (documents.value().length === 0) {
+    <p class="fiche-meta">Aucun document.</p>
+    } @else {
+    <ul class="flex flex-col gap-2">
+      @for (document of documents.value(); track document.id) {
+      <li
+        class="fiche-inline-card flex flex-wrap items-end justify-between gap-3"
+      >
+        <div class="min-w-0 flex-1">
+          <p class="font-medium text-ink">
+            {{ documentTypeLabel(document.typeDocument) }}
+          </p>
+          <p class="mt-1 text-sm text-muted">{{ document.reference }}</p>
+          <p class="mt-1 font-mono text-xs tabular-nums text-muted">
+            Expire le {{ formatDocumentExpiration(document.dateExpiration) }}
+          </p>
+          @if (document.url) {
+          <a
+            [href]="document.url"
+            class="mt-2 inline-block text-xs text-pine underline-offset-2 hover:underline"
+            rel="noopener"
+            target="_blank"
+          >
+            Ouvrir le fichier
+          </a>
+          }
+        </div>
+        <button
+          (click)="deleteDocument(document.id)"
+          class="btn-danger-outline pressable h-10 px-3 text-xs"
+          type="button"
+        >
+          Supprimer
+        </button>
+      </li>
+      }
+    </ul>
+    }
+
+    <details class="fiche-disclosure fiche-inset mt-4">
+      <summary class="text-sm font-medium text-ink">
+        Téléverser un document
+      </summary>
+      <form (submit)="uploadDocument($event)" class="mt-4" novalidate>
+        <app-form-field inputId="documentFichier" label="Fichier">
+          <input
+            (change)="onFileSelected($event)"
+            accept=".pdf,.png,.jpg,.jpeg,.webp"
+            class="field"
+            id="documentFichier"
+            type="file"
+          >
+        </app-form-field>
+        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <app-form-field inputId="uploadType" label="Type">
+            <app-field-select
+              (selectValueChange)="onUploadType($event)"
+              [options]="documentTypeOptions"
+              [selectValue]="uploadDraft().typeDocument"
+              inputId="uploadType"
+            />
+          </app-form-field>
+          <app-form-field inputId="uploadReference" label="Référence">
             <input
-              [formField]="compteursForm.kilometrage"
+              (input)="onUploadReference($event)"
+              [value]="uploadDraft().reference"
               class="field"
-              id="kilometrage"
-              step="1"
-              type="number"
+              id="uploadReference"
+              type="text"
             >
           </app-form-field>
-          <app-form-field inputId="heuresMoteur" label="Heures moteur">
-            <input
-              [formField]="compteursForm.heuresMoteur"
-              class="field"
-              id="heuresMoteur"
-              step="1"
-              type="number"
-            >
+          <app-form-field inputId="uploadExpiration" label="Expiration">
+            <app-iso-date-input
+              (isoDateChange)="onUploadExpirationIso($event)"
+              [isoDate]="uploadDraft().dateExpiration"
+              inputId="uploadExpiration"
+            />
           </app-form-field>
         </div>
-        @if (compteursError()) {
-        <div class="alert-panel" role="alert">
-          {{ compteursError() }}
-        </div>
+        @if (uploadError()) {
+        <div class="alert-panel mt-4" role="alert">{{ uploadError() }}</div>
         }
-        <app-form-actions>
+        <app-form-actions [inline]="true">
           <button class="btn-primary pressable min-h-11 px-5" type="submit">
-            Enregistrer le relevé
+            Téléverser
           </button>
         </app-form-actions>
       </form>
-    </app-form-section>
+    </details>
+    }
+  </app-form-section>
 
-    <app-form-section
-      description="Carte grise, assurance, contrôle technique — pièces rattachées à ce véhicule."
-      title="Documents"
-    >
-      @if (documents.isLoading()) {
-      <p class="text-sm text-muted" role="status">Chargement…</p>
-      } @else if (documents.error()) {
-      <div class="alert-panel" role="alert">
-        <p>{{ documentsLoadError() }}</p>
-        <button
-          (click)="documents.reload()"
-          class="pressable mt-2 font-medium text-ink underline underline-offset-2"
-          type="button"
-        >
-          Réessayer
-        </button>
-      </div>
-      } @else if (documents.hasValue()) {
-      @if (documents.value().length === 0) {
-      <p class="text-sm text-muted">Aucun document.</p>
-      } @else {
-      <ul class="flex flex-col gap-2">
-        @for (document of documents.value(); track document.id) {
-        <li
-          class="flex flex-wrap items-end justify-between gap-3 rounded-lg border border-line/80 bg-canvas px-3 py-3"
-        >
-          <div class="min-w-0 flex-1 text-sm">
-            <p class="font-medium text-ink">
-              {{ documentTypeLabel(document.typeDocument) }}
-            </p>
-            <p class="mt-1 text-muted">{{ document.reference }}</p>
-            <p class="mt-1 font-mono text-xs tabular-nums text-muted">
-              Expire le {{ formatDocumentExpiration(document.dateExpiration) }}
-            </p>
-            @if (document.url) {
-            <a
-              [href]="document.url"
-              class="mt-2 inline-block text-xs text-pine underline-offset-2 hover:underline"
-              rel="noopener"
-              target="_blank"
-            >
-              Ouvrir le fichier
-            </a>
-            }
-          </div>
-          <button
-            (click)="deleteDocument(document.id)"
-            class="btn-danger-outline pressable h-11 px-3 text-xs"
-            type="button"
-          >
-            Supprimer
-          </button>
-        </li>
-        }
-      </ul>
-      }
-
-      <details class="fiche-disclosure fiche-inset">
-        <summary class="text-sm font-medium text-ink">
-          Téléverser un document
-        </summary>
-        <form
-          (submit)="uploadDocument($event)"
-          class="mt-4"
-          novalidate
-        >
-          <app-form-field inputId="documentFichier" label="Fichier">
-            <input
-              (change)="onFileSelected($event)"
-              accept=".pdf,.png,.jpg,.jpeg,.webp"
-              class="field"
-              id="documentFichier"
-              type="file"
-            >
-          </app-form-field>
-          <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <app-form-field inputId="uploadType" label="Type">
-              <select
-                (change)="onUploadType($event)"
-                [value]="uploadDraft().typeDocument"
-                class="field"
-                id="uploadType"
-              >
-                @for (type of documentTypes; track type) {
-                <option [value]="type">{{ documentTypeLabel(type) }}</option>
-                }
-              </select>
-            </app-form-field>
-            <app-form-field inputId="uploadReference" label="Référence">
-              <input
-                (input)="onUploadReference($event)"
-                [value]="uploadDraft().reference"
-                class="field"
-                id="uploadReference"
-                type="text"
-              >
-            </app-form-field>
-            <app-form-field inputId="uploadExpiration" label="Expiration">
-              <input
-                (change)="onUploadExpiration($event)"
-                (input)="onUploadExpiration($event)"
-                [value]="uploadDraft().dateExpiration"
-                class="field"
-                id="uploadExpiration"
-                type="date"
-              >
-            </app-form-field>
-          </div>
-          @if (uploadError()) {
-          <div class="alert-panel" role="alert">
-            {{ uploadError() }}
-          </div>
-          }
-          <app-form-actions>
-            <button class="btn-primary pressable min-h-11 px-5" type="submit">
-              Téléverser
-            </button>
-          </app-form-actions>
-        </form>
-      </details>
-      }
-    </app-form-section>
-
-    <app-form-section
-      description="Dernier enregistrement pour ce véhicule. Le statut (Bon, À planifier…) est dérivé côté serveur à partir du score et des km avant échéance."
-      title="Score de santé"
-    >
-      @if (scoreSante.isLoading()) {
-      <p class="text-sm text-muted" role="status">Chargement…</p>
-      } @else if (scoreSante.error()) {
-      <div class="alert-panel" role="alert">
-        <p>{{ scoreLoadError() }}</p>
-        <button
-          (click)="scoreSante.reload()"
-          class="pressable mt-2 font-medium text-ink underline underline-offset-2"
-          type="button"
-        >
-          Réessayer
-        </button>
-      </div>
-      } @else if (scoreSante.hasValue() && scoreSante.value()) {
+  <app-form-section
+    description="Dernier enregistrement pour ce véhicule. Le statut (Bon, À planifier…) est dérivé côté serveur à partir du score et des km avant échéance."
+    title="Score de santé"
+  >
+    @if (scoreSante.isLoading()) {
+    <p class="fiche-load-hint" role="status">Chargement…</p>
+    } @else if (scoreSante.error()) {
+    <app-fiche-error
+      (retry)="scoreSante.reload()"
+      [message]="scoreLoadError()"
+    />
+    } @else if (scoreSante.hasValue() && scoreSante.value()) {
+    <div class="fiche-highlight">
       <div class="flex flex-wrap items-center gap-3">
         <app-statut-chip
           [label]="statutSanteLabel(scoreSante.value()!.statut)"
           [tone]="statutSanteTone(scoreSante.value()!.statut)"
         />
-        <span class="font-mono text-sm tabular-nums text-ink">
+        <span class="fiche-highlight__score">
           {{ scoreSante.value()!.score }}/100
         </span>
       </div>
       @if (scoreSante.value()!.necessiteIntervention && canMaintenance()) {
       <p class="text-sm text-amber">
-        Intervention recommandée — créez un ordre de travail si ce n'est pas déjà
-        fait.
+        Intervention recommandée — créez un ordre de travail si ce n'est pas
+        déjà fait.
       </p>
       }
-      <dl class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-        <div>
-          <dt class="text-xs text-muted">Enregistré le</dt>
-          <dd class="mt-0.5 text-ink">
-            {{ formatScoreDate(scoreSante.value()!.calculeLe) }}
-          </dd>
+    </div>
+    <app-fiche-field-grid>
+      <app-fiche-field label="Enregistré le">
+        {{ formatScoreDate(scoreSante.value()!.calculeLe) }}
+      </app-fiche-field>
+      <app-fiche-field label="Échéance projetée">
+        {{ formatScoreDate(scoreSante.value()!.dateEcheanceProjetee) }}
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="Km avant échéance">
+        {{ scoreSante.value()!.kmAvantEcheance.toLocaleString("fr-FR") }}
+      </app-fiche-field>
+      @if (scoreSante.value()!.recommandation) {
+      <app-fiche-field [span]="2" label="Recommandation">
+        {{ scoreSante.value()!.recommandation }}
+      </app-fiche-field>
+      }
+    </app-fiche-field-grid>
+    } @else if (scoreSante.hasValue()) {
+    <p class="fiche-meta">Aucun score enregistré.</p>
+    } @if (canMaintenance()) {
+    <details class="fiche-disclosure fiche-inset mt-4">
+      <summary class="text-sm font-medium text-ink">
+        Enregistrer un score
+      </summary>
+      <p class="mt-2 text-xs text-muted">
+        Saisissez le score (0–100), les km restants avant échéance et la date
+        projetée. Le serveur calcule le statut de santé.
+      </p>
+      <form (submit)="enregistrerScore($event)" class="mt-4" novalidate>
+        <div class="form-page__coords fiche-inset">
+          <app-form-field inputId="score" label="Score (0–100)">
+            <input
+              [formField]="scoreForm.score"
+              class="field"
+              id="score"
+              step="0.1"
+              type="number"
+            >
+          </app-form-field>
+          <app-form-field inputId="kmAvantEcheance" label="Km avant échéance">
+            <input
+              [formField]="scoreForm.kmAvantEcheance"
+              class="field"
+              id="kmAvantEcheance"
+              step="1"
+              type="number"
+            >
+          </app-form-field>
         </div>
-        <div>
-          <dt class="text-xs text-muted">Échéance projetée</dt>
-          <dd class="mt-0.5 text-ink">
-            {{ formatScoreDate(scoreSante.value()!.dateEcheanceProjetee) }}
-          </dd>
-        </div>
-        <div>
-          <dt class="text-xs text-muted">Km avant échéance</dt>
-          <dd class="mt-0.5 font-mono tabular-nums text-ink">
-            {{ scoreSante.value()!.kmAvantEcheance.toLocaleString("fr-FR") }}
-          </dd>
-        </div>
-        @if (scoreSante.value()!.recommandation) {
-        <div class="sm:col-span-2">
-          <dt class="text-xs text-muted">Recommandation</dt>
-          <dd class="mt-0.5 text-ink">
-            {{ scoreSante.value()!.recommandation }}
-          </dd>
-        </div>
+        <app-form-field inputId="dateEcheance" label="Échéance projetée">
+          <app-iso-date-input
+            [formField]="scoreForm.dateEcheanceProjetee"
+            inputId="dateEcheance"
+          />
+        </app-form-field>
+        <app-form-field
+          inputId="recommandation"
+          label="Recommandation (optionnel)"
+        >
+          <input
+            [formField]="scoreForm.recommandation"
+            class="field"
+            id="recommandation"
+            type="text"
+          >
+        </app-form-field>
+        @if (scoreError()) {
+        <div class="alert-panel mt-4" role="alert">{{ scoreError() }}</div>
         }
-      </dl>
-      } @else if (scoreSante.hasValue()) {
-      <p class="text-sm text-muted">Aucun score enregistré.</p>
-      }
-
-      @if (canMaintenance()) {
-      <details class="fiche-disclosure fiche-inset">
-        <summary class="text-sm font-medium text-ink">
-          Enregistrer un score
-        </summary>
-        <p class="mt-2 text-xs text-muted">
-          Saisissez le score (0–100), les km restants avant échéance et la date
-          projetée. Le serveur calcule le statut de santé.
-        </p>
-        <form (submit)="enregistrerScore($event)" class="mt-4" novalidate>
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <app-form-field inputId="score" label="Score (0–100)">
-              <input
-                [formField]="scoreForm.score"
-                class="field"
-                id="score"
-                step="0.1"
-                type="number"
-              >
-            </app-form-field>
-            <app-form-field inputId="kmAvantEcheance" label="Km avant échéance">
-              <input
-                [formField]="scoreForm.kmAvantEcheance"
-                class="field"
-                id="kmAvantEcheance"
-                step="1"
-                type="number"
-              >
-            </app-form-field>
-          </div>
-          <app-form-field inputId="dateEcheance" label="Échéance projetée">
-            <input
-              [formField]="scoreForm.dateEcheanceProjetee"
-              class="field"
-              id="dateEcheance"
-              type="date"
-            >
-          </app-form-field>
-          <app-form-field inputId="recommandation" label="Recommandation (optionnel)">
-            <input
-              [formField]="scoreForm.recommandation"
-              class="field"
-              id="recommandation"
-              type="text"
-            >
-          </app-form-field>
-          @if (scoreError()) {
-          <div class="alert-panel" role="alert">
-            {{ scoreError() }}
-          </div>
-          }
-          <app-form-actions>
-            <button class="btn-primary pressable min-h-11 px-5" type="submit">
-              Enregistrer le score
-            </button>
-          </app-form-actions>
-        </form>
-      </details>
-      }
-    </app-form-section>
-
-    @if (canMaintenance()) {
-    <app-form-section
-      description="Les plans d'entretien décrivent la périodicité préventive ; les ordres de travail exécutent une intervention. Un plan ne crée pas d'ordre automatiquement."
-      title="Maintenance"
-    >
-      <div class="flex flex-col gap-6">
-        <div>
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <h3 class="text-sm font-medium text-ink">Plans d'entretien</h3>
-            <a
-              [queryParams]="{ vehiculeId: id() }"
-              class="btn-outline pressable min-h-9 px-3 py-1.5 text-xs"
-              routerLink="/maintenance/plans/nouveau"
-            >
-              Nouveau plan
-            </a>
-          </div>
-
-          @if (plansEntretien.isLoading()) {
-          <p class="mt-3 text-sm text-muted" role="status">Chargement…</p>
-          } @else if (plansEntretien.error()) {
-          <div class="alert-panel mt-3" role="alert">
-            <p>{{ plansLoadError() }}</p>
-            <button
-              (click)="plansEntretien.reload()"
-              class="pressable mt-2 font-medium text-ink underline underline-offset-2"
-              type="button"
-            >
-              Réessayer
-            </button>
-          </div>
-          } @else if (plansEntretienList().length === 0) {
-          <p class="mt-3 text-sm text-muted">Aucun plan pour ce véhicule.</p>
-          } @else {
-          <ul class="mt-3 flex flex-col gap-2">
-            @for (plan of plansEntretienList(); track plan.id) {
-            <li>
-              <a
-                [routerLink]="['/maintenance/plans', plan.id]"
-                class="pressable flex flex-wrap items-baseline justify-between gap-2 rounded-lg border border-line/80 bg-canvas px-3 py-2.5 text-sm hover:border-pine/30 hover:bg-pine/5"
-              >
-                <span class="font-medium text-ink">{{ plan.libelle }}</span>
-                <span class="font-mono text-xs tabular-nums text-muted">
-                  {{ formatPeriodicite(plan) }}
-                </span>
-              </a>
-            </li>
-            }
-          </ul>
-          }
-        </div>
-
-        <div class="border-t border-line pt-6">
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <h3 class="text-sm font-medium text-ink">Ordres de travail</h3>
-            <a
-              [queryParams]="{ vehiculeId: id() }"
-              class="btn-primary pressable min-h-9 px-3 py-1.5 text-xs"
-              routerLink="/maintenance/nouveau"
-            >
-              Nouvel ordre
-            </a>
-          </div>
-
-          @if (ordresTravail.isLoading()) {
-          <p class="mt-3 text-sm text-muted" role="status">Chargement…</p>
-          } @else if (ordresTravail.error()) {
-          <div class="alert-panel mt-3" role="alert">
-            <p>{{ ordresLoadError() }}</p>
-            <button
-              (click)="ordresTravail.reload()"
-              class="pressable mt-2 font-medium text-ink underline underline-offset-2"
-              type="button"
-            >
-              Réessayer
-            </button>
-          </div>
-          } @else if (ordresTravailList().length === 0) {
-          <p class="mt-3 text-sm text-muted">Aucun ordre pour ce véhicule.</p>
-          } @else {
-          <ul class="mt-3 flex flex-col gap-2">
-            @for (ordre of ordresTravailList(); track ordre.id) {
-            <li>
-              <a
-                [routerLink]="['/maintenance', ordre.id]"
-                class="pressable flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line/80 bg-canvas px-3 py-2.5 text-sm hover:border-pine/30 hover:bg-pine/5"
-              >
-                <span class="font-mono text-xs text-pine">
-                  #{{ formatOrdreShortId(ordre.id) }}
-                </span>
-                <span class="text-ink">
-                  {{ typeInterventionLabel(ordre.type) }}
-                </span>
-                <app-statut-chip
-                  [label]="statutOtLabel(ordre.statut)"
-                  [tone]="statutOtTone(ordre.statut)"
-                />
-                <span class="font-mono text-xs tabular-nums text-muted">
-                  {{ formatDateTime(ordre.datePlanifiee) }}
-                </span>
-              </a>
-            </li>
-            }
-          </ul>
-          }
-        </div>
-      </div>
-
-      <div class="flex flex-wrap gap-x-4 gap-y-2 text-xs">
-        <a
-          [queryParams]="{ vehiculeId: id() }"
-          class="pressable font-medium text-pine underline-offset-2 hover:underline"
-          routerLink="/maintenance"
-        >
-          Tous les ordres
-        </a>
-        <a
-          [queryParams]="{ vehiculeId: id() }"
-          class="pressable font-medium text-pine underline-offset-2 hover:underline"
-          routerLink="/maintenance/plans"
-        >
-          Tous les plans
-        </a>
-      </div>
-    </app-form-section>
+        <app-form-actions [inline]="true">
+          <button class="btn-primary pressable min-h-11 px-5" type="submit">
+            Enregistrer le score
+          </button>
+        </app-form-actions>
+      </form>
+    </details>
     }
-  </div>
-  }
+  </app-form-section>
+
+  @if (canMaintenance()) {
+  <app-form-section
+    description="Les plans d'entretien décrivent la périodicité préventive ; les ordres de travail exécutent une intervention. Un plan ne crée pas d'ordre automatiquement."
+    title="Maintenance"
+  >
+    <div class="fiche-subsection">
+      <div class="fiche-subsection__header">
+        <h3 class="fiche-subsection__title">Plans d'entretien</h3>
+        <a
+          [queryParams]="{ vehiculeId: id() }"
+          class="btn-outline pressable min-h-9 px-3 py-1.5 text-xs"
+          routerLink="/maintenance/plans/nouveau"
+        >
+          Nouveau plan
+        </a>
+      </div>
+
+      @if (plansEntretien.isLoading()) {
+      <p class="fiche-load-hint" role="status">Chargement…</p>
+      } @else if (plansEntretien.error()) {
+      <app-fiche-error
+        (retry)="plansEntretien.reload()"
+        [message]="plansLoadError()"
+      />
+      } @else if (plansEntretienList().length === 0) {
+      <p class="fiche-meta">Aucun plan pour ce véhicule.</p>
+      } @else {
+      <ul class="flex flex-col gap-2">
+        @for (plan of plansEntretienList(); track plan.id) {
+        <li>
+          <a
+            [routerLink]="['/maintenance/plans', plan.id]"
+            class="fiche-link-card pressable"
+          >
+            <span class="font-medium text-ink">{{ plan.libelle }}</span>
+            <span class="font-mono text-xs tabular-nums text-muted">
+              {{ formatPeriodicite(plan) }}
+            </span>
+          </a>
+        </li>
+        }
+      </ul>
+      }
+    </div>
+
+    <div class="fiche-subsection fiche-subsection--divider">
+      <div class="fiche-subsection__header">
+        <h3 class="fiche-subsection__title">Ordres de travail</h3>
+        <a
+          [queryParams]="{ vehiculeId: id() }"
+          class="btn-primary pressable min-h-9 px-3 py-1.5 text-xs"
+          routerLink="/maintenance/nouveau"
+        >
+          Nouvel ordre
+        </a>
+      </div>
+
+      @if (ordresTravail.isLoading()) {
+      <p class="fiche-load-hint" role="status">Chargement…</p>
+      } @else if (ordresTravail.error()) {
+      <app-fiche-error
+        (retry)="ordresTravail.reload()"
+        [message]="ordresLoadError()"
+      />
+      } @else if (ordresTravailList().length === 0) {
+      <p class="fiche-meta">Aucun ordre pour ce véhicule.</p>
+      } @else {
+      <ul class="flex flex-col gap-2">
+        @for (ordre of ordresTravailList(); track ordre.id) {
+        <li>
+          <a
+            [routerLink]="['/maintenance', ordre.id]"
+            class="fiche-link-card pressable"
+          >
+            <span class="font-mono text-xs text-pine">
+              #{{ formatOrdreShortId(ordre.id) }}
+            </span>
+            <span class="text-ink"
+              >{{ typeInterventionLabel(ordre.type) }}</span
+            >
+            <app-statut-chip
+              [label]="statutOtLabel(ordre.statut)"
+              [tone]="statutOtTone(ordre.statut)"
+            />
+            <span class="font-mono text-xs tabular-nums text-muted">
+              {{ formatDateTime(ordre.datePlanifiee) }}
+            </span>
+          </a>
+        </li>
+        }
+      </ul>
+      }
+    </div>
+
+    <div class="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs">
+      <a
+        [queryParams]="{ vehiculeId: id() }"
+        class="pressable font-medium text-pine underline-offset-2 hover:underline"
+        routerLink="/maintenance"
+      >
+        Tous les ordres
+      </a>
+      <a
+        [queryParams]="{ vehiculeId: id() }"
+        class="pressable font-medium text-pine underline-offset-2 hover:underline"
+        routerLink="/maintenance/plans"
+      >
+        Tous les plans
+      </a>
+    </div>
+  </app-form-section>
+  } }
 </div>

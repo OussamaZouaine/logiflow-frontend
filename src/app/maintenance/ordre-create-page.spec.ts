@@ -40,7 +40,7 @@ describe("OrdreCreatePage", () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain("Nouvel ordre de travail");
     expect(compiled.querySelector("#vehiculeId")).toBeTruthy();
-    expect(compiled.querySelector("#datePlanifiee")).toBeTruthy();
+    expect(compiled.querySelector("app-iso-datetime-input")).toBeTruthy();
     http.verify();
   });
 });

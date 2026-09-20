@@ -2,6 +2,7 @@ import type { WorkDestinationId } from "./work-destination";
 
 /** Lucide icon names registered on the App Shell for each work destination. */
 export const DESTINATION_NAV_ICON: Record<WorkDestinationId, string> = {
+  clients: "lucideBuilding2",
   commandes: "lucideClipboardList",
   dossiers: "lucideFolderOpen",
   maintenance: "lucideWrench",

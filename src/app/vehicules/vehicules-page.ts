@@ -11,25 +11,26 @@ import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
-import { filterByStatut, statutOptionsFrom } from "../shared/ui/list-filter";
 import { ListEmptyState } from "../shared/ui/list-empty-state";
-import { ListTableSkeleton } from "../shared/ui/list-table-skeleton";
+import { filterByStatut, statutOptionsFrom } from "../shared/ui/list-filter";
 import { ListPagination } from "../shared/ui/list-pagination";
 import { connectListQueryState } from "../shared/ui/list-query-state";
 import {
-  listKeyboardRows,
   ListRowKeyboard,
+  listKeyboardRows,
   syncListKeyboardActiveId,
 } from "../shared/ui/list-row-keyboard";
 import { ListSearchBar } from "../shared/ui/list-search-bar";
 import { ListStatutFilter } from "../shared/ui/list-statut-filter";
+import { ListTableSkeleton } from "../shared/ui/list-table-skeleton";
 import { StatutChip } from "../shared/ui/statut-chip";
 import { vehiculeStatutTone } from "../tableau/apercu";
 import {
+  formatMarqueModele,
   statutLabel,
   typeLabel,
-  type Vehicule,
   VEHICULE_STATUTS,
+  type Vehicule,
 } from "./vehicule";
 
 const VEHICULES_PAGE_SIZE = 20;
@@ -55,6 +56,7 @@ export class VehiculesPage {
 
   protected readonly typeLabel = typeLabel;
   protected readonly statutLabel = statutLabel;
+  protected readonly formatMarqueModele = formatMarqueModele;
   protected readonly vehiculeStatutTone = vehiculeStatutTone;
   protected readonly statutOptions = statutOptionsFrom(
     VEHICULE_STATUTS,

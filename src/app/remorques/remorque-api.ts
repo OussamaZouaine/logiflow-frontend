@@ -25,4 +25,30 @@ export class RemorqueApi {
       })
     );
   }
+
+  sortir(
+    id: string,
+    dateSortie: string,
+    options?: {
+      heuresGroupeFroidSortie?: number;
+      kilometrageSortie?: number;
+      motifSortie?: string;
+    }
+  ): Promise<Remorque> {
+    const params: Record<string, string | number> = { dateSortie };
+    if (options?.motifSortie) {
+      params["motifSortie"] = options.motifSortie;
+    }
+    if (options?.kilometrageSortie != null) {
+      params["kilometrageSortie"] = options.kilometrageSortie;
+    }
+    if (options?.heuresGroupeFroidSortie != null) {
+      params["heuresGroupeFroidSortie"] = options.heuresGroupeFroidSortie;
+    }
+    return firstValueFrom(
+      this.http.put<Remorque>(`${this.baseUrl}/${id}/sortie`, null, {
+        params,
+      })
+    );
+  }
 }

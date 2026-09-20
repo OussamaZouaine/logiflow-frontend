@@ -4,25 +4,36 @@ import { FormField, form, min, required, submit } from "@angular/forms/signals";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
-import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
-import { ToastService } from "../shared/ui/toast";
 import type { PageResponse } from "../core/api/page-response";
 import { firstFieldError } from "../core/forms/first-field-error";
 import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
 import { validateTimeWindowEndAfterStart } from "../core/forms/time-window-validation";
-import type { Commande } from "../commandes/commande";
+import {
+  formatCommandeLabel,
+  type Commande,
+} from "../commandes/commande";
 import {
   formatMarchandiseLabel,
   type Marchandise,
 } from "../marchandises/marchandise";
 import {
+  enumToSelectOptions,
+  type FieldSelectOption,
+  withNoneSelectOption,
+} from "../shared/ui/field-select";
+import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
+import { ToastService } from "../shared/ui/toast";
+import {
   CARROSSERIES_REQUISES,
   carrosserieRequiseLabel,
   draftToWrite,
   emptyDossierDraft,
+  emptyLigneMarchandiseDraft,
+  formatSiteLabel,
   type DossierLookupSite,
   TYPE_TRANSPORTS,
   typeTransportLabel,
+  validateLignesMarchandise,
 } from "./dossier";
 import { DossierApi } from "./dossier-api";
 
@@ -43,11 +54,22 @@ export class DossierCreatePage {
   protected readonly carrosseries = CARROSSERIES_REQUISES;
   protected readonly typeTransportLabel = typeTransportLabel;
   protected readonly carrosserieRequiseLabel = carrosserieRequiseLabel;
+  protected readonly formatCommandeLabel = formatCommandeLabel;
   protected readonly formatMarchandiseLabel = formatMarchandiseLabel;
+  protected readonly typeTransportOptions = enumToSelectOptions(
+    TYPE_TRANSPORTS,
+    typeTransportLabel
+  );
+  protected readonly carrosserieSelectOptions = withNoneSelectOption(
+    "Aucune contrainte",
+    enumToSelectOptions(CARROSSERIES_REQUISES, carrosserieRequiseLabel)
+  );
+  protected readonly formatSiteLabel = formatSiteLabel;
   protected readonly firstFieldError = firstFieldError;
   protected readonly showFieldError = showFieldError;
   protected readonly fieldClasses = fieldClasses;
   protected readonly formError = signal<string | null>(null);
+  protected readonly lignesError = signal<string | null>(null);
 
   private lastPrefilledCommandeId = "";
 
@@ -72,7 +94,7 @@ export class DossierCreatePage {
         return;
       }
       this.lastPrefilledCommandeId = commandeId;
-      this.applyCommandeLinePrefill(commandeId);
+      this.applyCommandePrefill(commandeId);
     });
   }
 
@@ -83,9 +105,6 @@ export class DossierCreatePage {
     required(path.familleMarchandise, {
       message: "La famille de marchandise est obligatoire.",
     });
-    required(path.marchandiseId, {
-      message: "La marchandise est obligatoire.",
-    });
     required(path.chargementSiteId, {
       message: "Le site de chargement est obligatoire.",
     });
@@ -94,11 +113,6 @@ export class DossierCreatePage {
     });
     min(path.nbPalettes, 0, {
       message: "Le nombre de palettes ne peut pas être négatif.",
-    });
-    min(path.poidsKg, 0, { message: "Le poids ne peut pas être négatif." });
-    min(path.volumeM3, 0, { message: "Le volume ne peut pas être négatif." });
-    min(path.nbColis, 0, {
-      message: "Le nombre de colis ne peut pas être négatif.",
     });
     required(path.chargementDebut, {
       message: "Le début de fenêtre de chargement est obligatoire.",
@@ -155,6 +169,31 @@ export class DossierCreatePage {
     )
   );
 
+  protected readonly commandeSelectOptions = computed<readonly FieldSelectOption[]>(
+    () =>
+      this.commandeOptions().map((commande) => ({
+        label: formatCommandeLabel(commande),
+        value: commande.id,
+      }))
+  );
+
+  protected readonly siteSelectOptions = computed<readonly FieldSelectOption[]>(
+    () =>
+      this.siteOptions().map((site) => ({
+        label: formatSiteLabel(site),
+        value: site.id,
+      }))
+  );
+
+  protected readonly marchandiseSelectOptions = computed<
+    readonly FieldSelectOption[]
+  >(() =>
+    this.marchandiseOptions().map((marchandise) => ({
+      label: formatMarchandiseLabel(marchandise),
+      value: marchandise.id,
+    }))
+  );
+
   protected readonly marchandisesById = computed(() => {
     const map = new Map<string, Marchandise>();
     for (const marchandise of this.marchandises.value()?.content ?? []) {
@@ -183,24 +222,34 @@ export class DossierCreatePage {
     return marchandiseError ? httpErrorMessage(marchandiseError) : null;
   });
 
-  private applyCommandeLinePrefill(commandeId: string): void {
+  private applyCommandePrefill(commandeId: string): void {
     const commande = this.commandeOptions().find((item) => item.id === commandeId);
-    const ligne = commande?.lignes[0];
-    if (!ligne) {
+    if (!commande || commande.lignes.length === 0) {
       return;
     }
-    const marchandise = this.marchandisesById().get(ligne.marchandiseId);
+
+    const lignes = commande.lignes.map((ligne) => {
+      const marchandise = this.marchandisesById().get(ligne.marchandiseId);
+      return {
+        classeAdr: marchandise?.classeAdr ?? "",
+        gerbable: marchandise?.gerbable ?? true,
+        marchandiseId: ligne.marchandiseId,
+        nbColis: ligne.nbColis,
+        numeroOnu: marchandise?.numeroOnu ?? "",
+        poidsKg: ligne.poidsKg,
+        volumeM3: ligne.volumeM3,
+      };
+    });
+
+    const firstMarchandise = this.marchandisesById().get(
+      commande.lignes[0].marchandiseId
+    );
+
     this.draft.update((current) => ({
       ...current,
-      marchandiseId: ligne.marchandiseId,
-      poidsKg: ligne.poidsKg,
-      volumeM3: ligne.volumeM3,
-      nbColis: ligne.nbColis,
       familleMarchandise:
-        marchandise?.famille?.trim() || current.familleMarchandise,
-      classeAdr: marchandise?.classeAdr ?? "",
-      numeroOnu: marchandise?.numeroOnu ?? "",
-      gerbable: marchandise?.gerbable ?? current.gerbable,
+        firstMarchandise?.famille?.trim() || current.familleMarchandise,
+      lignes,
     }));
   }
 
@@ -214,20 +263,103 @@ export class DossierCreatePage {
     }
   }
 
-  protected onGerbable(event: Event): void {
+  protected updateLigneMarchandise(index: number, marchandiseId: string): void {
+    const marchandise = this.marchandisesById().get(marchandiseId);
+    this.draft.update((current) => ({
+      ...current,
+      lignes: current.lignes.map((ligne, ligneIndex) =>
+        ligneIndex === index
+          ? {
+              ...ligne,
+              marchandiseId,
+              classeAdr: marchandise?.classeAdr ?? ligne.classeAdr,
+              numeroOnu: marchandise?.numeroOnu ?? ligne.numeroOnu,
+              gerbable: marchandise?.gerbable ?? ligne.gerbable,
+            }
+          : ligne
+      ),
+    }));
+  }
+
+  protected updateLigneNumber(
+    index: number,
+    field: "poidsKg" | "volumeM3" | "nbColis",
+    event: Event
+  ): void {
     const { target } = event;
-    if (target instanceof HTMLInputElement) {
-      this.draft.update((current) => ({
-        ...current,
-        gerbable: target.checked,
-      }));
+    if (!(target instanceof HTMLInputElement)) {
+      return;
     }
+    const parsed = Number(target.value);
+    if (Number.isNaN(parsed)) {
+      return;
+    }
+    this.draft.update((current) => ({
+      ...current,
+      lignes: current.lignes.map((ligne, ligneIndex) =>
+        ligneIndex === index ? { ...ligne, [field]: parsed } : ligne
+      ),
+    }));
+  }
+
+  protected updateLigneText(
+    index: number,
+    field: "classeAdr" | "numeroOnu",
+    event: Event
+  ): void {
+    const { target } = event;
+    if (!(target instanceof HTMLInputElement)) {
+      return;
+    }
+    this.draft.update((current) => ({
+      ...current,
+      lignes: current.lignes.map((ligne, ligneIndex) =>
+        ligneIndex === index ? { ...ligne, [field]: target.value } : ligne
+      ),
+    }));
+  }
+
+  protected onLigneGerbable(index: number, event: Event): void {
+    const { target } = event;
+    if (!(target instanceof HTMLInputElement)) {
+      return;
+    }
+    this.draft.update((current) => ({
+      ...current,
+      lignes: current.lignes.map((ligne, ligneIndex) =>
+        ligneIndex === index ? { ...ligne, gerbable: target.checked } : ligne
+      ),
+    }));
+  }
+
+  protected addLigne(): void {
+    this.lignesError.set(null);
+    this.draft.update((current) => ({
+      ...current,
+      lignes: [...current.lignes, emptyLigneMarchandiseDraft()],
+    }));
+  }
+
+  protected removeLigne(index: number): void {
+    this.lignesError.set(null);
+    this.draft.update((current) => ({
+      ...current,
+      lignes:
+        current.lignes.length <= 1
+          ? current.lignes
+          : current.lignes.filter((_, ligneIndex) => ligneIndex !== index),
+    }));
   }
 
   protected async onSubmit(event: SubmitEvent): Promise<void> {
     event.preventDefault();
     this.formError.set(null);
+    this.lignesError.set(validateLignesMarchandise(this.draft().lignes));
+
     await submit(this.createForm, async () => {
+      if (this.lignesError()) {
+        return;
+      }
       try {
         const created = await this.api.create(draftToWrite(this.draft()));
         this.toast.success("Dossier créé.");

@@ -1,29 +1,20 @@
-<div class="flex flex-col gap-8">
+<div class="fiche-page">
   <app-fiche-header listLabel="Dossiers" listLink="/dossiers">
     @if (dossier.isLoading()) {
-    <p class="text-sm text-muted" role="status">Chargement…</p>
+    <p class="fiche-load-hint" role="status">Chargement…</p>
     } @else if (dossier.error()) {
-    <div class="alert-panel" role="alert">
-      <p>{{ loadError() }}</p>
-      <button
-        (click)="dossier.reload()"
-        class="pressable mt-2 font-medium text-ink underline underline-offset-2"
-        type="button"
-      >
-        Réessayer
-      </button>
-    </div>
+    <app-fiche-error
+      (retry)="dossier.reload()"
+      [message]="loadError()"
+    />
     } @else if (dossier.hasValue()) {
-    <div class="flex flex-wrap items-center gap-3">
-      <h1 class="fiche-page-title fiche-page-title--mono">
-        {{ dossier.value().reference }}
-      </h1>
+    <app-fiche-title-row [mono]="true" [title]="dossier.value().reference">
       <app-statut-chip
         [label]="statutDossierLabel(dossier.value().statut)"
         [tone]="dossierStatutTone(dossier.value().statut)"
       />
-    </div>
-    <p class="mt-1 text-sm text-muted">
+    </app-fiche-title-row>
+    <p class="fiche-meta">
       {{ typeTransportLabel(dossier.value().typeTransport) }}
       @if (dossier.value().groupable) {
       · Groupable
@@ -37,82 +28,79 @@
 
   @if (dossier.hasValue()) {
   <app-form-section title="Fiche">
-    <dl class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-      <div>
-        <dt class="text-xs text-muted">Commande</dt>
-        <dd class="mt-0.5 text-sm text-ink">
-          <a
-            [routerLink]="['/commandes', dossier.value().commandeId]"
-            class="text-pine underline-offset-2 hover:underline"
-          >
-            {{ commandeLabel(dossier.value().commandeId) }}
-          </a>
-        </dd>
-      </div>
-      <div>
-        <dt class="text-xs text-muted">Famille</dt>
-        <dd class="mt-0.5 text-ink">{{ dossier.value().familleMarchandise }}</dd>
-      </div>
-      <div>
-        <dt class="text-xs text-muted">Poids brut</dt>
-        <dd class="mt-0.5 font-mono tabular-nums text-ink">
-          {{ dossier.value().poidsBrutKg }} kg
-        </dd>
-      </div>
-      <div>
-        <dt class="text-xs text-muted">Volume</dt>
-        <dd class="mt-0.5 font-mono tabular-nums text-ink">
-          {{ dossier.value().volumeM3 }} m³
-        </dd>
-      </div>
-      <div>
-        <dt class="text-xs text-muted">Palettes</dt>
-        <dd class="mt-0.5 font-mono tabular-nums text-ink">
-          {{ dossier.value().nbPalettes }}
-        </dd>
-      </div>
+    <app-fiche-field-grid>
+      <app-fiche-field [span]="2" label="Commande">
+        <a
+          [routerLink]="['/commandes', dossier.value().commandeId]"
+          class="text-pine underline-offset-2 hover:underline"
+        >
+          {{ commandeLabel(dossier.value().commandeId) }}
+        </a>
+      </app-fiche-field>
+      <app-fiche-field label="Famille">
+        {{ dossier.value().familleMarchandise }}
+      </app-fiche-field>
+      <app-fiche-field label="Type de transport">
+        {{ typeTransportLabel(dossier.value().typeTransport) }}
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="Poids brut">
+        {{ dossier.value().poidsBrutKg }} kg
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="Volume">
+        {{ dossier.value().volumeM3 }} m³
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="Palettes">
+        {{ dossier.value().nbPalettes }}
+      </app-fiche-field>
       @if (dossier.value().temperatureRequise !== null) {
-      <div>
-        <dt class="text-xs text-muted">Température</dt>
-        <dd class="mt-0.5 font-mono tabular-nums text-ink">
-          {{ dossier.value().temperatureRequise }} °C
-        </dd>
-      </div>
+      <app-fiche-field [mono]="true" label="Température">
+        {{ dossier.value().temperatureRequise }} °C
+      </app-fiche-field>
       }
       @if (dossier.value().carrosserieRequise) {
-      <div>
-        <dt class="text-xs text-muted">Carrosserie</dt>
-        <dd class="mt-0.5 text-ink">
-          {{ dossier.value().carrosserieRequise }}
-        </dd>
-      </div>
+      <app-fiche-field label="Carrosserie">
+        {{ carrosserieRequiseLabel(dossier.value().carrosserieRequise!) }}
+      </app-fiche-field>
       }
-    </dl>
+      <app-fiche-field label="Groupable">
+        {{ dossier.value().groupable ? "Oui" : "Non" }}
+      </app-fiche-field>
+    </app-fiche-field-grid>
   </app-form-section>
 
-  <app-form-section title="Marchandise">
-    <ul class="flex flex-col gap-3 text-sm">
-      @for (ligne of dossier.value().lignesMarchandise; track ligne.marchandiseId) {
-      <li class="rounded-lg border border-line/80 bg-canvas px-3 py-2">
+  <app-form-section title="Lignes de marchandise">
+    @if (dossier.value().lignesMarchandise.length === 0) {
+    <p class="fiche-meta">Aucune ligne enregistrée.</p>
+    } @else {
+    <ul class="flex flex-col gap-2">
+      @for (ligne of dossier.value().lignesMarchandise; track $index) {
+      <li class="fiche-inline-card">
         <p class="font-medium text-ink">
           {{ marchandiseLabel(ligne.marchandiseId) }}
         </p>
         <p class="mt-1 font-mono text-xs tabular-nums text-muted">
           {{ ligne.poidsKg }} kg · {{ ligne.volumeM3 }} m³ ·
           {{ ligne.nbColis }} colis
+          @if (ligne.gerbable === false) {
+          · Non gerbable
+          }
           @if (ligne.classeAdr) {
           · ADR {{ ligne.classeAdr }}
+          }
+          @if (ligne.numeroOnu) {
+          · ONU {{ ligne.numeroOnu }}
           }
         </p>
       </li>
       }
     </ul>
+    }
   </app-form-section>
 
   <app-form-section title="Segments">
     <ol class="flex flex-col gap-3 text-sm">
       @for (segment of dossier.value().segments; track segment.ordre) {
-      <li class="rounded-lg border border-line/80 bg-canvas px-3 py-2">
+      <li class="fiche-inline-card">
         <p class="font-medium text-ink">
           {{ typeSegmentLabel(segment.type) }}
           <span class="font-mono text-xs text-muted">#{{ segment.ordre }}</span>
@@ -128,10 +116,35 @@
         <p class="mt-1 font-mono text-xs tabular-nums text-muted">
           {{ formatWindow(segment.fenetre) }}
         </p>
+        @if (segment.realiseLe) {
+        <p class="mt-1 text-xs text-muted">
+          Réalisé le {{ formatInstant(segment.realiseLe) }}
+        </p>
+        }
       </li>
       }
     </ol>
   </app-form-section>
+
+  @if (dossier.value().documents.length > 0) {
+  <app-form-section title="Documents de transport">
+    <ul class="flex flex-col gap-2 text-sm">
+      @for (document of dossier.value().documents; track $index) {
+      <li class="fiche-inline-card flex flex-wrap items-baseline justify-between gap-2">
+        <span class="font-medium text-ink">
+          {{ typeDocumentTransportLabel(document.type) }}
+          @if (document.obligatoire) {
+          <span class="text-xs text-muted">(obligatoire)</span>
+          }
+        </span>
+        <span class="text-muted">
+          {{ statutDocumentTransportLabel(document.statut) }}
+        </span>
+      </li>
+      }
+    </ul>
+  </app-form-section>
+  }
 
   <app-form-section
     description="Fenêtres de segments et réalisations. Pas d'historique de statut en v1."
@@ -165,9 +178,7 @@
       } @else {
       <ul class="flex flex-col gap-2 text-sm">
         @for (voyage of voyagesPorteursList(); track voyage.id) {
-        <li
-          class="rounded-lg border border-line/80 bg-canvas px-3 py-2"
-        >
+        <li class="fiche-inline-card">
           <a
             [routerLink]="['/voyages', voyage.id]"
             class="font-mono text-pine underline-offset-2 hover:underline"

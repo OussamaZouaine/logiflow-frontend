@@ -1,0 +1,48 @@
+import { httpResource } from "@angular/common/http";
+import { Component, computed, inject, input, signal } from "@angular/core";
+import { environment } from "../../environments/environment";
+import { httpErrorMessage } from "../core/api/http-error";
+import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
+import { ToastService } from "../shared/ui/toast";
+import {
+  actifLabel,
+  actifTone,
+  StatutChip,
+} from "../shared/ui/statut-chip";
+import type { Client } from "./client";
+import { ClientApi } from "./client-api";
+
+@Component({
+  imports: [StatutChip, ...FICHE_PAGE_IMPORTS],
+  selector: "app-client-detail-page",
+  templateUrl: "./client-detail-page.html",
+})
+export class ClientDetailPage {
+  private readonly api = inject(ClientApi);
+  private readonly toast = inject(ToastService);
+
+  readonly id = input.required<string>();
+
+  protected readonly actifLabel = actifLabel;
+  protected readonly actifTone = actifTone;
+  protected readonly deactivateError = signal<string | null>(null);
+
+  protected readonly client = httpResource<Client>(() => ({
+    url: `${environment.apiBaseUrl}/clients/${this.id()}`,
+  }));
+
+  protected readonly loadError = computed(() =>
+    httpErrorMessage(this.client.error())
+  );
+
+  protected async desactiver(): Promise<void> {
+    this.deactivateError.set(null);
+    try {
+      await this.api.desactiver(this.id());
+      this.client.reload();
+      this.toast.success("Client désactivé.");
+    } catch (error) {
+      this.deactivateError.set(httpErrorMessage(error));
+    }
+  }
+}

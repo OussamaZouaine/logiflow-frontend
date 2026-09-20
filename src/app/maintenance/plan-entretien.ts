@@ -10,13 +10,14 @@ export interface PlanEntretien {
   vehiculeId: string;
 }
 
+/** POST body — mirrors OpenAPI `PlanEntretienRequest`. */
 export interface PlanEntretienWrite {
-  dureeEstimeeMin: number;
-  libelle: string;
-  periodiciteKm?: number | null;
-  periodiciteMois?: number | null;
-  seuilAlerteKm: number;
   vehiculeId: string;
+  libelle: string;
+  periodiciteKm: number | null;
+  periodiciteMois: number | null;
+  seuilAlerteKm: number;
+  dureeEstimeeMin: number;
 }
 
 export interface PlanEntretienDraft {
@@ -26,6 +27,27 @@ export interface PlanEntretienDraft {
   periodiciteMois: number | null;
   seuilAlerteKm: number;
   vehiculeId: string;
+}
+
+export function isPositivePeriodicity(value: number | null): boolean {
+  return value != null && value > 0;
+}
+
+export function hasPlanPeriodicite(
+  periodiciteKm: number | null,
+  periodiciteMois: number | null
+): boolean {
+  return (
+    isPositivePeriodicity(periodiciteKm) || isPositivePeriodicity(periodiciteMois)
+  );
+}
+
+/** Swagger allows null; domain rejects both null or ≤ 0. */
+function periodicityForApi(value: number | null): number | null {
+  if (value == null || value <= 0) {
+    return null;
+  }
+  return value;
 }
 
 export function emptyPlanEntretienDraft(): PlanEntretienDraft {
@@ -41,12 +63,12 @@ export function emptyPlanEntretienDraft(): PlanEntretienDraft {
 
 export function draftToWrite(draft: PlanEntretienDraft): PlanEntretienWrite {
   return {
-    dureeEstimeeMin: draft.dureeEstimeeMin,
-    libelle: draft.libelle.trim(),
-    periodiciteKm: draft.periodiciteKm,
-    periodiciteMois: draft.periodiciteMois,
-    seuilAlerteKm: draft.seuilAlerteKm,
     vehiculeId: draft.vehiculeId,
+    libelle: draft.libelle.trim(),
+    periodiciteKm: periodicityForApi(draft.periodiciteKm),
+    periodiciteMois: periodicityForApi(draft.periodiciteMois),
+    seuilAlerteKm: draft.seuilAlerteKm,
+    dureeEstimeeMin: draft.dureeEstimeeMin,
   };
 }
 

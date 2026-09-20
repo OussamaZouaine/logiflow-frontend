@@ -2,8 +2,7 @@ import { httpResource } from "@angular/common/http";
 import { Component, computed, inject, input, signal } from "@angular/core";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
-import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
-import { FicheHeader } from "../shared/ui/fiche-header";
+import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
 import { ToastService } from "../shared/ui/toast";
 import {
   actifLabel,
@@ -17,7 +16,7 @@ import {
 import { MarchandiseApi } from "./marchandise-api";
 
 @Component({
-  imports: [FicheHeader, StatutChip, ...FORM_PAGE_IMPORTS],
+  imports: [StatutChip, ...FICHE_PAGE_IMPORTS],
   selector: "app-marchandise-detail-page",
   templateUrl: "./marchandise-detail-page.html",
 })

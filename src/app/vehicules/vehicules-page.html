@@ -17,7 +17,7 @@
       [(draft)]="searchDraft"
       [(query)]="search"
       inputId="vehicule-search"
-      placeholder="Immatriculation…"
+      placeholder="Immatriculation, n° parc, marque…"
     />
     <app-list-statut-filter
       [(selected)]="statutFilter"
@@ -76,6 +76,7 @@
         <tr>
           <th class="px-4 py-3 font-medium" scope="col">Immatriculation</th>
           <th class="px-4 py-3 font-medium" scope="col">Type</th>
+          <th class="px-4 py-3 font-medium" scope="col">Marque / modèle</th>
           <th class="px-4 py-3 font-medium" scope="col">PTAC</th>
           <th class="px-4 py-3 font-medium" scope="col">Km</th>
           <th class="px-4 py-3 font-medium" scope="col">Statut</th>
@@ -100,6 +101,9 @@
             </a>
           </td>
           <td class="px-4 py-3 text-ink">{{ typeLabel(vehicule.type) }}</td>
+          <td class="px-4 py-3 text-muted">
+            {{ formatMarqueModele(vehicule.marque, vehicule.modele) }}
+          </td>
           <td class="px-4 py-3 font-mono tabular-nums text-muted">
             {{ vehicule.ptacKg }} kg
           </td>

@@ -208,6 +208,31 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
+        data: { roles: workDestination("clients").roles },
+        loadComponent: () =>
+          import("./clients/clients-page").then((module) => module.ClientsPage),
+        path: "clients",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("clients").roles },
+        loadComponent: () =>
+          import("./clients/client-create-page").then(
+            (module) => module.ClientCreatePage
+          ),
+        path: "clients/nouveau",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("clients").roles },
+        loadComponent: () =>
+          import("./clients/client-detail-page").then(
+            (module) => module.ClientDetailPage
+          ),
+        path: "clients/:id",
+      },
+      {
+        canActivate: [roleGuard],
         data: { roles: workDestination("commandes").roles },
         loadComponent: () =>
           import("./commandes/commandes-page").then(

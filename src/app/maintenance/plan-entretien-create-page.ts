@@ -6,6 +6,7 @@ import {
   min,
   required,
   submit,
+  validate,
 } from "@angular/forms/signals";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
@@ -13,12 +14,14 @@ import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
 import { firstFieldError } from "../core/forms/first-field-error";
 import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
+import { type FieldSelectOption } from "../shared/ui/field-select";
 import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
 import { ToastService } from "../shared/ui/toast";
 import { MaintenanceTabs } from "./maintenance-tabs";
 import {
   draftToWrite,
   emptyPlanEntretienDraft,
+  hasPlanPeriodicite,
 } from "./plan-entretien";
 import { PlanEntretienApi } from "./plan-entretien-api";
 import type { VehiculeLookup } from "./ordre-travail";
@@ -57,6 +60,15 @@ export class PlanEntretienCreatePage {
     () => this.vehicules.value()?.content ?? []
   );
 
+  protected readonly vehiculeSelectOptions = computed<
+    readonly FieldSelectOption[]
+  >(() =>
+    this.vehiculeOptions().map((vehicule) => ({
+      label: vehicule.immatriculation,
+      value: vehicule.id,
+    }))
+  );
+
   protected readonly draft = signal(emptyPlanEntretienDraft());
 
   protected readonly createForm = form(this.draft, (path) => {
@@ -67,6 +79,44 @@ export class PlanEntretienCreatePage {
     });
     min(path.dureeEstimeeMin, 0, {
       message: "La durée ne peut pas être négative.",
+    });
+
+    validate(path.periodiciteKm, (ctx) => {
+      const km = ctx.value();
+      if (km != null && km <= 0) {
+        return {
+          kind: "periodiciteKm",
+          message: "La périodicité km doit être strictement positive.",
+        };
+      }
+      const mois = ctx.valueOf(path.periodiciteMois);
+      if (!hasPlanPeriodicite(km, mois)) {
+        return {
+          kind: "periodicite",
+          message:
+            "Indiquez au moins une périodicité en kilomètres ou en mois.",
+        };
+      }
+      return undefined;
+    });
+
+    validate(path.periodiciteMois, (ctx) => {
+      const mois = ctx.value();
+      if (mois != null && mois <= 0) {
+        return {
+          kind: "periodiciteMois",
+          message: "La périodicité en mois doit être strictement positive.",
+        };
+      }
+      const km = ctx.valueOf(path.periodiciteKm);
+      if (!hasPlanPeriodicite(km, mois)) {
+        return {
+          kind: "periodicite",
+          message:
+            "Indiquez au moins une périodicité en kilomètres ou en mois.",
+        };
+      }
+      return undefined;
     });
   });
 
