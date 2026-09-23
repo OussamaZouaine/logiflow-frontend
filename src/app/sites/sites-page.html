@@ -1,12 +1,17 @@
 <div class="flex flex-col gap-6">
-  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-    <div>
-      <h1 class="module-page-title">Sites</h1>
-      <p class="mt-1 text-sm text-muted">
-        Quais de chargement et de déchargement.
-      </p>
-    </div>
-    <div class="flex flex-wrap items-center gap-2">
+  <div class="list-toolbar">
+    <app-list-search-bar
+      [(draft)]="searchDraft"
+      [(query)]="search"
+      inputId="site-search"
+      placeholder="Code ou libellé…"
+    />
+    <app-list-statut-filter
+      [(selected)]="actifFilter"
+      [options]="actifOptions"
+      ariaLabel="Filtrer par activité"
+    />
+    <div class="list-toolbar__actions">
       @if (sites.isLoading() || sites.hasValue()) {
       <button
         (click)="toggleMapVisible()"
@@ -19,24 +24,8 @@
         {{ mapVisible() ? "Masquer la carte" : "Carte" }}
       </button>
       }
-      <a class="btn-primary pressable" routerLink="/sites/nouveau">
-        Nouveau site
-      </a>
+      <app-list-toolbar-cta label="Nouveau site" link="/sites/nouveau" />
     </div>
-  </div>
-
-  <div class="flex flex-col gap-3">
-    <app-list-search-bar
-      [(draft)]="searchDraft"
-      [(query)]="search"
-      inputId="site-search"
-      placeholder="Code ou libellé…"
-    />
-    <app-list-statut-filter
-      [(selected)]="actifFilter"
-      [options]="actifOptions"
-      ariaLabel="Filtrer par activité"
-    />
   </div>
 
   @if (sites.isLoading()) {
@@ -83,75 +72,78 @@
   } @else if (sites.hasValue()) {
   <div [class]="listWithMapLayoutClass()">
     <div class="flex min-w-0 flex-col gap-3">
-      <div
-        appListRowKeyboard
-        [(activeId)]="selectedSiteId"
-        [rows]="keyboardRows()"
-        aria-label="Liste des sites — flèches pour naviguer, Entrée pour ouvrir"
-        class="list-table-panel"
-      >
-        <table class="w-full min-w-xl text-left text-sm">
-          <thead
-            class="list-table-head"
-          >
-            <tr>
-              <th class="px-4 py-3 font-medium" scope="col">Code</th>
-              <th class="px-4 py-3 font-medium" scope="col">Libellé</th>
-              <th class="px-4 py-3 font-medium" scope="col">Adresse</th>
-              <th class="px-4 py-3 font-medium" scope="col">Statut</th>
-              <th class="px-4 py-3 font-medium" scope="col">
-                <span class="sr-only">Actions</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (site of visibleSites(); track site.id) {
-            <tr
-              (click)="selectSite(site.id)"
-              [attr.aria-selected]="selectedSiteId() === site.id"
-              [class.bg-pine/5]="selectedSiteId() === site.id"
-              class="list-row cursor-pointer border-b border-line last:border-0 hover:bg-canvas"
-            >
-              <td class="px-4 py-3">
-                <a
-                  (click)="$event.stopPropagation()"
-                  [routerLink]="['/sites', site.id]"
-                  class="font-mono text-xs text-pine underline-offset-2 hover:underline"
-                >
-                  {{ site.code }}
-                </a>
-              </td>
-              <td class="px-4 py-3 font-medium text-ink">{{ site.libelle }}</td>
-              <td class="px-4 py-3 text-muted">{{ site.adresse ?? "—" }}</td>
-              <td class="px-4 py-3">
-                <app-statut-chip
-                  [label]="actifLabel(site.actif)"
-                  [tone]="actifTone(site.actif)"
-                />
-              </td>
-              <td class="px-4 py-3 text-right">
-                <a
-                  (click)="$event.stopPropagation()"
-                  [routerLink]="['/sites', site.id]"
-                  class="list-row-action text-sm font-medium text-pine underline-offset-2 hover:underline"
-                >
-                  Ouvrir
-                </a>
-              </td>
-            </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      @if (sites.value().totalElements) {
-      <p class="font-mono text-sm tabular-nums text-muted">
-        {{ visibleSites().length }}
-        affiché(s) /
-        {{ sites.value().totalElements }}
-        site(s)
-      </p>
-      }
-      <app-list-pagination
+      <div class="list-table-stack">
+        <div
+          appListRowKeyboard
+          [(activeId)]="selectedSiteId"
+          [rows]="keyboardRows()"
+          aria-label="Liste des sites — flèches pour naviguer, Entrée pour ouvrir"
+          class="list-table-panel"
+        >
+          <table z-table>
+            <thead z-table-header>
+              <tr z-table-row>
+                <th scope="col" z-table-head>Code</th>
+                <th scope="col" z-table-head>Libellé</th>
+                <th scope="col" z-table-head>Adresse</th>
+                <th scope="col" z-table-head>Statut</th>
+                <th scope="col" z-table-head class="text-right">
+                  <span class="sr-only">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody z-table-body>
+              @for (site of visibleSites(); track site.id) {
+              <tr
+                z-table-row
+                (click)="selectSite(site.id)"
+                [attr.aria-selected]="selectedSiteId() === site.id"
+                [class.bg-pine/5]="selectedSiteId() === site.id"
+                class="list-row cursor-pointer"
+              >
+                <td z-table-cell>
+                  <a
+                    (click)="$event.stopPropagation()"
+                    [routerLink]="['/sites', site.id]"
+                    class="font-mono text-xs text-pine underline-offset-2 hover:underline"
+                  >
+                    {{ site.code }}
+                  </a>
+                </td>
+                <td class="font-medium text-ink" z-table-cell>
+                  <span class="list-cell-with-icon">
+                    <ng-icon
+                      [name]="rowIcon"
+                      aria-hidden="true"
+                      class="list-cell-with-icon__icon"
+                    />
+                    <span>{{ site.libelle }}</span>
+                  </span>
+                </td>
+                <td class="text-muted" z-table-cell>{{ site.adresse ?? "—" }}</td>
+                <td z-table-cell>
+                  <app-statut-chip
+                    [icon]="actifIcon(site.actif)"
+                    [label]="actifLabel(site.actif)"
+                    [tone]="actifTone(site.actif)"
+                  />
+                </td>
+                <td class="text-right" z-table-cell>
+                  <a
+                    (click)="$event.stopPropagation()"
+                    [routerLink]="['/sites', site.id]"
+                    class="list-row-action list-row-action--with-icon text-sm font-medium text-pine underline-offset-2 hover:underline"
+                  >
+                    <span>Ouvrir</span>
+                    <ng-icon aria-hidden="true" name="lucideArrowRight" />
+                  </a>
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <app-list-pagination
         [(page)]="page"
         [pageSize]="pageSize()"
         (pageSizeChange)="pageSize.set($event); page.set(0)"
@@ -161,6 +153,7 @@
         [visibleCount]="visibleSites().length"
         itemLabel="site"
       />
+      </div>
     </div>
 
     @if (mapVisible()) {

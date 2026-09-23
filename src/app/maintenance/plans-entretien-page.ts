@@ -26,6 +26,13 @@ import {
   resolveListPageSize,
 } from "../shared/ui/list-page-size";
 import { ListPagination } from "../shared/ui/list-pagination";
+import { ListToolbarCta } from "../shared/ui/list-toolbar-cta";
+import { NgIcon } from "@ng-icons/core";
+import {
+  DESTINATION_NAV_ICON,
+  LIST_TABLE_ROW_ICON_PROVIDERS,
+} from "../shared/ui/list-table-row-icons";
+import { ZardTableImports } from "@/shared/components/table/table.imports";
 import { MaintenanceTabs } from "./maintenance-tabs";
 import {
   formatPeriodicite,
@@ -38,15 +45,19 @@ const LOOKUP_PAGE_SIZE = 50;
 
 @Component({
   imports: [
+    NgIcon,
     RouterLink,
     MaintenanceTabs,
+    ListToolbarCta,
     ListPagination,
     ListEmptyState,
     ListRowKeyboard,
     ListTableSkeleton,
+    ...ZardTableImports,
   ],
   selector: "app-plans-entretien-page",
   templateUrl: "./plans-entretien-page.html",
+  viewProviders: [LIST_TABLE_ROW_ICON_PROVIDERS],
 })
 export class PlansEntretienPage {
   private readonly route = inject(ActivatedRoute);
@@ -55,6 +66,7 @@ export class PlansEntretienPage {
 
   protected readonly formatPeriodicite = formatPeriodicite;
   protected readonly vehiculeLabel = vehiculeLabel;
+  protected readonly rowIcon = DESTINATION_NAV_ICON.maintenance;
 
   protected readonly page = signal(0);
   protected readonly pageSizeOptions = LIST_PAGE_SIZE_OPTIONS;

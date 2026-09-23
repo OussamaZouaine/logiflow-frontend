@@ -1,4 +1,6 @@
 import { Component, inject, signal } from "@angular/core";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import { lucideCheck } from "@ng-icons/lucide";
 import {
   FormField,
   form,
@@ -23,12 +25,14 @@ import {
 @Component({
   imports: [
     FormField,
+    NgIcon,
     RouterLink,
     SiteLocalisationMap,
     ...FORM_PAGE_IMPORTS,
   ],
   selector: "app-site-create-page",
   templateUrl: "./site-create-page.html",
+  viewProviders: [provideIcons({ lucideCheck })],
 })
 export class SiteCreatePage {
   private readonly api = inject(SiteApi);

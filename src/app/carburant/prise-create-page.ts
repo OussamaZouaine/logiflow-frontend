@@ -1,5 +1,7 @@
 import { httpResource } from "@angular/common/http";
 import { Component, computed, inject, signal } from "@angular/core";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import { lucideCheck } from "@ng-icons/lucide";
 import { FormField, form, required, submit } from "@angular/forms/signals";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
@@ -24,9 +26,10 @@ import {
 import type { Station } from "./station";
 
 @Component({
-  imports: [FormField, RouterLink, ...FORM_PAGE_IMPORTS],
+  imports: [FormField, NgIcon, RouterLink, ...FORM_PAGE_IMPORTS],
   selector: "app-prise-create-page",
   templateUrl: "./prise-create-page.html",
+  viewProviders: [provideIcons({ lucideCheck })],
 })
 export class PriseCreatePage {
   private readonly api = inject(PriseCarburantApi);
@@ -110,10 +113,6 @@ export class PriseCreatePage {
     this.voyageLocked()
       ? `/voyages/${this.draft().voyageId}`
       : "/carburant"
-  );
-
-  protected readonly backLabel = computed(() =>
-    this.voyageLocked() ? "Voyage" : "Carburant"
   );
 
   protected readonly createForm = form(this.draft, (path) => {

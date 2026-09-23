@@ -1,5 +1,5 @@
-<div class="fiche-page fiche-page--wide voyage-detail">
-  <app-fiche-header listLabel="Voyages" listLink="/voyages">
+<div class="inner-page fiche-page fiche-page--wide voyage-detail">
+  <app-fiche-header icon="lucideRoute">
     @if (voyage.isLoading()) {
     <p class="fiche-load-hint" role="status">Chargement…</p>
     } @else if (voyage.error()) {

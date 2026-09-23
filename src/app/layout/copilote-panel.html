@@ -21,7 +21,10 @@
   >
     <div class="flex items-start justify-between gap-3">
       <div>
-        <h2 class="text-sm font-medium text-ink" id="app-copilote-title">
+        <h2
+          class="text-sm font-semibold tracking-tight text-ink"
+          id="app-copilote-title"
+        >
           Copilote
         </h2>
         <p class="mt-0.5 text-xs text-muted">
@@ -55,9 +58,14 @@
         </p>
         <button
           [disabled]="!canSubmit() || loading()"
-          class="pressable min-h-9 rounded-md bg-pine px-3 py-1.5 text-xs font-semibold tracking-wide text-surface shadow-[0_1px_2px_oklch(0_0_0/0.06),0_4px_12px_color-mix(in_oklch,var(--color-pine)_28%,transparent)] disabled:cursor-not-allowed disabled:opacity-50"
+          class="btn-toolbar pressable disabled:cursor-not-allowed disabled:opacity-50"
           type="submit"
         >
+          <ng-icon
+            aria-hidden="true"
+            class="btn-toolbar__icon"
+            name="lucideArrowRight"
+          />
           {{ loading() ? "Envoi…" : "Envoyer" }}
         </button>
       </div>

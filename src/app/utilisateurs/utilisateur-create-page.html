@@ -1,11 +1,11 @@
-<app-form-page-header
-  description="Le login ne se modifie plus ensuite. Compte créé actif."
-  listLabel="Utilisateurs"
-  listLink="/utilisateurs"
-  title="Nouvel utilisateur"
-/>
+<div class="inner-page fiche-page">
+  <app-form-page-header
+    description="Le login ne se modifie plus ensuite. Compte créé actif."
+    icon="lucideUsers"
+    title="Nouvel utilisateur"
+  />
 
-<form (submit)="onSubmit($event)" class="form-page" novalidate>
+  <form (submit)="onSubmit($event)" class="form-page" novalidate>
   <app-form-validation-summary
     [show]="createForm().touched() && createForm().invalid()"
   />
@@ -76,12 +76,12 @@
   <div class="alert-panel" role="alert">{{ formError() }}</div>
   }
 
-  <app-form-actions>
-    <button class="btn-primary pressable min-h-11 px-5" type="submit">
-      Enregistrer
-    </button>
-    <a class="btn-outline pressable min-h-11 px-5" routerLink="/utilisateurs">
-      Annuler
-    </a>
-  </app-form-actions>
-</form>
+    <app-form-actions [inline]="true">
+      <button class="btn-toolbar pressable" type="submit">
+        <ng-icon aria-hidden="true" class="btn-toolbar__icon" name="lucideCheck" />
+        <span>Enregistrer</span>
+      </button>
+      <a class="btn-outline pressable" routerLink="/utilisateurs">Annuler</a>
+    </app-form-actions>
+  </form>
+</div>

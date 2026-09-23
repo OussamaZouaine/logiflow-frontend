@@ -1,11 +1,11 @@
-<app-form-page-header
-  description="Périodicité kilométrique et/ou calendaire (au moins l'une des deux). Le véhicule doit déjà exister."
-  listLabel="Plans d'entretien"
-  listLink="/maintenance/plans"
-  title="Nouveau plan d'entretien"
-/>
+<div class="inner-page fiche-page--wide">
+  <app-form-page-header
+    description="Périodicité kilométrique et/ou calendaire (au moins l'une des deux). Le véhicule doit déjà exister."
+    icon="lucideWrench"
+    title="Nouveau plan d'entretien"
+  />
 
-<app-maintenance-tabs />
+  <app-maintenance-tabs />
 
 @if (vehicules.isLoading()) {
 <p class="text-sm text-muted" role="status">Chargement des véhicules…</p>
@@ -138,16 +138,13 @@
   <div class="alert-panel" role="alert">{{ formError() }}</div>
   }
 
-  <app-form-actions>
-    <button class="btn-primary pressable min-h-11 px-5" type="submit">
-      Enregistrer
-    </button>
-    <a
-      class="btn-outline pressable min-h-11 px-5"
-      routerLink="/maintenance/plans"
-    >
-      Annuler
-    </a>
-  </app-form-actions>
-</form>
-}
+    <app-form-actions [inline]="true">
+      <button class="btn-toolbar pressable" type="submit">
+        <ng-icon aria-hidden="true" class="btn-toolbar__icon" name="lucideCheck" />
+        <span>Enregistrer</span>
+      </button>
+      <a class="btn-outline pressable" routerLink="/maintenance/plans">Annuler</a>
+    </app-form-actions>
+  </form>
+  }
+</div>

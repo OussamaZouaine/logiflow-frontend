@@ -1,5 +1,5 @@
-<div class="fiche-page">
-  <app-fiche-header listLabel="Maintenance" listLink="/maintenance">
+<div class="inner-page fiche-page">
+  <app-fiche-header icon="lucideWrench">
     @if (ordre.isLoading()) {
     <p class="fiche-load-hint" role="status">Chargement…</p>
     } @else if (ordre.error()) {
@@ -10,6 +10,7 @@
     } @else if (ordre.hasValue()) {
     <app-fiche-title-row [title]="typeInterventionLabel(ordre.value().type)">
       <app-statut-chip
+        [icon]="statutChipIcon(ordre.value().statut)"
         [label]="statutOtLabel(ordre.value().statut)"
         [tone]="statutOtTone(ordre.value().statut)"
       />

@@ -1,4 +1,13 @@
-import { Component, computed, effect, inject, input, signal } from "@angular/core";
+import {
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  input,
+  signal,
+} from "@angular/core";
+import { bindShellBreadcrumbLeaf } from "../core/nav/shell-breadcrumb-leaf";
 import { FormField, form, required, submit } from "@angular/forms/signals";
 import { httpResource } from "@angular/common/http";
 import { environment } from "../../environments/environment";
@@ -6,7 +15,10 @@ import { httpErrorMessage } from "../core/api/http-error";
 import { firstFieldError } from "../core/forms/first-field-error";
 import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
 import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import { lucideCheck, lucideCircleOff } from "@ng-icons/lucide";
 import {
+  actifIcon,
   actifLabel,
   actifTone,
   StatutChip,
@@ -16,16 +28,19 @@ import { draftToMaj, stationToDraft, type Station } from "./station";
 import { StationApi } from "./station-api";
 
 @Component({
-  imports: [FormField, StatutChip, ...FICHE_PAGE_IMPORTS],
+  imports: [FormField, NgIcon, StatutChip, ...FICHE_PAGE_IMPORTS],
   selector: "app-station-detail-page",
   templateUrl: "./station-detail-page.html",
+  viewProviders: [provideIcons({ lucideCheck, lucideCircleOff })],
 })
 export class StationDetailPage {
   private readonly api = inject(StationApi);
   private readonly toast = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly id = input.required<string>();
 
+  protected readonly actifIcon = actifIcon;
   protected readonly actifLabel = actifLabel;
   protected readonly actifTone = actifTone;
   protected readonly firstFieldError = firstFieldError;
@@ -55,6 +70,13 @@ export class StationDetailPage {
   });
 
   constructor() {
+    bindShellBreadcrumbLeaf(
+      this.destroyRef,
+      computed(() =>
+        this.station.hasValue() ? this.station.value().code : null
+      )
+    );
+
     effect(() => {
       const current = this.station.value();
       if (current) {

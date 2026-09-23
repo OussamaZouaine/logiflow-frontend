@@ -1,17 +1,5 @@
 <div class="flex flex-col gap-6">
-  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-    <div>
-      <h1 class="module-page-title">Clients</h1>
-      <p class="mt-1 text-sm text-muted">
-        Tiers donneurs d'ordre pour les commandes de transport.
-      </p>
-    </div>
-    <a class="btn-primary pressable" routerLink="/clients/nouveau">
-      Nouveau client
-    </a>
-  </div>
-
-  <div class="flex flex-col gap-3">
+  <div class="list-toolbar">
     <app-list-search-bar
       [(draft)]="searchDraft"
       [(query)]="search"
@@ -23,6 +11,7 @@
       [options]="actifOptions"
       ariaLabel="Filtrer par activité"
     />
+    <app-list-toolbar-cta label="Nouveau client" link="/clients/nouveau" />
   </div>
 
   @if (clients.isLoading()) {
@@ -62,76 +51,82 @@
     title="Aucun client pour ce filtre"
   />
   } @else if (clients.hasValue()) {
-  <div
-    appListRowKeyboard
-    [(activeId)]="activeRowId"
-    [rows]="keyboardRows()"
-    aria-label="Liste des clients — flèches pour naviguer, Entrée pour ouvrir"
-    class="list-table-panel"
-  >
-    <table class="w-full min-w-xl text-left text-sm">
-      <thead class="list-table-head">
-        <tr>
-          <th class="px-4 py-3 font-medium" scope="col">Code</th>
-          <th class="px-4 py-3 font-medium" scope="col">Raison sociale</th>
-          <th class="px-4 py-3 font-medium" scope="col">Statut</th>
-          <th class="px-4 py-3 font-medium" scope="col">
-            <span class="sr-only">Actions</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (client of visibleClients(); track client.id) {
-        <tr
-          [attr.aria-selected]="activeRowId() === client.id"
-          [class.bg-pine/5]="activeRowId() === client.id"
-          class="list-row border-b border-line last:border-0 hover:bg-canvas"
-        >
-          <td class="px-4 py-3">
-            <a
-              [routerLink]="['/clients', client.id]"
-              class="font-mono text-xs text-pine underline-offset-2 hover:underline"
-            >
-              {{ client.code }}
-            </a>
-          </td>
-          <td class="px-4 py-3 text-ink">{{ client.raisonSociale }}</td>
-          <td class="px-4 py-3">
-            <app-statut-chip
-              [label]="actifLabel(client.actif)"
-              [tone]="actifTone(client.actif)"
-            />
-          </td>
-          <td class="px-4 py-3 text-right">
-            <a
-              [routerLink]="['/clients', client.id]"
-              class="list-row-action text-sm font-medium text-pine underline-offset-2 hover:underline"
-            >
-              Ouvrir
-            </a>
-          </td>
-        </tr>
-        }
-      </tbody>
-    </table>
+  <div class="list-table-stack">
+    <div
+      appListRowKeyboard
+      [(activeId)]="activeRowId"
+      [rows]="keyboardRows()"
+      aria-label="Liste des clients — flèches pour naviguer, Entrée pour ouvrir"
+      class="list-table-panel"
+    >
+      <table z-table>
+        <thead z-table-header>
+          <tr z-table-row>
+            <th scope="col" z-table-head>Code</th>
+            <th scope="col" z-table-head>Raison sociale</th>
+            <th scope="col" z-table-head>Statut</th>
+            <th scope="col" z-table-head class="text-right">
+              <span class="sr-only">Actions</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody z-table-body>
+          @for (client of visibleClients(); track client.id) {
+          <tr
+            z-table-row
+            [attr.aria-selected]="activeRowId() === client.id"
+            [class.bg-pine/5]="activeRowId() === client.id"
+            class="list-row"
+          >
+            <td z-table-cell>
+              <a
+                [routerLink]="['/clients', client.id]"
+                class="font-mono text-xs text-pine underline-offset-2 hover:underline"
+              >
+                {{ client.code }}
+              </a>
+            </td>
+            <td class="text-ink" z-table-cell>
+              <span class="list-cell-with-icon">
+                <ng-icon
+                  [name]="rowIcon"
+                  aria-hidden="true"
+                  class="list-cell-with-icon__icon"
+                />
+                <span>{{ client.raisonSociale }}</span>
+              </span>
+            </td>
+            <td z-table-cell>
+              <app-statut-chip
+                [icon]="actifIcon(client.actif)"
+                [label]="actifLabel(client.actif)"
+                [tone]="actifTone(client.actif)"
+              />
+            </td>
+            <td class="text-right" z-table-cell>
+              <a
+                [routerLink]="['/clients', client.id]"
+                class="list-row-action list-row-action--with-icon text-sm font-medium text-pine underline-offset-2 hover:underline"
+              >
+                <span>Ouvrir</span>
+                <ng-icon aria-hidden="true" name="lucideArrowRight" />
+              </a>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-list-pagination
+      [(page)]="page"
+      [pageSize]="pageSize()"
+      (pageSizeChange)="pageSize.set($event); page.set(0)"
+      [pageSizeOptions]="pageSizeOptions"
+      [totalElements]="clients.value().totalElements"
+      [totalPages]="clients.value().totalPages"
+      [visibleCount]="visibleClients().length"
+      itemLabel="client"
+    />
   </div>
-  @if (clients.value().totalElements) {
-  <p class="font-mono text-sm tabular-nums text-muted">
-    {{ visibleClients().length }}
-    affiché(s) /
-    {{ clients.value().totalElements }}
-    client(s)
-  </p>
-  }
-  <app-list-pagination
-    [(page)]="page"
-    [pageSize]="pageSize()"
-    (pageSizeChange)="pageSize.set($event); page.set(0)"
-    [pageSizeOptions]="pageSizeOptions"
-    [totalElements]="clients.value().totalElements"
-    [totalPages]="clients.value().totalPages"
-    [visibleCount]="visibleClients().length"
-    itemLabel="client"
-  />
   }
 </div>

@@ -1,4 +1,6 @@
 import { Component, inject, signal } from "@angular/core";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import { lucideCheck } from "@ng-icons/lucide";
 import { FormField, form, required, submit } from "@angular/forms/signals";
 import { Router, RouterLink } from "@angular/router";
 import { httpErrorMessage } from "../core/api/http-error";
@@ -13,9 +15,10 @@ import {
 import { MarchandiseApi } from "./marchandise-api";
 
 @Component({
-  imports: [FormField, RouterLink, ...FORM_PAGE_IMPORTS],
+  imports: [FormField, NgIcon, RouterLink, ...FORM_PAGE_IMPORTS],
   selector: "app-marchandise-create-page",
   templateUrl: "./marchandise-create-page.html",
+  viewProviders: [provideIcons({ lucideCheck })],
 })
 export class MarchandiseCreatePage {
   private readonly api = inject(MarchandiseApi);

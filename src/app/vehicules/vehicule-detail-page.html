@@ -1,5 +1,5 @@
-<div class="fiche-page">
-  <app-fiche-header listLabel="Véhicules" listLink="/vehicules">
+<div class="inner-page fiche-page fiche-page--wide">
+  <app-fiche-header icon="lucideTruck">
     @if (vehicule.isLoading()) {
     <p class="fiche-load-hint" role="status">Chargement…</p>
     } @else if (vehicule.error()) {
@@ -10,6 +10,7 @@
       [title]="vehicule.value().immatriculation"
     >
       <app-statut-chip
+        [icon]="statutChipIcon(vehicule.value().statut)"
         [label]="statutLabel(vehicule.value().statut)"
         [tone]="vehiculeStatutTone(vehicule.value().statut)"
       />
@@ -198,8 +199,9 @@
       <div class="alert-panel mt-4" role="alert">{{ compteursError() }}</div>
       }
       <app-form-actions [inline]="true">
-        <button class="btn-primary pressable min-h-11 px-5" type="submit">
-          Enregistrer le relevé
+        <button class="btn-toolbar pressable" type="submit">
+          <ng-icon aria-hidden="true" class="btn-toolbar__icon" name="lucideCheck" />
+          <span>Enregistrer le relevé</span>
         </button>
       </app-form-actions>
     </form>
@@ -299,8 +301,9 @@
         <div class="alert-panel mt-4" role="alert">{{ uploadError() }}</div>
         }
         <app-form-actions [inline]="true">
-          <button class="btn-primary pressable min-h-11 px-5" type="submit">
-            Téléverser
+          <button class="btn-toolbar pressable" type="submit">
+            <ng-icon aria-hidden="true" class="btn-toolbar__icon" name="lucideCheck" />
+            <span>Téléverser</span>
           </button>
         </app-form-actions>
       </form>
@@ -406,8 +409,9 @@
         <div class="alert-panel mt-4" role="alert">{{ scoreError() }}</div>
         }
         <app-form-actions [inline]="true">
-          <button class="btn-primary pressable min-h-11 px-5" type="submit">
-            Enregistrer le score
+          <button class="btn-toolbar pressable" type="submit">
+            <ng-icon aria-hidden="true" class="btn-toolbar__icon" name="lucideCheck" />
+            <span>Enregistrer le score</span>
           </button>
         </app-form-actions>
       </form>

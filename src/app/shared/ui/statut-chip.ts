@@ -1,5 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, input } from "@angular/core";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import {
+  lucideCircleCheck,
+  lucideCircleOff,
+  lucideTag,
+} from "@ng-icons/lucide";
 import type { ApercuTone } from "../../tableau/apercu";
+import { LIST_STATUT_FILTER_ICON_PROVIDERS } from "./list-statut-icons";
 
 export type StatutTone = ApercuTone;
 
@@ -23,17 +30,44 @@ export function actifLabel(actif: boolean): string {
   return actif ? "Actif" : "Inactif";
 }
 
+export function actifIcon(actif: boolean): string {
+  return actif ? "lucideCircleCheck" : "lucideCircleOff";
+}
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     "[class]": "classes()",
   },
+  imports: [NgIcon],
   selector: "app-statut-chip",
-  template: `{{ label() }}`,
+  viewProviders: [
+    provideIcons({ lucideCircleCheck, lucideCircleOff, lucideTag }),
+    LIST_STATUT_FILTER_ICON_PROVIDERS,
+  ],
+  template: `
+    @if (icon()) {
+    <ng-icon [name]="icon()!" aria-hidden="true" class="statut-chip__icon" />
+    }
+    <span>{{ label() }}</span>
+  `,
+  styles: `
+    :host {
+      gap: 0.3125rem;
+    }
+
+    .statut-chip__icon {
+      width: 0.8125rem;
+      height: 0.8125rem;
+      flex-shrink: 0;
+      opacity: 0.9;
+    }
+  `,
 })
 export class StatutChip {
   readonly label = input.required<string>();
   readonly tone = input<StatutTone>("muted");
+  readonly icon = input<string | null>(null);
 
   protected readonly classes = computed(() => statutChipClasses(this.tone()));
 }

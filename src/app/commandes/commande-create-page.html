@@ -1,11 +1,11 @@
-<app-form-page-header
-  description="Choisissez un client dans la liste ou créez-en un nouveau. Chaque commande embarque au moins une ligne liée au catalogue marchandises."
-  listLabel="Commandes"
-  listLink="/commandes"
-  title="Nouvelle commande"
-/>
+<div class="inner-page fiche-page--wide">
+  <app-form-page-header
+    description="Choisissez un client dans la liste ou créez-en un nouveau. Chaque commande embarque au moins une ligne liée au catalogue marchandises."
+    icon="lucideClipboardList"
+    title="Nouvelle commande"
+  />
 
-@if (clients.isLoading() || marchandises.isLoading()) {
+  @if (clients.isLoading() || marchandises.isLoading()) {
 <p class="text-sm text-muted" role="status">Chargement des ressources…</p>
 } @else if (clientsError() || marchandisesError()) {
 <div class="alert-panel" role="alert">
@@ -113,7 +113,7 @@
             : null
         "
         inputId="montant"
-        label="Prix négocié (EUR) *"
+        label="Prix négocié (DH) *"
       >
         <input
           [attr.aria-invalid]="showFieldError(createForm.montant()) || null"
@@ -218,13 +218,13 @@
   <div class="alert-panel" role="alert">{{ formError() }}</div>
   }
 
-  <app-form-actions>
-    <button class="btn-primary pressable min-h-11 px-5" type="submit">
-      Enregistrer
-    </button>
-    <a class="btn-outline pressable min-h-11 px-5" routerLink="/commandes">
-      Annuler
-    </a>
-  </app-form-actions>
-</form>
-}
+    <app-form-actions [inline]="true">
+      <button class="btn-toolbar pressable" type="submit">
+        <ng-icon aria-hidden="true" class="btn-toolbar__icon" name="lucideCheck" />
+        <span>Enregistrer</span>
+      </button>
+      <a class="btn-outline pressable" routerLink="/commandes">Annuler</a>
+    </app-form-actions>
+  </form>
+  }
+</div>

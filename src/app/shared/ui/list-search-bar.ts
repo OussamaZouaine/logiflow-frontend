@@ -6,7 +6,6 @@ import {
 } from "@angular/core";
 import { NgIcon, provideIcons } from "@ng-icons/core";
 import { lucideSearch, lucideX } from "@ng-icons/lucide";
-import { ZardButtonComponent } from "@/shared/components/button";
 import { ZardInputComponent } from "@/shared/components/input";
 import {
   ZardInputGroupAddonComponent,
@@ -19,7 +18,6 @@ import {
   selector: "app-list-search-bar",
   imports: [
     NgIcon,
-    ZardButtonComponent,
     ZardInputComponent,
     ZardInputGroupComponent,
     ZardInputGroupAddonComponent,
@@ -29,7 +27,7 @@ import {
   template: `
     <form (submit)="onSubmit($event)" class="list-search-bar">
       <label class="sr-only" [attr.for]="inputId()">{{ label() }}</label>
-      <z-input-group class="list-search-bar__field">
+      <z-input-group class="list-search-bar__field list-search-bar__field--compact">
         <z-input-group-addon zAlign="inline-start">
           <ng-icon aria-hidden="true" name="lucideSearch" />
         </z-input-group-addon>
@@ -57,36 +55,24 @@ import {
         </z-input-group-addon>
         }
       </z-input-group>
-      <button class="list-search-bar__submit" type="submit" z-button zType="default">
-        Chercher
-      </button>
     </form>
   `,
   styles: `
     .list-search-bar {
-      display: flex;
-      gap: 0.5rem;
-      align-items: stretch;
+      display: block;
+      min-width: 0;
+      width: 100%;
     }
 
     .list-search-bar__field {
       min-width: 0;
-      flex: 1;
+      width: 100%;
     }
 
-    .list-search-bar__submit {
-      flex-shrink: 0;
-    }
-
-    @media (max-width: 479px) {
-      .list-search-bar {
-        flex-direction: column;
-      }
-
-      .list-search-bar__submit {
-        width: 100%;
-        justify-content: center;
-      }
+    :host ::ng-deep .list-search-bar__field--compact {
+      min-height: 2.25rem;
+      height: 2.25rem;
+      border-radius: var(--radius-lg);
     }
   `,
 })

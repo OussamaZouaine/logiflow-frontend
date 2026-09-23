@@ -1,16 +1,16 @@
-<app-form-page-header
-  description="Tiers donneur d'ordre. Le code ne se modifie plus ensuite."
-  listLabel="Clients"
-  listLink="/clients"
-  title="Nouveau client"
-/>
-
-<form (submit)="onSubmit($event)" class="form-page" novalidate>
-  <app-form-validation-summary
-    [show]="createForm().touched() && createForm().invalid()"
+<div class="inner-page">
+  <app-form-page-header
+    description="Tiers donneur d'ordre. Le code ne se modifie plus ensuite."
+    icon="lucideBuilding2"
+    title="Nouveau client"
   />
 
-  <app-form-section title="Fiche">
+  <form (submit)="onSubmit($event)" class="form-page" novalidate>
+    <app-form-validation-summary
+    [show]="createForm().touched() && createForm().invalid()"
+    />
+
+    <app-form-section title="Fiche">
     <app-form-field
       [error]="
         showFieldError(createForm.code())
@@ -54,12 +54,12 @@
   <div class="alert-panel" role="alert">{{ formError() }}</div>
   }
 
-  <app-form-actions>
-    <button class="btn-primary pressable min-h-11 px-5" type="submit">
-      Créer
-    </button>
-    <a class="btn-outline pressable min-h-11 px-5" routerLink="/clients">
-      Annuler
-    </a>
-  </app-form-actions>
-</form>
+    <app-form-actions [inline]="true">
+      <button class="btn-toolbar pressable" type="submit">
+        <ng-icon aria-hidden="true" class="btn-toolbar__icon" name="lucideCheck" />
+        <span>Créer</span>
+      </button>
+      <a class="btn-outline pressable" routerLink="/clients">Annuler</a>
+    </app-form-actions>
+  </form>
+</div>

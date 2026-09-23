@@ -1,5 +1,5 @@
-<div class="fiche-page">
-  <app-fiche-header listLabel="Plans d'entretien" listLink="/maintenance/plans">
+<div class="inner-page fiche-page">
+  <app-fiche-header icon="lucideWrench">
     @if (plan.isLoading()) {
     <p class="fiche-load-hint" role="status">Chargement…</p>
     } @else if (plan.error()) {

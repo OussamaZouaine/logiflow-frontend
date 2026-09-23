@@ -123,8 +123,8 @@
 
 @media (min-width: 1280px) {
   .voyages-table-panel {
-    overflow-y: auto;
-    max-height: min(70vh, 42rem);
+    overflow-y: visible;
+    max-height: none;
   }
 }
 

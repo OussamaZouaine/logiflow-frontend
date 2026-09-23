@@ -1,4 +1,6 @@
 import { Component, inject, signal } from "@angular/core";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import { lucideCheck } from "@ng-icons/lucide";
 import { FormField, form, required, submit } from "@angular/forms/signals";
 import { Router, RouterLink } from "@angular/router";
 import { httpErrorMessage } from "../core/api/http-error";
@@ -10,9 +12,10 @@ import { ClientApi } from "./client-api";
 import { draftToWrite, emptyClientDraft } from "./client";
 
 @Component({
-  imports: [FormField, RouterLink, ...FORM_PAGE_IMPORTS],
+  imports: [FormField, NgIcon, RouterLink, ...FORM_PAGE_IMPORTS],
   selector: "app-client-create-page",
   templateUrl: "./client-create-page.html",
+  viewProviders: [provideIcons({ lucideCheck })],
 })
 export class ClientCreatePage {
   private readonly api = inject(ClientApi);

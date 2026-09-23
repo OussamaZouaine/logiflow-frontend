@@ -4,7 +4,10 @@
   gap: 1.25rem;
   width: 100%;
   min-width: 0;
-  max-width: 56rem;
+}
+
+.voyage-create.inner-page.fiche-page--wide {
+  max-width: 72rem;
 }
 
 @media (max-width: 479px) {

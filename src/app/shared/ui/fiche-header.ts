@@ -1,31 +1,34 @@
 import { ChangeDetectionStrategy, Component, input } from "@angular/core";
-import { RouterLink } from "@angular/router";
+import { NgIcon } from "@ng-icons/core";
+import { LIST_TABLE_ROW_ICON_PROVIDERS } from "./list-table-row-icons";
 
-/**
- * Sticky header for module fiches: back link + projected title/meta.
- * Sticks below the utility bar while the main pane scrolls.
- */
+/** Header for module fiches: optional module icon + projected title/meta. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    class: "fiche-header",
+    class: "block",
     role: "banner",
   },
-  imports: [RouterLink],
+  imports: [NgIcon],
   selector: "app-fiche-header",
+  viewProviders: [LIST_TABLE_ROW_ICON_PROVIDERS],
   template: `
-    <a
-      [routerLink]="listLink()"
-      class="btn-back pressable"
-    >
-      ← {{ listLabel() }}
-    </a>
-    <div class="mt-3">
-      <ng-content />
+    <div class="inner-page-header">
+      <div class="inner-page-header__row">
+        @if (icon()) {
+        <ng-icon
+          [name]="icon()!"
+          aria-hidden="true"
+          class="inner-page-header__icon"
+        />
+        }
+        <div class="inner-page-header__copy">
+          <ng-content />
+        </div>
+      </div>
     </div>
   `,
 })
 export class FicheHeader {
-  readonly listLink = input.required<string>();
-  readonly listLabel = input.required<string>();
+  readonly icon = input<string | null>(null);
 }

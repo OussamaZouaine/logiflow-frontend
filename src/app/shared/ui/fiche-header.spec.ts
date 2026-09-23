@@ -10,16 +10,13 @@ describe("FicheHeader", () => {
     }).compileComponents();
   });
 
-  it("renders the back link to the list module", () => {
+  it("renders projected content without a list back link", () => {
     const fixture = TestBed.createComponent(FicheHeader);
-    fixture.componentRef.setInput("listLink", "/voyages");
-    fixture.componentRef.setInput("listLabel", "Voyages");
+    fixture.componentRef.setInput("icon", "lucideBuilding2");
     fixture.detectChanges();
 
     const host = fixture.nativeElement as HTMLElement;
-    const link = host.querySelector("a");
-    expect(link?.textContent?.trim()).toBe("← Voyages");
-    expect(link?.getAttribute("href")).toBe("/voyages");
-    expect(host.className).toContain("fiche-header");
+    expect(host.querySelector("a")).toBeNull();
+    expect(host.querySelector(".inner-page-header")).not.toBeNull();
   });
 });

@@ -4,7 +4,18 @@ import {
   CARBURANT_STATIONS_ALLOWED_ROLES,
   DOSSIERS_PLAN_ROLES,
 } from "./core/auth/role";
+import { shellBreadcrumb } from "./core/nav/shell-breadcrumb-data";
 import { workDestination } from "./core/nav/work-destination";
+
+const maintenancePlansTrail = [
+  { label: "Maintenance", path: "/maintenance" },
+  { label: "Plans d'entretien", path: "/maintenance/plans" },
+] as const;
+
+const carburantStationsTrail = [
+  { label: "Carburant", path: "/carburant" },
+  { label: "Stations", path: "/carburant/stations" },
+] as const;
 
 export const routes: Routes = [
   {
@@ -21,19 +32,26 @@ export const routes: Routes = [
           import("./tableau/tableau-de-bord-page").then(
             (module) => module.TableauDeBordPage
           ),
+        data: { ...shellBreadcrumb.list("Tableau de bord") },
         path: "",
         pathMatch: "full",
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("sites").roles },
+        data: {
+          roles: workDestination("sites").roles,
+          ...shellBreadcrumb.list("Sites"),
+        },
         loadComponent: () =>
           import("./sites/sites-page").then((module) => module.SitesPage),
         path: "sites",
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("sites").roles },
+        data: {
+          roles: workDestination("sites").roles,
+          ...shellBreadcrumb.create("Sites", "/sites"),
+        },
         loadComponent: () =>
           import("./sites/site-create-page").then(
             (module) => module.SiteCreatePage
@@ -42,7 +60,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("sites").roles },
+        data: {
+          roles: workDestination("sites").roles,
+          ...shellBreadcrumb.detail("Sites", "/sites"),
+        },
         loadComponent: () =>
           import("./sites/site-detail-page").then(
             (module) => module.SiteDetailPage
@@ -51,7 +72,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("marchandises").roles },
+        data: {
+          roles: workDestination("marchandises").roles,
+          ...shellBreadcrumb.list("Marchandises"),
+        },
         loadComponent: () =>
           import("./marchandises/marchandises-page").then(
             (module) => module.MarchandisesPage
@@ -60,7 +84,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("marchandises").roles },
+        data: {
+          roles: workDestination("marchandises").roles,
+          ...shellBreadcrumb.create("Marchandises", "/marchandises"),
+        },
         loadComponent: () =>
           import("./marchandises/marchandise-create-page").then(
             (module) => module.MarchandiseCreatePage
@@ -69,7 +96,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("marchandises").roles },
+        data: {
+          roles: workDestination("marchandises").roles,
+          ...shellBreadcrumb.detail("Marchandises", "/marchandises"),
+        },
         loadComponent: () =>
           import("./marchandises/marchandise-detail-page").then(
             (module) => module.MarchandiseDetailPage
@@ -78,7 +108,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("vehicules").roles },
+        data: {
+          roles: workDestination("vehicules").roles,
+          ...shellBreadcrumb.list("Véhicules"),
+        },
         loadComponent: () =>
           import("./vehicules/vehicules-page").then(
             (module) => module.VehiculesPage
@@ -87,7 +120,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("vehicules").roles },
+        data: {
+          roles: workDestination("vehicules").roles,
+          ...shellBreadcrumb.create("Véhicules", "/vehicules"),
+        },
         loadComponent: () =>
           import("./vehicules/vehicule-create-page").then(
             (module) => module.VehiculeCreatePage
@@ -96,7 +132,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("vehicules").roles },
+        data: {
+          roles: workDestination("vehicules").roles,
+          ...shellBreadcrumb.detail("Véhicules", "/vehicules"),
+        },
         loadComponent: () =>
           import("./vehicules/vehicule-detail-page").then(
             (module) => module.VehiculeDetailPage
@@ -105,7 +144,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("remorques").roles },
+        data: {
+          roles: workDestination("remorques").roles,
+          ...shellBreadcrumb.list("Remorques"),
+        },
         loadComponent: () =>
           import("./remorques/remorques-page").then(
             (module) => module.RemorquesPage
@@ -114,7 +156,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("remorques").roles },
+        data: {
+          roles: workDestination("remorques").roles,
+          ...shellBreadcrumb.create("Remorques", "/remorques"),
+        },
         loadComponent: () =>
           import("./remorques/remorque-create-page").then(
             (module) => module.RemorqueCreatePage
@@ -123,7 +168,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("remorques").roles },
+        data: {
+          roles: workDestination("remorques").roles,
+          ...shellBreadcrumb.detail("Remorques", "/remorques"),
+        },
         loadComponent: () =>
           import("./remorques/remorque-detail-page").then(
             (module) => module.RemorqueDetailPage
@@ -132,14 +180,20 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("voyages").roles },
+        data: {
+          roles: workDestination("voyages").roles,
+          ...shellBreadcrumb.list("Voyages"),
+        },
         loadComponent: () =>
           import("./voyages/voyages-page").then((module) => module.VoyagesPage),
         path: "voyages",
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("voyages").roles },
+        data: {
+          roles: workDestination("voyages").roles,
+          ...shellBreadcrumb.create("Voyages", "/voyages"),
+        },
         loadComponent: () =>
           import("./voyages/voyage-create-page").then(
             (module) => module.VoyageCreatePage
@@ -148,7 +202,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("voyages").roles },
+        data: {
+          roles: workDestination("voyages").roles,
+          ...shellBreadcrumb.detail("Voyages", "/voyages"),
+        },
         loadComponent: () =>
           import("./voyages/voyage-detail-page").then(
             (module) => module.VoyageDetailPage
@@ -157,7 +214,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("carburant").roles },
+        data: {
+          roles: workDestination("carburant").roles,
+          ...shellBreadcrumb.list("Carburant"),
+        },
         loadComponent: () =>
           import("./carburant/prises-carburant-page").then(
             (module) => module.PrisesCarburantPage
@@ -166,7 +226,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("carburant").roles },
+        data: {
+          roles: workDestination("carburant").roles,
+          ...shellBreadcrumb.create("Carburant", "/carburant"),
+        },
         loadComponent: () =>
           import("./carburant/prise-create-page").then(
             (module) => module.PriseCreatePage
@@ -175,7 +238,14 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: CARBURANT_STATIONS_ALLOWED_ROLES },
+        data: {
+          roles: CARBURANT_STATIONS_ALLOWED_ROLES,
+          ...shellBreadcrumb.nested(
+            "Carburant",
+            "/carburant",
+            "Stations"
+          ),
+        },
         loadComponent: () =>
           import("./carburant/stations-page").then(
             (module) => module.StationsPage
@@ -184,7 +254,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: CARBURANT_STATIONS_ALLOWED_ROLES },
+        data: {
+          roles: CARBURANT_STATIONS_ALLOWED_ROLES,
+          ...shellBreadcrumb.createNested([...carburantStationsTrail]),
+        },
         loadComponent: () =>
           import("./carburant/station-create-page").then(
             (module) => module.StationCreatePage
@@ -193,7 +266,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: CARBURANT_STATIONS_ALLOWED_ROLES },
+        data: {
+          roles: CARBURANT_STATIONS_ALLOWED_ROLES,
+          ...shellBreadcrumb.detailNested([...carburantStationsTrail]),
+        },
         loadComponent: () =>
           import("./carburant/station-detail-page").then(
             (module) => module.StationDetailPage
@@ -202,7 +278,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("carburant").roles },
+        data: {
+          roles: workDestination("carburant").roles,
+          ...shellBreadcrumb.detail("Carburant", "/carburant"),
+        },
         loadComponent: () =>
           import("./carburant/prise-detail-page").then(
             (module) => module.PriseDetailPage
@@ -211,7 +290,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("maintenance").roles },
+        data: {
+          roles: workDestination("maintenance").roles,
+          ...shellBreadcrumb.list("Maintenance"),
+        },
         loadComponent: () =>
           import("./maintenance/maintenance-page").then(
             (module) => module.MaintenancePage
@@ -220,7 +302,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("maintenance").roles },
+        data: {
+          roles: workDestination("maintenance").roles,
+          ...shellBreadcrumb.create("Maintenance", "/maintenance"),
+        },
         loadComponent: () =>
           import("./maintenance/ordre-create-page").then(
             (module) => module.OrdreCreatePage
@@ -229,7 +314,14 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("maintenance").roles },
+        data: {
+          roles: workDestination("maintenance").roles,
+          ...shellBreadcrumb.nested(
+            "Maintenance",
+            "/maintenance",
+            "Plans d'entretien"
+          ),
+        },
         loadComponent: () =>
           import("./maintenance/plans-entretien-page").then(
             (module) => module.PlansEntretienPage
@@ -238,7 +330,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("maintenance").roles },
+        data: {
+          roles: workDestination("maintenance").roles,
+          ...shellBreadcrumb.createNested([...maintenancePlansTrail]),
+        },
         loadComponent: () =>
           import("./maintenance/plan-entretien-create-page").then(
             (module) => module.PlanEntretienCreatePage
@@ -247,7 +342,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("maintenance").roles },
+        data: {
+          roles: workDestination("maintenance").roles,
+          ...shellBreadcrumb.detailNested([...maintenancePlansTrail]),
+        },
         loadComponent: () =>
           import("./maintenance/plan-entretien-detail-page").then(
             (module) => module.PlanEntretienDetailPage
@@ -256,7 +354,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("maintenance").roles },
+        data: {
+          roles: workDestination("maintenance").roles,
+          ...shellBreadcrumb.detail("Maintenance", "/maintenance"),
+        },
         loadComponent: () =>
           import("./maintenance/ordre-detail-page").then(
             (module) => module.OrdreDetailPage
@@ -265,14 +366,20 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("clients").roles },
+        data: {
+          roles: workDestination("clients").roles,
+          ...shellBreadcrumb.list("Clients"),
+        },
         loadComponent: () =>
           import("./clients/clients-page").then((module) => module.ClientsPage),
         path: "clients",
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("clients").roles },
+        data: {
+          roles: workDestination("clients").roles,
+          ...shellBreadcrumb.create("Clients", "/clients"),
+        },
         loadComponent: () =>
           import("./clients/client-create-page").then(
             (module) => module.ClientCreatePage
@@ -281,7 +388,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("clients").roles },
+        data: {
+          roles: workDestination("clients").roles,
+          ...shellBreadcrumb.detail("Clients", "/clients"),
+        },
         loadComponent: () =>
           import("./clients/client-detail-page").then(
             (module) => module.ClientDetailPage
@@ -290,7 +400,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("commandes").roles },
+        data: {
+          roles: workDestination("commandes").roles,
+          ...shellBreadcrumb.list("Commandes"),
+        },
         loadComponent: () =>
           import("./commandes/commandes-page").then(
             (module) => module.CommandesPage
@@ -299,7 +412,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("commandes").roles },
+        data: {
+          roles: workDestination("commandes").roles,
+          ...shellBreadcrumb.create("Commandes", "/commandes"),
+        },
         loadComponent: () =>
           import("./commandes/commande-create-page").then(
             (module) => module.CommandeCreatePage
@@ -308,7 +424,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("commandes").roles },
+        data: {
+          roles: workDestination("commandes").roles,
+          ...shellBreadcrumb.detail("Commandes", "/commandes"),
+        },
         loadComponent: () =>
           import("./commandes/commande-detail-page").then(
             (module) => module.CommandeDetailPage
@@ -317,7 +436,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("dossiers").roles },
+        data: {
+          roles: workDestination("dossiers").roles,
+          ...shellBreadcrumb.list("Dossiers"),
+        },
         loadComponent: () =>
           import("./dossiers/dossiers-page").then(
             (module) => module.DossiersPage
@@ -326,7 +448,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: DOSSIERS_PLAN_ROLES },
+        data: {
+          roles: DOSSIERS_PLAN_ROLES,
+          ...shellBreadcrumb.create("Dossiers", "/dossiers"),
+        },
         loadComponent: () =>
           import("./dossiers/dossier-create-page").then(
             (module) => module.DossierCreatePage
@@ -335,7 +460,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("dossiers").roles },
+        data: {
+          roles: workDestination("dossiers").roles,
+          ...shellBreadcrumb.detail("Dossiers", "/dossiers"),
+        },
         loadComponent: () =>
           import("./dossiers/dossier-detail-page").then(
             (module) => module.DossierDetailPage
@@ -344,7 +472,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("utilisateurs").roles },
+        data: {
+          roles: workDestination("utilisateurs").roles,
+          ...shellBreadcrumb.list("Utilisateurs"),
+        },
         loadComponent: () =>
           import("./utilisateurs/utilisateurs-page").then(
             (module) => module.UtilisateursPage
@@ -353,7 +484,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("utilisateurs").roles },
+        data: {
+          roles: workDestination("utilisateurs").roles,
+          ...shellBreadcrumb.create("Utilisateurs", "/utilisateurs"),
+        },
         loadComponent: () =>
           import("./utilisateurs/utilisateur-create-page").then(
             (module) => module.UtilisateurCreatePage
@@ -362,7 +496,10 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
-        data: { roles: workDestination("utilisateurs").roles },
+        data: {
+          roles: workDestination("utilisateurs").roles,
+          ...shellBreadcrumb.detail("Utilisateurs", "/utilisateurs"),
+        },
         loadComponent: () =>
           import("./utilisateurs/utilisateur-detail-page").then(
             (module) => module.UtilisateurDetailPage
@@ -370,6 +507,7 @@ export const routes: Routes = [
         path: "utilisateurs/:id",
       },
       {
+        data: { ...shellBreadcrumb.list("Accès refusé") },
         loadComponent: () =>
           import("./auth/acces-refuse-page").then(
             (module) => module.AccesRefusePage

@@ -31,11 +31,19 @@ import {
   ListStatutFilter,
   type ListStatutOption,
 } from "../shared/ui/list-statut-filter";
+import { ListToolbarCta } from "../shared/ui/list-toolbar-cta";
 import {
+  actifIcon,
   actifLabel,
   actifTone,
   StatutChip,
 } from "../shared/ui/statut-chip";
+import { NgIcon } from "@ng-icons/core";
+import {
+  DESTINATION_NAV_ICON,
+  LIST_TABLE_ROW_ICON_PROVIDERS,
+} from "../shared/ui/list-table-row-icons";
+import { ZardTableImports } from "@/shared/components/table/table.imports";
 import { CarburantTabs } from "./carburant-tabs";
 import type { Station } from "./station";
 
@@ -46,26 +54,32 @@ const ACTIF_OPTIONS: readonly ListStatutOption[] = [
 
 @Component({
   imports: [
+    NgIcon,
     RouterLink,
     StatutChip,
     CarburantTabs,
     ListSearchBar,
     ListStatutFilter,
+    ListToolbarCta,
     ListPagination,
     ListEmptyState,
     ListRowKeyboard,
     ListTableSkeleton,
+    ...ZardTableImports,
   ],
   selector: "app-stations-page",
   templateUrl: "./stations-page.html",
+  viewProviders: [LIST_TABLE_ROW_ICON_PROVIDERS],
 })
 export class StationsPage {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
+  protected readonly actifIcon = actifIcon;
   protected readonly actifLabel = actifLabel;
   protected readonly actifTone = actifTone;
+  protected readonly rowIcon = DESTINATION_NAV_ICON.carburant;
   protected readonly actifOptions = ACTIF_OPTIONS;
   protected readonly searchDraft = signal("");
   protected readonly search = signal("");

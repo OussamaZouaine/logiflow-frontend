@@ -1,10 +1,13 @@
 import { Component, computed, inject } from "@angular/core";
 import { Router, RouterLink } from "@angular/router";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import { lucideLayoutDashboard, lucideLogOut } from "@ng-icons/lucide";
 import { DemoSessionService } from "../core/auth/demo-session";
 import { roleLabel } from "../core/auth/role";
 
 @Component({
-  imports: [RouterLink],
+  imports: [NgIcon, RouterLink],
+  providers: [provideIcons({ lucideLayoutDashboard, lucideLogOut })],
   selector: "app-acces-refuse-page",
   templateUrl: "./acces-refuse-page.html",
 })

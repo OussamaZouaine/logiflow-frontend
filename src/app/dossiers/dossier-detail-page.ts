@@ -1,6 +1,17 @@
 import { httpResource } from "@angular/common/http";
-import { Component, computed, inject, input, signal } from "@angular/core";
+import {
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  input,
+  signal,
+} from "@angular/core";
+import { bindShellBreadcrumbLeaf } from "../core/nav/shell-breadcrumb-leaf";
 import { RouterLink } from "@angular/router";
+import { statutOptionsFrom } from "../shared/ui/list-filter";
+import { dossierStatutIcon } from "../shared/ui/list-statut-icons";
+import { statutIconForValue } from "../shared/ui/list-statut-filter";
 import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
 import { ToastService } from "../shared/ui/toast";
 import { OpsTimeline } from "../shared/ui/ops-timeline";
@@ -29,6 +40,7 @@ import {
   formatWindow,
   manualNextStatuts,
   siteLabelFromLookup,
+  STATUT_DOSSIERS,
   statutDocumentTransportLabel,
   statutDossierLabel,
   typeDocumentTransportLabel,
@@ -59,16 +71,35 @@ export class DossierDetailPage {
   private readonly api = inject(DossierApi);
   private readonly toast = inject(ToastService);
   private readonly session = inject(DemoSessionService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly id = input.required<string>();
+
+  constructor() {
+    bindShellBreadcrumbLeaf(
+      this.destroyRef,
+      computed(() =>
+        this.dossier.hasValue() ? this.dossier.value().reference : null
+      )
+    );
+  }
 
   protected readonly carrosserieRequiseLabel = carrosserieRequiseLabel;
   protected readonly formatInstant = formatInstant;
   protected readonly formatWindow = formatWindow;
   protected readonly manualNextStatuts = manualNextStatuts;
+  protected readonly statutOptions = statutOptionsFrom(
+    STATUT_DOSSIERS,
+    statutDossierLabel,
+    dossierStatutIcon
+  );
   protected readonly statutDossierLabel = statutDossierLabel;
   protected readonly statutDocumentTransportLabel = statutDocumentTransportLabel;
   protected readonly dossierStatutTone = dossierStatutTone;
+
+  protected statutChipIcon(statut: string): string | null {
+    return statutIconForValue(this.statutOptions, statut);
+  }
   protected readonly statutVoyageLabel = statutVoyageLabel;
   protected readonly typeDocumentTransportLabel = typeDocumentTransportLabel;
   protected readonly typeSegmentLabel = typeSegmentLabel;

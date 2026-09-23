@@ -17,6 +17,12 @@ export type TypeIntervention = (typeof TYPE_INTERVENTIONS)[number];
 export const STATUT_OT = ["PLANIFIE", "EN_COURS", "TERMINE", "ANNULE"] as const;
 export type StatutOT = (typeof STATUT_OT)[number];
 
+export interface OrdreTravailStats {
+  coutTotal: Money;
+  enCours: number;
+  nombre: number;
+}
+
 export interface OrdreTravail {
   cout: Money;
   datePlanifiee: string;

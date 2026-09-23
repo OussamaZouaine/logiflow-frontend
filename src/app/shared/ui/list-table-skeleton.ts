@@ -4,6 +4,7 @@ import {
   computed,
   input,
 } from "@angular/core";
+import { ZardTableImports } from "@/shared/components/table/table.imports";
 
 export function skeletonCellWidthClass(
   column: number,
@@ -19,8 +20,8 @@ export function skeletonCellWidthClass(
 }
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: "app-list-table-skeleton",
+  imports: [...ZardTableImports],
   template: `
     <div
       [attr.aria-label]="label()"
@@ -28,11 +29,11 @@ export function skeletonCellWidthClass(
       role="status"
     >
       <span class="sr-only">{{ label() }}</span>
-      <table class="w-full min-w-xl text-left text-sm">
-        <thead class="border-b border-line">
-          <tr>
+      <table z-table>
+        <thead z-table-header>
+          <tr z-table-row>
             @for (column of columnIndices(); track column) {
-            <th class="px-4 py-3" scope="col">
+            <th scope="col" z-table-head>
               <div
                 class="h-3 w-16 animate-pulse rounded-sm bg-secondary"
               ></div>
@@ -40,11 +41,11 @@ export function skeletonCellWidthClass(
             }
           </tr>
         </thead>
-        <tbody>
+        <tbody z-table-body>
           @for (row of rowIndices(); track row) {
-          <tr class="border-b border-line last:border-0">
+          <tr z-table-row>
             @for (column of columnIndices(); track column) {
-            <td class="px-4 py-3">
+            <td z-table-cell>
               <div
                 [class]="
                   'h-4 w-full animate-pulse rounded-sm bg-secondary/80 ' +

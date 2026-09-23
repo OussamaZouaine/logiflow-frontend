@@ -2,19 +2,26 @@ import { httpResource } from "@angular/common/http";
 import { Component, computed, inject } from "@angular/core";
 import { RouterLink } from "@angular/router";
 import { NgIcon, provideIcons } from "@ng-icons/core";
+import { lucideChevronRight, lucideInbox } from "@ng-icons/lucide";
+import type { StatutPrise } from "../carburant/prise-carburant";
+import type { StatutCommande } from "../commandes/commande";
+import { DESTINATION_NAV_ICON } from "../core/nav/nav-icon";
+import type { StatutDossier } from "../dossiers/dossier";
+import { InnerPageHeader } from "../shared/ui/inner-page-header";
+import { StatutChip } from "../shared/ui/statut-chip";
 import {
-	lucideChevronRight,
-	lucideClipboardList,
-	lucideContainer,
-	lucideFolderOpen,
-	lucideInbox,
-	lucideMapPin,
-	lucidePackage,
-	lucideRoute,
-	lucideTruck,
-	lucideUsers,
-	lucideWrench,
-} from "@ng-icons/lucide";
+	LIST_STATUT_FILTER_ICON_PROVIDERS,
+	commandeStatutIcon,
+	dossierStatutIcon,
+	priseCarburantStatutIcon,
+	vehiculeStatutIcon,
+	voyageStatutIcon,
+} from "../shared/ui/list-statut-icons";
+import {
+	LIST_TABLE_ROW_ICON_PROVIDERS,
+} from "../shared/ui/list-table-row-icons";
+import type { VehiculeStatut } from "../vehicules/vehicule";
+import type { StatutVoyage } from "../voyages/voyage";
 import { environment } from "../../environments/environment";
 import type { PageResponse } from "../core/api/page-response";
 import { DemoSessionService } from "../core/auth/demo-session";
@@ -49,6 +56,8 @@ import {
 
 export interface ApercuTile {
 	count: number | null;
+	destinationId: ApercuCountableId;
+	icon: string;
 	label: string;
 	loading: boolean;
 	path: string;
@@ -57,21 +66,14 @@ export interface ApercuTile {
 }
 
 @Component({
-	imports: [NgIcon, RouterLink],
-	providers: [
+	imports: [InnerPageHeader, NgIcon, RouterLink, StatutChip],
+	viewProviders: [
 		provideIcons({
 			lucideChevronRight,
-			lucideClipboardList,
-			lucideContainer,
-			lucideFolderOpen,
 			lucideInbox,
-			lucideMapPin,
-			lucidePackage,
-			lucideRoute,
-			lucideTruck,
-			lucideUsers,
-			lucideWrench,
 		}),
+		LIST_TABLE_ROW_ICON_PROVIDERS,
+		LIST_STATUT_FILTER_ICON_PROVIDERS,
 	],
 	selector: "app-tableau-de-bord-page",
 	styleUrl: "./tableau-de-bord-page.css",
@@ -93,6 +95,20 @@ export class TableauDeBordPage {
 		const role = this.session.session()?.roles[0];
 		return role ? roleLabel(role) : "";
 	});
+
+	protected readonly pageDescription = computed(() => {
+		const login = this.login();
+		const role = this.roleName();
+		if (login && role) {
+			return `${login} · ${role} — File du jour, puis totaux des modules accessibles.`;
+		}
+		if (login) {
+			return `${login} — File du jour, puis totaux des modules accessibles.`;
+		}
+		return "File du jour, puis totaux des modules accessibles.";
+	});
+
+	protected readonly fileInboxSkeletonRows = [0, 1, 2] as const;
 
 	protected readonly destinations = computed(() =>
 		destinationsForRoles(this.session.session()?.roles ?? []),
@@ -140,6 +156,10 @@ export class TableauDeBordPage {
 		fileDuJourToneCounts(this.fileDuJour()),
 	);
 
+	protected readonly showFileDuJourJump = computed(
+		() => !this.fileDuJourLoading() && this.fileDuJour().length > 0,
+	);
+
 	protected readonly tiles = computed((): ApercuTile[] =>
 		this.countableDestinations().map((destination) => {
 			switch (destination.id) {
@@ -183,6 +203,10 @@ export class TableauDeBordPage {
 		}),
 	);
 
+	protected fileDuJourToneChipLabel(count: number, label: string): string {
+		return `${count} ${label}`;
+	}
+
 	protected fileDuJourSummaryAriaLabel(): string {
 		const summary = this.fileDuJourSummary();
 		if (summary.totalCount <= 0) {
@@ -190,6 +214,32 @@ export class TableauDeBordPage {
 		}
 		const plural = summary.totalCount === 1 ? "" : "s";
 		return `${summary.totalCount} élément${plural} à traiter`;
+	}
+
+	protected sliceStatutIcon(
+		destinationId: ApercuCountableId,
+		statutKey: string,
+	): string | null {
+		switch (destinationId) {
+			case "commandes":
+				return commandeStatutIcon(statutKey as StatutCommande);
+			case "dossiers":
+				return dossierStatutIcon(statutKey as StatutDossier);
+			case "voyages":
+				return voyageStatutIcon(statutKey as StatutVoyage);
+			case "vehicules":
+				return vehiculeStatutIcon(statutKey as VehiculeStatut);
+			case "carburant":
+				return priseCarburantStatutIcon(statutKey as StatutPrise);
+			case "sites":
+			case "utilisateurs":
+			case "maintenance":
+				return null;
+			default: {
+				const _exhaustive: never = destinationId;
+				return _exhaustive;
+			}
+		}
 	}
 
 	protected tileAriaLabel(tile: ApercuTile): string {
@@ -221,8 +271,17 @@ export class TableauDeBordPage {
 		};
 	}
 
+	private tileIcon(id: ApercuCountableId): string {
+		return DESTINATION_NAV_ICON[id];
+	}
+
 	private countTile(
-		destination: { label: string; path: string; section: string },
+		destination: {
+			id: ApercuCountableId;
+			label: string;
+			path: string;
+			section: string;
+		},
 		resource: {
 			isLoading: () => boolean;
 			value: () => PageResponse<unknown> | undefined;
@@ -231,6 +290,8 @@ export class TableauDeBordPage {
 		const page = resource.value();
 		return {
 			count: page === undefined ? null : page.totalElements,
+			destinationId: destination.id,
+			icon: this.tileIcon(destination.id),
 			label: destination.label,
 			loading: resource.isLoading(),
 			path: destination.path,
@@ -240,7 +301,12 @@ export class TableauDeBordPage {
 	}
 
 	private chartTile<T>(
-		destination: { label: string; path: string; section: string },
+		destination: {
+			id: ApercuCountableId;
+			label: string;
+			path: string;
+			section: string;
+		},
 		resource: {
 			isLoading: () => boolean;
 			value: () => PageResponse<T> | undefined;
@@ -250,6 +316,8 @@ export class TableauDeBordPage {
 		const page = resource.value();
 		return {
 			count: page === undefined ? null : page.totalElements,
+			destinationId: destination.id,
+			icon: this.tileIcon(destination.id),
 			label: destination.label,
 			loading: resource.isLoading(),
 			path: destination.path,

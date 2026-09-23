@@ -1,16 +1,16 @@
 /* Page rhythm */
-.voyage-detail.fiche-page {
+.voyage-detail.inner-page {
   gap: 1.25rem;
 }
 
 @media (min-width: 768px) {
-  .voyage-detail.fiche-page {
+  .voyage-detail.inner-page {
     gap: 1.75rem;
   }
 }
 
 /* Title scrolls naturally — no second sticky bar under the shell header */
-.voyage-detail .fiche-header {
+.voyage-detail app-fiche-header .inner-page-header {
   position: static;
   z-index: auto;
   margin: 0;

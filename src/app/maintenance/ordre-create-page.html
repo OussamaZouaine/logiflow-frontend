@@ -1,11 +1,11 @@
-<app-form-page-header
-  description="Créé au statut Planifié. Le véhicule doit déjà exister."
-  listLabel="Maintenance"
-  listLink="/maintenance"
-  title="Nouvel ordre de travail"
-/>
+<div class="inner-page fiche-page--wide">
+  <app-form-page-header
+    description="Créé au statut Planifié. Le véhicule doit déjà exister."
+    icon="lucideWrench"
+    title="Nouvel ordre de travail"
+  />
 
-@if (vehicules.isLoading()) {
+  @if (vehicules.isLoading()) {
 <p class="text-sm text-muted" role="status">Chargement des véhicules…</p>
 } @else if (lookupsError()) {
 <div class="alert-panel" role="alert">
@@ -72,7 +72,7 @@
       </app-form-field>
       <div class="flex flex-col gap-1.5">
         <label class="text-xs font-medium text-muted" for="montant">
-          Coût estimé (EUR)
+          Coût estimé (DH)
         </label>
         <input
           [formField]="createForm.montant"
@@ -94,13 +94,13 @@
   <div class="alert-panel" role="alert">{{ formError() }}</div>
   }
 
-  <app-form-actions>
-    <button class="btn-primary pressable min-h-11 px-5" type="submit">
-      Enregistrer
-    </button>
-    <a class="btn-outline pressable min-h-11 px-5" routerLink="/maintenance">
-      Annuler
-    </a>
-  </app-form-actions>
-</form>
-}
+    <app-form-actions [inline]="true">
+      <button class="btn-toolbar pressable" type="submit">
+        <ng-icon aria-hidden="true" class="btn-toolbar__icon" name="lucideCheck" />
+        <span>Enregistrer</span>
+      </button>
+      <a class="btn-outline pressable" routerLink="/maintenance">Annuler</a>
+    </app-form-actions>
+  </form>
+  }
+</div>

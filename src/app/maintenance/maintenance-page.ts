@@ -13,6 +13,7 @@ import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
 import { filterByStatut, statutOptionsFrom } from "../shared/ui/list-filter";
+import { ordreTravailStatutIcon } from "../shared/ui/list-statut-icons";
 import { ListEmptyState } from "../shared/ui/list-empty-state";
 import { ListTableSkeleton } from "../shared/ui/list-table-skeleton";
 import {
@@ -27,8 +28,19 @@ import {
   ListRowKeyboard,
   syncListKeyboardActiveId,
 } from "../shared/ui/list-row-keyboard";
-import { ListStatutFilter } from "../shared/ui/list-statut-filter";
+import {
+  ListStatutFilter,
+  statutIconForValue,
+} from "../shared/ui/list-statut-filter";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import { lucidePlay, lucideReceipt } from "@ng-icons/lucide";
+import {
+  DESTINATION_NAV_ICON,
+  LIST_TABLE_ROW_ICON_PROVIDERS,
+} from "../shared/ui/list-table-row-icons";
+import { ListToolbarCta } from "../shared/ui/list-toolbar-cta";
 import { StatutChip } from "../shared/ui/statut-chip";
+import { ZardTableImports } from "@/shared/components/table/table.imports";
 import { MaintenanceTabs } from "./maintenance-tabs";
 import {
   formatDateTime,
@@ -38,6 +50,7 @@ import {
   statutOtLabel,
   statutOtTone,
   type OrdreTravail,
+  type OrdreTravailStats,
   type VehiculeLookup,
   typeInterventionLabel,
   vehiculeLabel,
@@ -47,17 +60,24 @@ const VEHICULE_LOOKUP_PAGE_SIZE = 50;
 
 @Component({
   imports: [
+    NgIcon,
     RouterLink,
     StatutChip,
     MaintenanceTabs,
     ListStatutFilter,
+    ListToolbarCta,
     ListPagination,
     ListEmptyState,
     ListRowKeyboard,
     ListTableSkeleton,
+    ...ZardTableImports,
   ],
   selector: "app-maintenance-page",
   templateUrl: "./maintenance-page.html",
+  viewProviders: [
+    LIST_TABLE_ROW_ICON_PROVIDERS,
+    provideIcons({ lucidePlay, lucideReceipt }),
+  ],
 })
 export class MaintenancePage {
   private readonly route = inject(ActivatedRoute);
@@ -73,8 +93,11 @@ export class MaintenancePage {
   protected readonly vehiculeLabel = vehiculeLabel;
   protected readonly statutOptions = statutOptionsFrom(
     STATUT_OT,
-    statutOtLabel
+    statutOtLabel,
+    ordreTravailStatutIcon
   );
+  protected readonly rowIcon = DESTINATION_NAV_ICON.maintenance;
+  protected readonly statsSkeletonTiles = [0, 1, 2] as const;
 
   protected readonly statutFilter = signal<string | null>(null);
   protected readonly page = signal(0);
@@ -82,6 +105,22 @@ export class MaintenancePage {
   protected readonly pageSize = signal(DEFAULT_LIST_PAGE_SIZE);
   protected readonly activeRowId = signal<string | null>(null);
   protected readonly vehiculeFilterId = signal<string | null>(null);
+
+  protected readonly stats = httpResource<OrdreTravailStats>(() => {
+    const params: Record<string, string> = {};
+    const vehiculeId = this.vehiculeFilterId();
+    if (vehiculeId) {
+      params["vehiculeId"] = vehiculeId;
+    }
+    const statut = this.statutFilter();
+    if (statut) {
+      params["statut"] = statut;
+    }
+    return {
+      params,
+      url: `${environment.apiBaseUrl}/ordres-travail/stats`,
+    };
+  });
 
   protected readonly ordres = httpResource<PageResponse<OrdreTravail>>(() => {
     const params: Record<string, string | number> = {
@@ -164,6 +203,10 @@ export class MaintenancePage {
     effect(() => {
       syncListKeyboardActiveId(this.keyboardRows(), this.activeRowId);
     });
+  }
+
+  protected statutChipIcon(statut: string): string | null {
+    return statutIconForValue(this.statutOptions, statut);
   }
 
   protected clearFilters(): void {

@@ -13,6 +13,7 @@ import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
 import { filterByStatut } from "../shared/ui/list-filter";
 import { ListEmptyState } from "../shared/ui/list-empty-state";
+import { ZardTableImports } from "@/shared/components/table/table.imports";
 import {
   ListTableSkeleton,
   MapAsideSkeleton,
@@ -34,12 +35,19 @@ import {
   ListStatutFilter,
   type ListStatutOption,
 } from "../shared/ui/list-statut-filter";
+import { ListToolbarCta } from "../shared/ui/list-toolbar-cta";
 import { GeoMarkersMap } from "../shared/ui/geo-markers-map";
 import {
+  actifIcon,
   actifLabel,
   actifTone,
   StatutChip,
 } from "../shared/ui/statut-chip";
+import { NgIcon } from "@ng-icons/core";
+import {
+  DESTINATION_NAV_ICON,
+  LIST_TABLE_ROW_ICON_PROVIDERS,
+} from "../shared/ui/list-table-row-icons";
 import type { Site } from "./site";
 import { siteListMarkers } from "./site-list-markers";
 
@@ -50,27 +58,33 @@ const ACTIF_OPTIONS: readonly ListStatutOption[] = [
 
 @Component({
   imports: [
+    NgIcon,
     RouterLink,
     StatutChip,
     ListSearchBar,
     ListStatutFilter,
+    ListToolbarCta,
     ListPagination,
     ListEmptyState,
     ListRowKeyboard,
     ListTableSkeleton,
     MapAsideSkeleton,
     GeoMarkersMap,
+    ...ZardTableImports,
   ],
   selector: "app-sites-page",
   templateUrl: "./sites-page.html",
+  viewProviders: [LIST_TABLE_ROW_ICON_PROVIDERS],
 })
 export class SitesPage {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
+  protected readonly actifIcon = actifIcon;
   protected readonly actifLabel = actifLabel;
   protected readonly actifTone = actifTone;
+  protected readonly rowIcon = DESTINATION_NAV_ICON.sites;
   protected readonly actifOptions = ACTIF_OPTIONS;
   protected readonly searchDraft = signal("");
   protected readonly search = signal("");

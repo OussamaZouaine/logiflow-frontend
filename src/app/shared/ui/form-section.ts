@@ -8,9 +8,9 @@ import { ChangeDetectionStrategy, Component, input } from "@angular/core";
   },
   selector: "app-form-section",
   template: `
-    <section class="surface-panel flex flex-col gap-5 p-5">
+    <section class="surface-panel flex flex-col gap-5 p-4 sm:p-5">
       <div>
-        <h2 class="text-base font-medium tracking-tight text-ink">
+        <h2 class="text-sm font-semibold tracking-tight text-ink">
           {{ title() }}
         </h2>
         @if (description()) {

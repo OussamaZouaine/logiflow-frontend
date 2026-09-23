@@ -1,4 +1,6 @@
 import { Component, computed, inject, signal } from "@angular/core";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import { lucideCheck } from "@ng-icons/lucide";
 import {
   FormField,
   form,
@@ -37,9 +39,10 @@ const VIN_PATTERN = /^[A-HJ-NPR-Z0-9]{17}$/;
 const CURRENT_YEAR = new Date().getFullYear();
 
 @Component({
-  imports: [FormField, RouterLink, ...FORM_PAGE_IMPORTS],
+  imports: [FormField, NgIcon, RouterLink, ...FORM_PAGE_IMPORTS],
   selector: "app-vehicule-create-page",
   templateUrl: "./vehicule-create-page.html",
+  viewProviders: [provideIcons({ lucideCheck })],
 })
 export class VehiculeCreatePage {
   private readonly api = inject(VehiculeApi);

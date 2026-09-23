@@ -1,5 +1,5 @@
-<div class="fiche-page">
-  <app-fiche-header listLabel="Commandes" listLink="/commandes">
+<div class="inner-page fiche-page">
+  <app-fiche-header icon="lucideClipboardList">
     @if (commande.isLoading()) {
     <p class="fiche-load-hint" role="status">Chargement…</p>
     } @else if (commande.error()) {
@@ -10,6 +10,7 @@
     } @else if (commande.hasValue()) {
     <app-fiche-title-row [mono]="true" [title]="commande.value().reference">
       <app-statut-chip
+        [icon]="statutChipIcon(commande.value().statut)"
         [label]="statutCommandeLabel(commande.value().statut)"
         [tone]="commandeStatutTone(commande.value().statut)"
       />

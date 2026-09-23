@@ -1,32 +1,23 @@
 <div class="voyages-page">
-  <div class="voyages-page__header">
-    <div>
-      <h1 class="module-page-title">Voyages</h1>
-      <p class="mt-1 text-sm text-muted">
-        Exécution physique des dossiers — véhicule, chauffeur, trajet.
-      </p>
-    </div>
-    @if (canPlan()) {
-    <a class="voyages-page__cta" routerLink="/voyages/nouveau" z-button zType="default">
-      <ng-icon aria-hidden="true" name="lucidePlus" />
-      Nouveau voyage
-    </a>
-    }
-  </div>
-
-  <z-card class="voyages-toolbar">
-    <div class="voyages-toolbar__inner">
-      <app-list-search-bar
+  <div class="list-toolbar voyages-toolbar">
+    <app-list-search-bar
         [(draft)]="searchDraft"
         [(query)]="search"
         inputId="voyage-search"
         placeholder="Référence, type, portée…"
       />
-      <app-list-statut-filter
-        [(selected)]="statutFilter"
-        [options]="statutOptions"
-      />
-      @if (hasActiveFilters()) {
+    <app-list-statut-filter
+      [(selected)]="statutFilter"
+      [options]="statutOptions"
+    />
+    @if (canPlan()) {
+    <app-list-toolbar-cta label="Nouveau voyage" link="/voyages/nouveau" />
+    }
+  </div>
+
+  @if (hasActiveFilters()) {
+  <z-card class="voyages-toolbar-meta">
+    <div class="voyages-toolbar__inner">
       <div class="voyages-toolbar__meta">
         <p class="voyages-toolbar__meta-text">
           <ng-icon aria-hidden="true" name="lucideRoute" />
@@ -50,9 +41,9 @@
           Effacer
         </button>
       </div>
-      }
     </div>
   </z-card>
+  }
 
   @if (voyages.isLoading()) {
   <div class="voyages-layout">
@@ -106,122 +97,125 @@
   } @else if (voyages.hasValue()) {
   <div class="voyages-layout">
     <div class="voyages-table-wrap">
-      <div
-        appListRowKeyboard
-        [(activeId)]="selectedVoyageId"
-        [rows]="keyboardRows()"
-        aria-label="Liste des voyages — flèches pour naviguer, Entrée pour ouvrir"
-        class="voyages-table-panel"
-      >
-        <table>
-          <thead class="voyages-table-head">
-            <tr>
-              <th scope="col">
-                <span class="voyages-th">
-                  <ng-icon aria-hidden="true" name="lucideHash" />
-                  Référence
-                </span>
-              </th>
-              <th class="voyages-col voyages-col--type" scope="col">
-                <span class="voyages-th">
-                  <ng-icon aria-hidden="true" name="lucideRoute" />
-                  Type
-                </span>
-              </th>
-              <th class="voyages-col voyages-col--portee" scope="col">
-                <span class="voyages-th">
-                  <ng-icon aria-hidden="true" name="lucideGlobe" />
-                  Portée
-                </span>
-              </th>
-              <th class="voyages-col voyages-col--depart" scope="col">
-                <span class="voyages-th">
-                  <ng-icon aria-hidden="true" name="lucideCalendarClock" />
-                  Départ prévu
-                </span>
-              </th>
-              <th scope="col">
-                <span class="voyages-th">
-                  <ng-icon aria-hidden="true" name="lucideCircleDot" />
-                  Statut
-                </span>
-              </th>
-              <th scope="col">
-                <span class="sr-only">Actions</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (voyage of visibleVoyages(); track voyage.id) {
-            <tr
-              (click)="selectVoyage(voyage.id)"
-              [attr.aria-selected]="selectedVoyageId() === voyage.id"
-              class="voyages-row"
-            >
-              <td>
-                <a
-                  (click)="$event.stopPropagation()"
-                  [routerLink]="['/voyages', voyage.id]"
-                  class="voyages-ref"
-                >
-                  <ng-icon aria-hidden="true" name="lucideHash" />
-                  {{ voyage.reference }}
-                </a>
-              </td>
-              <td class="voyages-col voyages-col--type">
-                <span class="voyages-cell">
-                  <ng-icon
-                    aria-hidden="true"
-                    [name]="typeVoyageIcon(voyage.typeVoyage)"
-                  />
-                  {{ typeVoyageLabel(voyage.typeVoyage) }}
-                </span>
-              </td>
-              <td class="voyages-col voyages-col--portee">
-                <span class="voyages-cell voyages-cell--muted">
-                  <ng-icon
-                    aria-hidden="true"
-                    [name]="porteeIcon(voyage.portee)"
-                  />
-                  {{ porteeLabel(voyage.portee) }}
-                </span>
-              </td>
-              <td class="voyages-col voyages-col--depart">
-                <span class="voyages-cell voyages-cell--muted voyages-cell--mono">
-                  <ng-icon aria-hidden="true" name="lucideCalendarClock" />
-                  {{ formatInstant(voyage.departPrevu) }}
-                </span>
-              </td>
-              <td>
-                <z-badge [zType]="statutBadgeType(voyage.statut)">
-                  {{ statutVoyageLabel(voyage.statut) }}
-                </z-badge>
-              </td>
-              <td class="text-right">
-                <a
-                  (click)="$event.stopPropagation()"
-                  [routerLink]="['/voyages', voyage.id]"
-                  class="voyages-row-action"
-                >
-                  Ouvrir
-                  <ng-icon aria-hidden="true" name="lucideChevronRight" />
-                </a>
-              </td>
-            </tr>
-            }
-          </tbody>
-        </table>
+      <div class="list-table-stack">
+        <div
+          appListRowKeyboard
+          [(activeId)]="selectedVoyageId"
+          [rows]="keyboardRows()"
+          aria-label="Liste des voyages — flèches pour naviguer, Entrée pour ouvrir"
+          class="voyages-table-panel"
+        >
+          <table z-table>
+            <thead class="voyages-table-head" z-table-header>
+              <tr z-table-row>
+                <th scope="col" z-table-head>
+                  <span class="voyages-th">
+                    <ng-icon aria-hidden="true" name="lucideHash" />
+                    Référence
+                  </span>
+                </th>
+                <th class="voyages-col voyages-col--type" scope="col" z-table-head>
+                  <span class="voyages-th">
+                    <ng-icon aria-hidden="true" name="lucideRoute" />
+                    Type
+                  </span>
+                </th>
+                <th class="voyages-col voyages-col--portee" scope="col" z-table-head>
+                  <span class="voyages-th">
+                    <ng-icon aria-hidden="true" name="lucideGlobe" />
+                    Portée
+                  </span>
+                </th>
+                <th class="voyages-col voyages-col--depart" scope="col" z-table-head>
+                  <span class="voyages-th">
+                    <ng-icon aria-hidden="true" name="lucideCalendarClock" />
+                    Départ prévu
+                  </span>
+                </th>
+                <th scope="col" z-table-head>
+                  <span class="voyages-th">
+                    <ng-icon aria-hidden="true" name="lucideCircleDot" />
+                    Statut
+                  </span>
+                </th>
+                <th scope="col" z-table-head>
+                  <span class="sr-only">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody z-table-body>
+              @for (voyage of visibleVoyages(); track voyage.id) {
+              <tr
+                z-table-row
+                (click)="selectVoyage(voyage.id)"
+                [attr.aria-selected]="selectedVoyageId() === voyage.id"
+                class="voyages-row"
+              >
+                <td z-table-cell>
+                  <a
+                    (click)="$event.stopPropagation()"
+                    [routerLink]="['/voyages', voyage.id]"
+                    class="voyages-ref"
+                  >
+                    <ng-icon aria-hidden="true" name="lucideHash" />
+                    {{ voyage.reference }}
+                  </a>
+                </td>
+                <td class="voyages-col voyages-col--type" z-table-cell>
+                  <span class="voyages-cell">
+                    <ng-icon
+                      aria-hidden="true"
+                      [name]="typeVoyageIcon(voyage.typeVoyage)"
+                    />
+                    {{ typeVoyageLabel(voyage.typeVoyage) }}
+                  </span>
+                </td>
+                <td class="voyages-col voyages-col--portee" z-table-cell>
+                  <span class="voyages-cell voyages-cell--muted">
+                    <ng-icon
+                      aria-hidden="true"
+                      [name]="porteeIcon(voyage.portee)"
+                    />
+                    {{ porteeLabel(voyage.portee) }}
+                  </span>
+                </td>
+                <td class="voyages-col voyages-col--depart" z-table-cell>
+                  <span class="voyages-cell voyages-cell--muted voyages-cell--mono">
+                    <ng-icon aria-hidden="true" name="lucideCalendarClock" />
+                    {{ formatInstant(voyage.departPrevu) }}
+                  </span>
+                </td>
+                <td z-table-cell>
+                  <z-badge [zType]="statutBadgeType(voyage.statut)">
+                    {{ statutVoyageLabel(voyage.statut) }}
+                  </z-badge>
+                </td>
+                <td class="text-right" z-table-cell>
+                  <a
+                    (click)="$event.stopPropagation()"
+                    [routerLink]="['/voyages', voyage.id]"
+                    class="voyages-row-action"
+                  >
+                    Ouvrir
+                    <ng-icon aria-hidden="true" name="lucideChevronRight" />
+                  </a>
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <app-list-pagination
+          [(page)]="page"
+          [pageSize]="pageSize()"
+          (pageSizeChange)="pageSize.set($event); page.set(0)"
+          [pageSizeOptions]="pageSizeOptions"
+          [totalElements]="voyages.value().totalElements"
+          [totalPages]="voyages.value().totalPages"
+          [visibleCount]="visibleVoyages().length"
+          itemLabel="voyage"
+        />
       </div>
-      <app-list-pagination
-        [(page)]="page"
-        [pageSize]="pageSize()"
-        (pageSizeChange)="pageSize.set($event); page.set(0)"
-        [pageSizeOptions]="pageSizeOptions"
-        [totalElements]="voyages.value().totalElements"
-        [totalPages]="voyages.value().totalPages"
-        [visibleCount]="visibleVoyages().length"
-        itemLabel="voyage"
-      />
     </div>
 
     <z-card class="voyages-map-card">

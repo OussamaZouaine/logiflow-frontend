@@ -1,9 +1,20 @@
 import { httpResource } from "@angular/common/http";
-import { Component, computed, inject, input, signal } from "@angular/core";
+import {
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  input,
+  signal,
+} from "@angular/core";
+import { bindShellBreadcrumbLeaf } from "../core/nav/shell-breadcrumb-leaf";
 import { RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
+import { statutOptionsFrom } from "../shared/ui/list-filter";
+import { ordreTravailStatutIcon } from "../shared/ui/list-statut-icons";
+import { statutIconForValue } from "../shared/ui/list-statut-filter";
 import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
 import { ToastService } from "../shared/ui/toast";
 import { StatutChip } from "../shared/ui/statut-chip";
@@ -13,6 +24,7 @@ import {
   formatMoney,
   formatOrdreShortId,
   nextStatuts,
+  STATUT_OT,
   type OrdreTravail,
   type StatutOT,
   statutOtLabel,
@@ -33,17 +45,38 @@ const VEHICULE_LOOKUP_PAGE_SIZE = 50;
 export class OrdreDetailPage {
   private readonly api = inject(OrdreTravailApi);
   private readonly toast = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly id = input.required<string>();
+
+  constructor() {
+    bindShellBreadcrumbLeaf(
+      this.destroyRef,
+      computed(() =>
+        this.ordre.hasValue()
+          ? `#${formatOrdreShortId(this.ordre.value().id)}`
+          : null
+      )
+    );
+  }
 
   protected readonly formatDateTime = formatDateTime;
   protected readonly formatDureeReelleMin = formatDureeReelleMin;
   protected readonly formatMoney = formatMoney;
   protected readonly formatOrdreShortId = formatOrdreShortId;
   protected readonly nextStatuts = nextStatuts;
+  protected readonly statutOptions = statutOptionsFrom(
+    STATUT_OT,
+    statutOtLabel,
+    ordreTravailStatutIcon
+  );
   protected readonly statutOtLabel = statutOtLabel;
   protected readonly statutOtTone = statutOtTone;
   protected readonly typeInterventionLabel = typeInterventionLabel;
+
+  protected statutChipIcon(statut: string): string | null {
+    return statutIconForValue(this.statutOptions, statut);
+  }
 
   protected readonly statutError = signal<string | null>(null);
 

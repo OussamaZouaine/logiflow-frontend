@@ -1,20 +1,5 @@
 <div class="flex flex-col gap-6">
-  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-    <div>
-      <h1 class="module-page-title">Dossiers</h1>
-      <p class="mt-1 text-sm text-muted">
-        Fiches transport issues des commandes confirmées — marchandise, sites,
-        cycle de vie.
-      </p>
-    </div>
-    @if (canPlan()) {
-    <a class="btn-primary pressable" routerLink="/dossiers/nouveau">
-      Nouveau dossier
-    </a>
-    }
-  </div>
-
-  <div class="flex flex-col gap-3">
+  <div class="list-toolbar">
     <app-list-search-bar
       [(draft)]="searchDraft"
       [(query)]="search"
@@ -25,6 +10,9 @@
       [(selected)]="statutFilter"
       [options]="statutOptions"
     />
+    @if (canPlan()) {
+    <app-list-toolbar-cta label="Nouveau dossier" link="/dossiers/nouveau" />
+    }
   </div>
 
   @if (dossiers.isLoading()) {
@@ -69,86 +57,90 @@
     title="Aucun dossier pour ce filtre"
   />
   } @else if (dossiers.hasValue()) {
-  <div
-    appListRowKeyboard
-    [(activeId)]="activeRowId"
-    [rows]="keyboardRows()"
-    aria-label="Liste des dossiers — flèches pour naviguer, Entrée pour ouvrir"
-    class="list-table-panel"
-  >
-    <table class="w-full min-w-xl text-left text-sm">
-      <thead class="list-table-head">
-        <tr>
-          <th class="px-4 py-3 font-medium" scope="col">Référence</th>
-          <th class="px-4 py-3 font-medium" scope="col">Type</th>
-          <th class="px-4 py-3 font-medium" scope="col">Famille</th>
-          <th class="px-4 py-3 font-medium" scope="col">Poids</th>
-          <th class="px-4 py-3 font-medium" scope="col">Statut</th>
-          <th class="px-4 py-3 font-medium" scope="col">
-            <span class="sr-only">Actions</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (dossier of visibleDossiers(); track dossier.id) {
-        <tr
-          [attr.aria-selected]="activeRowId() === dossier.id"
-          [class.bg-pine/5]="activeRowId() === dossier.id"
-          class="list-row border-b border-line last:border-0 hover:bg-canvas"
-        >
-          <td class="px-4 py-3">
-            <a
-              [routerLink]="['/dossiers', dossier.id]"
-              class="font-mono text-xs text-pine underline-offset-2 hover:underline"
-            >
-              {{ dossier.reference }}
-            </a>
-          </td>
-          <td class="px-4 py-3 text-ink">
-            {{ typeTransportLabel(dossier.typeTransport) }}
-          </td>
-          <td class="px-4 py-3 text-muted">
-            {{ dossier.familleMarchandise }}
-          </td>
-          <td class="px-4 py-3 font-mono tabular-nums text-muted">
-            {{ dossier.poidsBrutKg }} kg
-          </td>
-          <td class="px-4 py-3">
-            <app-statut-chip
-              [label]="statutDossierLabel(dossier.statut)"
-              [tone]="dossierStatutTone(dossier.statut)"
-            />
-          </td>
-          <td class="px-4 py-3 text-right">
-            <a
-              [routerLink]="['/dossiers', dossier.id]"
-              class="list-row-action text-sm font-medium text-pine underline-offset-2 hover:underline"
-            >
-              Ouvrir
-            </a>
-          </td>
-        </tr>
-        }
-      </tbody>
-    </table>
+  <div class="list-table-stack">
+    <div
+      appListRowKeyboard
+      [(activeId)]="activeRowId"
+      [rows]="keyboardRows()"
+      aria-label="Liste des dossiers — flèches pour naviguer, Entrée pour ouvrir"
+      class="list-table-panel"
+    >
+      <table z-table>
+        <thead z-table-header>
+          <tr z-table-row>
+            <th scope="col" z-table-head>Référence</th>
+            <th scope="col" z-table-head>Type</th>
+            <th scope="col" z-table-head>Famille</th>
+            <th scope="col" z-table-head>Poids</th>
+            <th scope="col" z-table-head>Statut</th>
+            <th scope="col" z-table-head class="text-right">
+              <span class="sr-only">Actions</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody z-table-body>
+          @for (dossier of visibleDossiers(); track dossier.id) {
+          <tr
+            z-table-row
+            [attr.aria-selected]="activeRowId() === dossier.id"
+            [class.bg-pine/5]="activeRowId() === dossier.id"
+            class="list-row"
+          >
+            <td z-table-cell>
+              <a
+                [routerLink]="['/dossiers', dossier.id]"
+                class="font-mono text-xs text-pine underline-offset-2 hover:underline"
+              >
+                {{ dossier.reference }}
+              </a>
+            </td>
+            <td class="text-ink" z-table-cell>
+              <span class="list-cell-with-icon">
+                <ng-icon
+                  [name]="rowIcon"
+                  aria-hidden="true"
+                  class="list-cell-with-icon__icon"
+                />
+                <span>{{ typeTransportLabel(dossier.typeTransport) }}</span>
+              </span>
+            </td>
+            <td class="text-muted" z-table-cell>
+              {{ dossier.familleMarchandise }}
+            </td>
+            <td class="font-mono tabular-nums text-muted" z-table-cell>
+              {{ dossier.poidsBrutKg }} kg
+            </td>
+            <td z-table-cell>
+              <app-statut-chip
+                [icon]="statutChipIcon(dossier.statut)"
+                [label]="statutDossierLabel(dossier.statut)"
+                [tone]="dossierStatutTone(dossier.statut)"
+              />
+            </td>
+            <td class="text-right" z-table-cell>
+              <a
+                [routerLink]="['/dossiers', dossier.id]"
+                class="list-row-action list-row-action--with-icon text-sm font-medium text-pine underline-offset-2 hover:underline"
+              >
+                <span>Ouvrir</span>
+                <ng-icon aria-hidden="true" name="lucideArrowRight" />
+              </a>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-list-pagination
+      [(page)]="page"
+      [pageSize]="pageSize()"
+      (pageSizeChange)="pageSize.set($event); page.set(0)"
+      [pageSizeOptions]="pageSizeOptions"
+      [totalElements]="dossiers.value().totalElements"
+      [totalPages]="dossiers.value().totalPages"
+      [visibleCount]="visibleDossiers().length"
+      itemLabel="dossier"
+    />
   </div>
-  @if (dossiers.value().totalElements) {
-  <p class="font-mono text-sm tabular-nums text-muted">
-    {{ visibleDossiers().length }}
-    affiché(s) /
-    {{ dossiers.value().totalElements }}
-    dossier(s)
-  </p>
-  }
-  <app-list-pagination
-    [(page)]="page"
-    [pageSize]="pageSize()"
-    (pageSizeChange)="pageSize.set($event); page.set(0)"
-    [pageSizeOptions]="pageSizeOptions"
-    [totalElements]="dossiers.value().totalElements"
-    [totalPages]="dossiers.value().totalPages"
-    [visibleCount]="visibleDossiers().length"
-    itemLabel="dossier"
-  />
   }
 </div>

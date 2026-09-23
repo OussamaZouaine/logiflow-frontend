@@ -7,6 +7,12 @@ import { TestBed } from "@angular/core/testing";
 import { provideRouter } from "@angular/router";
 import { MaintenancePage } from "./maintenance-page";
 
+const STATS = {
+  coutTotal: { devise: "EUR", montant: 250 },
+  enCours: 0,
+  nombre: 1,
+};
+
 const SAMPLE = {
   cout: { devise: "EUR", montant: 250 },
   datePlanifiee: "2026-09-04T16:00:00",
@@ -34,6 +40,9 @@ describe("MaintenancePage", () => {
     fixture.detectChanges();
 
     const http = TestBed.inject(HttpTestingController);
+    http
+      .expectOne((req) => req.url === "/api/v1/ordres-travail/stats")
+      .flush(STATS);
     http
       .expectOne((req) => req.url === "/api/v1/ordres-travail")
       .flush({
@@ -75,6 +84,9 @@ describe("MaintenancePage", () => {
 
     const http = TestBed.inject(HttpTestingController);
     http
+      .expectOne((req) => req.url === "/api/v1/ordres-travail/stats")
+      .flush({ ...STATS, nombre: 0, coutTotal: { devise: "EUR", montant: 0 } });
+    http
       .expectOne((req) => req.url === "/api/v1/ordres-travail")
       .flush({
         content: [],
@@ -107,6 +119,9 @@ describe("MaintenancePage", () => {
     fixture.detectChanges();
 
     const http = TestBed.inject(HttpTestingController);
+    http
+      .expectOne((req) => req.url === "/api/v1/ordres-travail/stats")
+      .flush(STATS);
     http
       .expectOne((req) => req.url === "/api/v1/ordres-travail")
       .error(new ProgressEvent("error"));

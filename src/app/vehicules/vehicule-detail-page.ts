@@ -2,11 +2,13 @@ import { httpResource } from "@angular/common/http";
 import {
   Component,
   computed,
+  DestroyRef,
   effect,
   inject,
   input,
   signal,
 } from "@angular/core";
+import { bindShellBreadcrumbLeaf } from "../core/nav/shell-breadcrumb-leaf";
 import {
   FormField,
   form,
@@ -56,8 +58,13 @@ import {
 } from "../maintenance/score-sante";
 import { ScoreSanteApi } from "../maintenance/score-sante-api";
 import { enumToSelectOptions } from "../shared/ui/field-select";
+import { statutOptionsFrom } from "../shared/ui/list-filter";
+import { vehiculeStatutIcon } from "../shared/ui/list-statut-icons";
+import { statutIconForValue } from "../shared/ui/list-statut-filter";
 import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
 import { StatutChip } from "../shared/ui/statut-chip";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import { lucideCheck } from "@ng-icons/lucide";
 import { ToastService } from "../shared/ui/toast";
 import { vehiculeStatutTone } from "../tableau/apercu";
 import {
@@ -67,14 +74,16 @@ import {
   formatVehiculeDate,
   statutLabel,
   typeLabel,
+  VEHICULE_STATUTS,
   type Vehicule,
 } from "./vehicule";
 import { VehiculeApi } from "./vehicule-api";
 
 @Component({
-  imports: [FormField, RouterLink, StatutChip, ...FICHE_PAGE_IMPORTS],
+  imports: [FormField, NgIcon, RouterLink, StatutChip, ...FICHE_PAGE_IMPORTS],
   selector: "app-vehicule-detail-page",
   templateUrl: "./vehicule-detail-page.html",
+  viewProviders: [provideIcons({ lucideCheck })],
 })
 export class VehiculeDetailPage {
   private readonly api = inject(VehiculeApi);
@@ -82,9 +91,15 @@ export class VehiculeDetailPage {
   private readonly scoreApi = inject(ScoreSanteApi);
   private readonly session = inject(DemoSessionService);
   private readonly toast = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly id = input.required<string>();
 
+  protected readonly statutOptions = statutOptionsFrom(
+    VEHICULE_STATUTS,
+    statutLabel,
+    vehiculeStatutIcon
+  );
   protected readonly documentTypes = DOCUMENT_TYPES;
   protected readonly documentTypeOptions = enumToSelectOptions(
     DOCUMENT_TYPES,
@@ -99,6 +114,11 @@ export class VehiculeDetailPage {
   protected readonly formatMarqueModele = formatMarqueModele;
   protected readonly formatVehiculeDate = formatVehiculeDate;
   protected readonly vehiculeStatutTone = vehiculeStatutTone;
+
+  protected statutChipIcon(statut: string): string | null {
+    return statutIconForValue(this.statutOptions, statut);
+  }
+
   protected readonly statutSanteLabel = statutSanteLabel;
   protected readonly statutSanteTone = statutSanteTone;
   protected readonly formatScoreDate = formatDate;
@@ -228,6 +248,15 @@ export class VehiculeDetailPage {
   private seededForId = "";
 
   constructor() {
+    bindShellBreadcrumbLeaf(
+      this.destroyRef,
+      computed(() =>
+        this.vehicule.hasValue()
+          ? this.vehicule.value().immatriculation
+          : null
+      )
+    );
+
     effect(() => {
       const id = this.id();
       const current = this.vehicule.value();

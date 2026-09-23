@@ -3,12 +3,14 @@ import { httpResource } from "@angular/common/http";
 import {
   Component,
   computed,
+  DestroyRef,
   effect,
   inject,
   input,
   signal,
   viewChild,
 } from "@angular/core";
+import { bindShellBreadcrumbLeaf } from "../core/nav/shell-breadcrumb-leaf";
 import { RouterLink } from "@angular/router";
 import { NgIcon, provideIcons } from "@ng-icons/core";
 import {
@@ -172,11 +174,19 @@ const ETAPE_DOT_CLASS: Record<TypeEtape, string> = {
 export class VoyageDetailPage {
   private readonly api = inject(VoyageApi);
   private readonly toast = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly capacityView = viewChild(RemorqueCapacityView);
 
   readonly id = input.required<string>();
 
   constructor() {
+    bindShellBreadcrumbLeaf(
+      this.destroyRef,
+      computed(() =>
+        this.voyage.hasValue() ? this.voyage.value().reference : null
+      )
+    );
+
     effect(() => {
       const suggested = suggestedEvenementHorodatageLocal(
         this.evenements.value() ?? []

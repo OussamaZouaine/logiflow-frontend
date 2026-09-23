@@ -1,5 +1,6 @@
 import { httpResource } from "@angular/common/http";
-import { Component, computed, inject, input } from "@angular/core";
+import { Component, computed, DestroyRef, inject, input } from "@angular/core";
+import { bindShellBreadcrumbLeaf } from "../core/nav/shell-breadcrumb-leaf";
 import { RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
@@ -20,7 +21,18 @@ const LOOKUP_PAGE_SIZE = 50;
   templateUrl: "./plan-entretien-detail-page.html",
 })
 export class PlanEntretienDetailPage {
+  private readonly destroyRef = inject(DestroyRef);
+
   readonly id = input.required<string>();
+
+  constructor() {
+    bindShellBreadcrumbLeaf(
+      this.destroyRef,
+      computed(() =>
+        this.plan.hasValue() ? this.plan.value().libelle : null
+      )
+    );
+  }
 
   protected readonly formatPeriodicite = formatPeriodicite;
   protected readonly vehiculeLabel = vehiculeLabel;

@@ -1,17 +1,5 @@
 <div class="flex flex-col gap-6">
-  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-    <div>
-      <h1 class="module-page-title">Commandes</h1>
-      <p class="mt-1 text-sm text-muted">
-        Demandes clients à transporter. Confirmation puis dossier.
-      </p>
-    </div>
-    <a class="btn-primary pressable" routerLink="/commandes/nouveau">
-      Nouvelle commande
-    </a>
-  </div>
-
-  <div class="flex flex-col gap-3">
+  <div class="list-toolbar">
     <app-list-search-bar
       [(draft)]="searchDraft"
       [(query)]="search"
@@ -22,6 +10,7 @@
       [(selected)]="statutFilter"
       [options]="statutOptions"
     />
+    <app-list-toolbar-cta label="Nouvelle commande" link="/commandes/nouveau" />
   </div>
 
   @if (commandes.isLoading()) {
@@ -61,82 +50,84 @@
     title="Aucune commande pour ce filtre"
   />
   } @else if (commandes.hasValue()) {
-  <div
-    appListRowKeyboard
-    [(activeId)]="activeRowId"
-    [rows]="keyboardRows()"
-    aria-label="Liste des commandes — flèches pour naviguer, Entrée pour ouvrir"
-    class="list-table-panel"
-  >
-    <table class="w-full min-w-xl text-left text-sm">
-      <thead class="list-table-head">
-        <tr>
-          <th class="px-4 py-3 font-medium" scope="col">Référence</th>
-          <th class="px-4 py-3 font-medium" scope="col">Date souhaitée</th>
-          <th class="px-4 py-3 font-medium" scope="col">Prix</th>
-          <th class="px-4 py-3 font-medium" scope="col">Statut</th>
-          <th class="px-4 py-3 font-medium" scope="col">
-            <span class="sr-only">Actions</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (commande of visibleCommandes(); track commande.id) {
-        <tr
-          [attr.aria-selected]="activeRowId() === commande.id"
-          [class.bg-pine/5]="activeRowId() === commande.id"
-          class="list-row border-b border-line last:border-0 hover:bg-canvas"
-        >
-          <td class="px-4 py-3">
-            <a
-              [routerLink]="['/commandes', commande.id]"
-              class="font-mono text-xs text-pine underline-offset-2 hover:underline"
-            >
-              {{ commande.reference }}
-            </a>
-          </td>
-          <td class="px-4 py-3 font-mono tabular-nums text-muted">
-            {{ formatDate(commande.dateSouhaitee) }}
-          </td>
-          <td class="px-4 py-3 font-mono tabular-nums text-ink">
-            {{ formatMoney(commande.prixNegocie) }}
-          </td>
-          <td class="px-4 py-3">
-            <app-statut-chip
-              [label]="statutCommandeLabel(commande.statut)"
-              [tone]="commandeStatutTone(commande.statut)"
-            />
-          </td>
-          <td class="px-4 py-3 text-right">
-            <a
-              [routerLink]="['/commandes', commande.id]"
-              class="list-row-action text-sm font-medium text-pine underline-offset-2 hover:underline"
-            >
-              Ouvrir
-            </a>
-          </td>
-        </tr>
-        }
-      </tbody>
-    </table>
+  <div class="list-table-stack">
+    <div
+      appListRowKeyboard
+      [(activeId)]="activeRowId"
+      [rows]="keyboardRows()"
+      aria-label="Liste des commandes — flèches pour naviguer, Entrée pour ouvrir"
+      class="list-table-panel"
+    >
+      <table z-table>
+        <thead z-table-header>
+          <tr z-table-row>
+            <th scope="col" z-table-head>Référence</th>
+            <th scope="col" z-table-head>Date souhaitée</th>
+            <th scope="col" z-table-head>Prix</th>
+            <th scope="col" z-table-head>Statut</th>
+            <th scope="col" z-table-head class="text-right">
+              <span class="sr-only">Actions</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody z-table-body>
+          @for (commande of visibleCommandes(); track commande.id) {
+          <tr
+            z-table-row
+            [attr.aria-selected]="activeRowId() === commande.id"
+            [class.bg-pine/5]="activeRowId() === commande.id"
+            class="list-row"
+          >
+            <td z-table-cell>
+              <a
+                [routerLink]="['/commandes', commande.id]"
+                class="list-cell-with-icon font-mono text-xs text-pine underline-offset-2 hover:underline"
+              >
+                <ng-icon
+                  [name]="rowIcon"
+                  aria-hidden="true"
+                  class="list-cell-with-icon__icon"
+                />
+                <span>{{ commande.reference }}</span>
+              </a>
+            </td>
+            <td class="font-mono tabular-nums text-muted" z-table-cell>
+              {{ formatDate(commande.dateSouhaitee) }}
+            </td>
+            <td class="font-mono tabular-nums text-ink" z-table-cell>
+              {{ formatMoney(commande.prixNegocie) }}
+            </td>
+            <td z-table-cell>
+              <app-statut-chip
+                [icon]="statutChipIcon(commande.statut)"
+                [label]="statutCommandeLabel(commande.statut)"
+                [tone]="commandeStatutTone(commande.statut)"
+              />
+            </td>
+            <td class="text-right" z-table-cell>
+              <a
+                [routerLink]="['/commandes', commande.id]"
+                class="list-row-action list-row-action--with-icon text-sm font-medium text-pine underline-offset-2 hover:underline"
+              >
+                <span>Ouvrir</span>
+                <ng-icon aria-hidden="true" name="lucideArrowRight" />
+              </a>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-list-pagination
+      [(page)]="page"
+      [pageSize]="pageSize()"
+      (pageSizeChange)="pageSize.set($event); page.set(0)"
+      [pageSizeOptions]="pageSizeOptions"
+      [totalElements]="commandes.value().totalElements"
+      [totalPages]="commandes.value().totalPages"
+      [visibleCount]="visibleCommandes().length"
+      itemLabel="commande"
+    />
   </div>
-  @if (commandes.value().totalElements) {
-  <p class="font-mono text-sm tabular-nums text-muted">
-    {{ visibleCommandes().length }}
-    affichée(s) /
-    {{ commandes.value().totalElements }}
-    commande(s)
-  </p>
-  }
-  <app-list-pagination
-    [(page)]="page"
-    [pageSize]="pageSize()"
-    (pageSizeChange)="pageSize.set($event); page.set(0)"
-    [pageSizeOptions]="pageSizeOptions"
-    [totalElements]="commandes.value().totalElements"
-    [totalPages]="commandes.value().totalPages"
-    [visibleCount]="visibleCommandes().length"
-    itemLabel="commande"
-  />
   }
 </div>

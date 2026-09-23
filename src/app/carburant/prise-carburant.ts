@@ -1,3 +1,5 @@
+import { formatAmountDh } from "../core/api/money";
+
 export const TYPE_CARBURANTS = [
   "DIESEL",
   "GNR",
@@ -135,10 +137,10 @@ export function formatLitres(value: number): string {
 }
 
 export function formatMontantTtc(value: number): string {
-  return `${value.toLocaleString("fr-FR", {
-    minimumFractionDigits: 2,
+  return formatAmountDh(value, {
     maximumFractionDigits: 2,
-  })} €`;
+    minimumFractionDigits: 2,
+  });
 }
 
 export function formatPrixUnitaire(value: number | null): string {
@@ -148,7 +150,7 @@ export function formatPrixUnitaire(value: number | null): string {
   return `${value.toLocaleString("fr-FR", {
     minimumFractionDigits: 3,
     maximumFractionDigits: 3,
-  })} €/L`;
+  })} DH/L`;
 }
 
 export function draftToWrite(

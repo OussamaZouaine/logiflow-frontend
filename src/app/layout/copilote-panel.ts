@@ -5,7 +5,7 @@ import {
   signal,
 } from "@angular/core";
 import { NgIcon, provideIcons } from "@ng-icons/core";
-import { lucideSparkles, lucideX } from "@ng-icons/lucide";
+import { lucideArrowRight, lucideSparkles, lucideX } from "@ng-icons/lucide";
 import { httpErrorMessage } from "../core/api/http-error";
 import {
   canSubmitCopiloteQuestion,
@@ -17,7 +17,7 @@ import { CopiloteApi } from "../ia/copilote-api";
 
 @Component({
   imports: [NgIcon],
-  providers: [provideIcons({ lucideSparkles, lucideX })],
+  providers: [provideIcons({ lucideArrowRight, lucideSparkles, lucideX })],
   selector: "app-copilote-panel",
   templateUrl: "./copilote-panel.html",
 })

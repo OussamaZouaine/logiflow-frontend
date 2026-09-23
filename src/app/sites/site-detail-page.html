@@ -1,5 +1,5 @@
-<div class="fiche-page">
-  <app-fiche-header listLabel="Sites" listLink="/sites">
+<div class="inner-page fiche-page fiche-page--wide">
+  <app-fiche-header icon="lucideMapPin">
     @if (site.isLoading()) {
     <p class="fiche-load-hint" role="status">Chargement…</p>
     } @else if (site.error()) {
@@ -10,6 +10,7 @@
     } @else if (site.hasValue()) {
     <app-fiche-title-row [mono]="true" [title]="site.value().code">
       <app-statut-chip
+        [icon]="actifIcon(site.value().actif)"
         [label]="actifLabel(site.value().actif)"
         [tone]="actifTone(site.value().actif)"
       />
@@ -121,9 +122,10 @@
     <div class="alert-panel" role="alert">{{ formError() }}</div>
     }
 
-    <app-form-actions>
-      <button class="btn-primary pressable min-h-11 px-5" type="submit">
-        Enregistrer
+    <app-form-actions [inline]="true">
+      <button class="btn-toolbar pressable" type="submit">
+        <ng-icon aria-hidden="true" class="btn-toolbar__icon" name="lucideCheck" />
+        <span>Enregistrer</span>
       </button>
     </app-form-actions>
   </form>
@@ -141,7 +143,12 @@
       class="btn-danger-outline pressable w-fit"
       type="button"
     >
-      Désactiver
+      <ng-icon
+        aria-hidden="true"
+        class="size-[0.9375rem] shrink-0 opacity-90"
+        name="lucideCircleOff"
+      />
+      <span>Désactiver</span>
     </button>
   </app-fiche-danger-zone>
   } }
