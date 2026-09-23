@@ -14,6 +14,11 @@ import type { PageResponse } from "../core/api/page-response";
 import { filterByStatut, statutOptionsFrom } from "../shared/ui/list-filter";
 import { ListEmptyState } from "../shared/ui/list-empty-state";
 import { ListTableSkeleton } from "../shared/ui/list-table-skeleton";
+import {
+  DEFAULT_LIST_PAGE_SIZE,
+  LIST_PAGE_SIZE_OPTIONS,
+  resolveListPageSize,
+} from "../shared/ui/list-page-size";
 import { ListPagination } from "../shared/ui/list-pagination";
 import { ListSearchBar } from "../shared/ui/list-search-bar";
 import { connectListQueryState } from "../shared/ui/list-query-state";
@@ -32,8 +37,6 @@ import {
   STATUT_COMMANDES,
   statutCommandeLabel,
 } from "./commande";
-
-const COMMANDES_PAGE_SIZE = 20;
 
 @Component({
   imports: [
@@ -66,13 +69,15 @@ export class CommandesPage {
   protected readonly search = signal("");
   protected readonly statutFilter = signal<string | null>(null);
   protected readonly page = signal(0);
+  protected readonly pageSizeOptions = LIST_PAGE_SIZE_OPTIONS;
+  protected readonly pageSize = signal(DEFAULT_LIST_PAGE_SIZE);
   protected readonly activeRowId = signal<string | null>(null);
 
   protected readonly commandes = httpResource<PageResponse<Commande>>(() => ({
     params: {
       page: this.page(),
       q: this.search().trim(),
-      size: COMMANDES_PAGE_SIZE,
+      size: resolveListPageSize(this.pageSize()),
     },
     url: `${environment.apiBaseUrl}/commandes`,
   }));

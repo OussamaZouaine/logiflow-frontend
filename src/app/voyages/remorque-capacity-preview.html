@@ -1,0 +1,15 @@
+@if (capacitePreview(); as preview) {
+<app-remorque-capacity-display [capacite]="preview" [preview]="true" />
+} @else {
+<z-card>
+  <z-card-header>
+    <z-card-title zTitle="Capacité remorque" />
+    <z-card-description
+      zDescription="Estimation à partir de la remorque et des dossiers sélectionnés (avant enregistrement)."
+    />
+  </z-card-header>
+  <z-card-content>
+    <p class="text-sm text-muted">{{ hint() }}</p>
+  </z-card-content>
+</z-card>
+}

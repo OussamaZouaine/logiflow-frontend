@@ -1,0 +1,67 @@
+<app-form-page-header
+  description="Le code ne se modifie plus ensuite."
+  listLabel="Stations"
+  listLink="/carburant/stations"
+  title="Nouvelle station"
+/>
+
+<form (submit)="onSubmit($event)" class="form-page max-w-lg" novalidate>
+  <app-form-validation-summary
+    [show]="createForm().touched() && createForm().invalid()"
+  />
+
+  <app-form-section title="Identité">
+    <app-form-field
+      [error]="
+        showFieldError(createForm.code())
+          ? firstFieldError(createForm.code().errors())
+          : null
+      "
+      inputId="code"
+      label="Code"
+    >
+      <input
+        [attr.aria-invalid]="showFieldError(createForm.code()) || null"
+        [class]="fieldClasses(createForm.code())"
+        [formField]="createForm.code"
+        id="code"
+        type="text"
+      />
+    </app-form-field>
+
+    <app-form-field
+      [error]="
+        showFieldError(createForm.libelle())
+          ? firstFieldError(createForm.libelle().errors())
+          : null
+      "
+      inputId="libelle"
+      label="Libellé"
+    >
+      <input
+        [attr.aria-invalid]="showFieldError(createForm.libelle()) || null"
+        [class]="fieldClasses(createForm.libelle())"
+        [formField]="createForm.libelle"
+        id="libelle"
+        type="text"
+      />
+    </app-form-field>
+
+    <app-form-field inputId="adresse" label="Adresse">
+      <input [formField]="createForm.adresse" class="field" id="adresse" type="text" />
+    </app-form-field>
+  </app-form-section>
+
+  @if (formError()) {
+  <div class="alert-panel" role="alert">{{ formError() }}</div>
+  }
+
+  <app-form-actions>
+    <button class="btn-primary pressable min-h-11 px-5" type="submit">
+      Enregistrer
+    </button>
+    <a class="btn-outline pressable min-h-11 px-5" routerLink="/carburant/stations">
+      Annuler
+    </a>
+  </app-form-actions>
+</form>

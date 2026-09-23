@@ -2,6 +2,7 @@ export const TYPE_ENTITES_DOCUMENTABLES = [
   "VEHICULE",
   "REMORQUE",
   "CHAUFFEUR",
+  "PRISE_CARBURANT",
 ] as const;
 export type TypeEntiteDocumentable =
   (typeof TYPE_ENTITES_DOCUMENTABLES)[number];
@@ -12,6 +13,7 @@ export const DOCUMENT_TYPES = [
   "CONTROLE_TECHNIQUE",
   "ADR",
   "PHOTO",
+  "JUSTIFICATIF_CARBURANT",
   "AUTRE",
 ] as const;
 export type DocumentType = (typeof DOCUMENT_TYPES)[number];
@@ -56,6 +58,8 @@ export function documentTypeLabel(type: DocumentType): string {
       return "ADR";
     case "PHOTO":
       return "Photo";
+    case "JUSTIFICATIF_CARBURANT":
+      return "Justificatif carburant";
     case "AUTRE":
       return "Autre";
     default: {

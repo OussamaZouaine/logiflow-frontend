@@ -47,6 +47,12 @@ export const VOYAGES_ALLOWED_ROLES: readonly Role[] = [
   "CHAUFFEUR",
 ];
 
+/** Prises de carburant — same reach as Voyages. */
+export const CARBURANT_PRISES_ALLOWED_ROLES = VOYAGES_ALLOWED_ROLES;
+
+/** Stations carburant — same reach as Sites. */
+export const CARBURANT_STATIONS_ALLOWED_ROLES = SITES_ALLOWED_ROLES;
+
 /** List and detail on /dossiers — same as Commandes. */
 export const DOSSIERS_ALLOWED_ROLES: readonly Role[] = [
   "ADMINISTRATEUR",

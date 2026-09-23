@@ -1,5 +1,8 @@
 import type { EvenementVoyage, Voyage } from "./voyage";
-import { voyageTimelineEntries } from "./voyage-timeline";
+import {
+  voyageActualTimelineEntries,
+  voyagePlannedTimelineEntries,
+} from "./voyage-timeline";
 
 function sampleVoyage(overrides: Partial<Voyage> = {}): Voyage {
   return {
@@ -48,9 +51,33 @@ function sampleVoyage(overrides: Partial<Voyage> = {}): Voyage {
   };
 }
 
-describe("voyageTimelineEntries", () => {
-  it("merges planned steps, affectations and événements in time order", () => {
+describe("voyagePlannedTimelineEntries", () => {
+  it("lists départ, arrivée and étapes in time order", () => {
+    const entries = voyagePlannedTimelineEntries(sampleVoyage());
+    const labels = entries.map((entry) => entry.label);
+
+    expect(labels).toEqual([
+      "Départ prévu",
+      "Chargement (ETA)",
+      "Chargement (ETD)",
+      "Arrivée prévue",
+      "Déchargement (ETA)",
+    ]);
+    expect(entries.every((entry) => entry.kind === "planned")).toBe(true);
+  });
+});
+
+describe("voyageActualTimelineEntries", () => {
+  it("lists declared événements by horodatage and skips POSITION", () => {
     const evenements: EvenementVoyage[] = [
+      {
+        commentaire: "Sur site",
+        horodatage: "2026-09-02T11:00:00Z",
+        id: "evt-2",
+        position: null,
+        type: "ARRIVEE_CHARGEMENT",
+        voyageId: "55555555-5555-5555-5555-555555555555",
+      },
       {
         commentaire: null,
         horodatage: "2026-09-02T09:00:00Z",
@@ -69,33 +96,17 @@ describe("voyageTimelineEntries", () => {
       },
     ];
 
-    const entries = voyageTimelineEntries(sampleVoyage(), evenements, () =>
-      "CH-001 — Jean Martin"
-    );
-    const labels = entries.map((entry) => entry.label);
+    const entries = voyageActualTimelineEntries(evenements);
 
-    expect(labels).toContain("Départ prévu");
-    expect(labels).toContain("Affectation · Titulaire");
-    expect(labels).toContain("Départ");
-    expect(labels.indexOf("Affectation · Titulaire")).toBeLessThan(
-      labels.indexOf("Départ prévu")
-    );
-    expect(
-      entries.find((entry) => entry.label === "Affectation · Titulaire")?.detail
-    ).toBe("CH-001 — Jean Martin");
-    expect(labels.some((label) => label.toLowerCase().includes("position"))).toBe(
-      false
-    );
-    expect(entries.at(-1)?.kind).toBe("state");
-    expect(entries.at(-1)?.detail).toBe("Planifié");
+    expect(entries.map((entry) => entry.label)).toEqual([
+      "Départ",
+      "Arrivée chargement",
+    ]);
+    expect(entries.every((entry) => entry.kind === "actual")).toBe(true);
+    expect(entries[1]?.detail).toBe("Sur site");
   });
 
-  it("still returns statut state when voyage has no evenements", () => {
-    const entries = voyageTimelineEntries(
-      sampleVoyage({ affectations: [] }),
-      []
-    );
-    expect(entries.some((entry) => entry.kind === "planned")).toBe(true);
-    expect(entries.at(-1)?.kind).toBe("state");
+  it("returns an empty list when there are no événements", () => {
+    expect(voyageActualTimelineEntries([])).toEqual([]);
   });
 });

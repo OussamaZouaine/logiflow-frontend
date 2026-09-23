@@ -1,10 +1,21 @@
 import { isFieldSelectNone } from "../shared/ui/field-select";
 import {
+  compareDatetimeLocal,
   datetimeLocalToIso,
+  formatDatetimeLocalForDisplay,
+  isoInstantToDatetimeLocal,
+  maxDatetimeLocal,
   toDatetimeLocal,
 } from "../shared/ui/iso-datetime";
 
-export { datetimeLocalToIso, toDatetimeLocal };
+export {
+  compareDatetimeLocal,
+  datetimeLocalToIso,
+  formatDatetimeLocalForDisplay,
+  isoInstantToDatetimeLocal,
+  maxDatetimeLocal,
+  toDatetimeLocal,
+};
 
 export const TYPE_VOYAGES = [
   "SIMPLE",
@@ -144,6 +155,47 @@ export interface EvenementVoyageWrite {
   position: GeoPoint | null;
   type: TypeEvenement;
   voyageId: string;
+}
+
+export function latestEvenementHorodatage(
+  evenements: readonly EvenementVoyage[]
+): string | null {
+  if (evenements.length === 0) {
+    return null;
+  }
+  let latest = evenements[0].horodatage;
+  let latestMs = new Date(latest).getTime();
+  for (let index = 1; index < evenements.length; index += 1) {
+    const candidate = evenements[index].horodatage;
+    const candidateMs = new Date(candidate).getTime();
+    if (candidateMs > latestMs) {
+      latest = candidate;
+      latestMs = candidateMs;
+    }
+  }
+  return latest;
+}
+
+export function minEvenementHorodatageLocal(
+  evenements: readonly EvenementVoyage[]
+): string | null {
+  const latestIso = latestEvenementHorodatage(evenements);
+  if (!latestIso) {
+    return null;
+  }
+  const latestLocal = isoInstantToDatetimeLocal(latestIso);
+  return latestLocal.length > 0 ? latestLocal : null;
+}
+
+export function suggestedEvenementHorodatageLocal(
+  evenements: readonly EvenementVoyage[]
+): string {
+  const now = toDatetimeLocal(new Date());
+  const minimum = minEvenementHorodatageLocal(evenements);
+  if (!minimum) {
+    return now;
+  }
+  return maxDatetimeLocal(now, minimum);
 }
 
 export interface VoyageLookupVehicule {
@@ -408,6 +460,22 @@ export function formatInstant(value: string): string {
 
 export function remplissageLabel(taux: number): string {
   return `${Math.round(taux * 100)} %`;
+}
+
+/** Human-readable duration from minutes (e.g. "7 h 30"). */
+export function formatDureeMin(minutes: number): string {
+  if (minutes <= 0) {
+    return "0 min";
+  }
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  if (hours === 0) {
+    return `${remainder} min`;
+  }
+  if (remainder === 0) {
+    return `${hours} h`;
+  }
+  return `${hours} h ${String(remainder).padStart(2, "0")}`;
 }
 
 function minutesBetween(fromLocal: string, toLocal: string): number {

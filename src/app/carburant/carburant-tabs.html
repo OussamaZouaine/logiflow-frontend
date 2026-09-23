@@ -1,0 +1,22 @@
+<nav
+  aria-label="Sections carburant"
+  class="flex flex-wrap gap-2 border-b border-line pb-3"
+>
+  <a
+    class="pressable min-h-10 rounded-lg border border-line/80 px-3 py-2 text-sm font-medium text-ink aria-[current=page]:border-pine aria-[current=page]:bg-pine/5 aria-[current=page]:text-pine"
+    routerLink="/carburant"
+    routerLinkActive
+    [routerLinkActiveOptions]="{ exact: true }"
+  >
+    Prises
+  </a>
+  @if (showStations()) {
+  <a
+    class="pressable min-h-10 rounded-lg border border-line/80 px-3 py-2 text-sm font-medium text-ink aria-[current=page]:border-pine aria-[current=page]:bg-pine/5 aria-[current=page]:text-pine"
+    routerLink="/carburant/stations"
+    routerLinkActive
+  >
+    Stations
+  </a>
+  }
+</nav>

@@ -20,6 +20,11 @@ import {
   ListRowKeyboard,
   syncListKeyboardActiveId,
 } from "../shared/ui/list-row-keyboard";
+import {
+  DEFAULT_LIST_PAGE_SIZE,
+  LIST_PAGE_SIZE_OPTIONS,
+  resolveListPageSize,
+} from "../shared/ui/list-page-size";
 import { ListPagination } from "../shared/ui/list-pagination";
 import { ListSearchBar } from "../shared/ui/list-search-bar";
 import { ListStatutFilter } from "../shared/ui/list-statut-filter";
@@ -31,8 +36,6 @@ import {
   type Remorque,
   VEHICULE_STATUTS,
 } from "./remorque";
-
-const REMORQUES_PAGE_SIZE = 20;
 
 @Component({
   imports: [
@@ -65,13 +68,15 @@ export class RemorquesPage {
   protected readonly search = signal("");
   protected readonly statutFilter = signal<string | null>(null);
   protected readonly page = signal(0);
+  protected readonly pageSizeOptions = LIST_PAGE_SIZE_OPTIONS;
+  protected readonly pageSize = signal(DEFAULT_LIST_PAGE_SIZE);
   protected readonly activeRowId = signal<string | null>(null);
 
   protected readonly remorques = httpResource<PageResponse<Remorque>>(() => ({
     params: {
       page: this.page(),
       q: this.search().trim(),
-      size: REMORQUES_PAGE_SIZE,
+      size: resolveListPageSize(this.pageSize()),
     },
     url: `${environment.apiBaseUrl}/remorques`,
   }));

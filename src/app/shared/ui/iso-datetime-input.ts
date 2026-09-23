@@ -23,6 +23,7 @@ import {
 } from "@/shared/components/popover";
 import { mergeClasses } from "@/shared/utils/merge-classes";
 import {
+  clampDatetimeLocal,
   combineDatetimeLocal,
   dateIsoFromDate,
   dateIsoToDisplay,
@@ -89,6 +90,7 @@ import {
         [attr.aria-label]="timeAriaLabel()"
         [attr.aria-invalid]="ariaInvalid() ?? null"
         [disabled]="isDisabled()"
+        [attr.min]="timeMin()"
         [value]="timeValue()"
         (input)="onTimeInput($event)"
         (blur)="onTimeBlur()"
@@ -99,8 +101,8 @@ import {
       <z-popover aria-label="Choisir une date" class="w-auto overflow-hidden p-0">
         <z-calendar
           zCaptionLayout="dropdown"
-          [minDate]="minDate()"
-          [maxDate]="maxDate()"
+        [minDate]="effectiveMinDate()"
+        [maxDate]="maxDate()"
           [value]="selectedDate()"
           (valueChange)="onCalendarSelect($event)"
         />
@@ -122,6 +124,8 @@ export class IsoDatetimeInputComponent implements ControlValueAccessor {
   readonly timeAriaLabel = input("Heure");
   readonly minDate = input<Date | null>(null);
   readonly maxDate = input<Date | null>(null);
+  /** Minimum allowed value as `yyyy-MM-ddTHH:mm` (local). */
+  readonly minIsoDatetime = input<string | null>(null);
   readonly ariaInvalid = input<boolean | null>(null);
   readonly inputClass = input<ClassValue>("");
   /** Standalone binding when `[formField]` is not used. */
@@ -135,6 +139,33 @@ export class IsoDatetimeInputComponent implements ControlValueAccessor {
   protected readonly isDisabled = signal(false);
 
   protected readonly timeInputId = computed(() => `${this.inputId()}-time`);
+
+  protected readonly effectiveMinDate = computed(() => {
+    const explicitMin = this.minDate();
+    if (explicitMin) {
+      return explicitMin;
+    }
+    const minIso = this.minIsoDatetime();
+    if (!minIso) {
+      return null;
+    }
+    const { date } = splitDatetimeLocal(minIso);
+    return localDateFromDateIso(date);
+  });
+
+  protected readonly timeMin = computed(() => {
+    const minIso = this.minIsoDatetime();
+    const selected = this.selectedDate();
+    if (!minIso || !selected) {
+      return null;
+    }
+    const { date: minDateIso, time: minTime } = splitDatetimeLocal(minIso);
+    const minDate = localDateFromDateIso(minDateIso);
+    if (!minDate || minTime.length === 0) {
+      return null;
+    }
+    return selected.getTime() === minDate.getTime() ? minTime : null;
+  });
 
   protected readonly inputClasses = computed(() =>
     mergeClasses(this.inputClass())
@@ -254,17 +285,23 @@ export class IsoDatetimeInputComponent implements ControlValueAccessor {
   }
 
   private commitFromParts(date: string, time: string): void {
-    const combined = combineDatetimeLocal(date, time);
+    let combined = combineDatetimeLocal(date, time);
+    const minIso = this.minIsoDatetime();
+    if (minIso && combined.length > 0) {
+      combined = clampDatetimeLocal(combined, minIso);
+    }
+    const { date: nextDate, time: nextTime } = splitDatetimeLocal(combined);
     if (combined === this.datetimeLocal) {
-      this.dateIso = date;
-      this.selectedDate.set(localDateFromDateIso(date));
+      this.dateIso = nextDate;
+      this.selectedDate.set(localDateFromDateIso(nextDate));
       return;
     }
 
     this.datetimeLocal = combined;
-    this.dateIso = date;
-    this.timeValue.set(time);
-    this.selectedDate.set(localDateFromDateIso(date));
+    this.dateIso = nextDate;
+    this.timeValue.set(nextTime);
+    this.displayDate.set(dateIsoToDisplay(nextDate));
+    this.selectedDate.set(localDateFromDateIso(nextDate));
     this.onChange(combined);
     this.isoDatetimeChange.emit(combined);
   }

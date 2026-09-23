@@ -1,4 +1,4 @@
-<div class="fiche-page">
+<div class="fiche-page fiche-page--wide voyage-detail">
   <app-fiche-header listLabel="Voyages" listLink="/voyages">
     @if (voyage.isLoading()) {
     <p class="fiche-load-hint" role="status">Chargement…</p>
@@ -6,230 +6,553 @@
     <app-fiche-error (retry)="voyage.reload()" [message]="loadError()" />
     } @else if (voyage.hasValue()) {
     <app-fiche-title-row [mono]="true" [title]="voyage.value().reference">
-      <app-statut-chip
-        [label]="statutVoyageLabel(voyage.value().statut)"
-        [tone]="voyageStatutTone(voyage.value().statut)"
-      />
+      <z-badge [zType]="statutBadgeType(voyage.value().statut)">
+        {{ statutVoyageLabel(voyage.value().statut) }}
+      </z-badge>
     </app-fiche-title-row>
     <p class="fiche-meta">
       {{ typeVoyageLabel(voyage.value().typeVoyage) }}
       ·
       {{ porteeLabel(voyage.value().portee) }}
+      @if (voyage.value().dossierIds.length > 0) {
+      ·
+      {{ voyage.value().dossierIds.length }}
+      {{ voyage.value().dossierIds.length === 1 ? "dossier" : "dossiers" }}
+      }
     </p>
     }
   </app-fiche-header>
 
   @if (voyage.hasValue()) {
-  <app-form-section title="Fiche">
-    <app-fiche-field-grid>
-      <app-fiche-field [mono]="true" label="Départ prévu">
-        {{ formatInstant(voyage.value().departPrevu) }}
-      </app-fiche-field>
-      <app-fiche-field [mono]="true" label="Arrivée prévue">
-        {{ formatInstant(voyage.value().arriveePrevue) }}
-      </app-fiche-field>
-      <app-fiche-field label="Véhicule">
-        <a
-          [routerLink]="['/vehicules', voyage.value().vehiculeId]"
-          class="font-mono text-pine underline-offset-2 hover:underline"
-        >
-          {{ affectedVehiculeLabel() }}
-        </a>
-      </app-fiche-field>
-      @if (voyage.value().remorqueId; as remorqueId) {
-      <app-fiche-field label="Remorque">
-        <a
-          [routerLink]="['/remorques', remorqueId]"
-          class="font-mono text-pine underline-offset-2 hover:underline"
-        >
-          {{ affectedRemorqueLabel(remorqueId) }}
-        </a>
-      </app-fiche-field>
-      }
-      <app-fiche-field [mono]="true" label="Remplissage">
-        {{ remplissageLabel(voyage.value().tauxRemplissage) }}
-      </app-fiche-field>
-      <app-fiche-field [span]="2" label="Dossiers">
-        @if (voyage.value().dossierIds.length === 0) {
-        <span class="text-muted">Aucun dossier lié.</span>
-        } @else {
-        <ul class="flex flex-col gap-1">
-          @for (dossierId of voyage.value().dossierIds; track dossierId) {
-          <li>
-            <a
-              [routerLink]="['/dossiers', dossierId]"
-              class="font-mono text-pine underline-offset-2 hover:underline"
-            >
-              {{ dossierLabel(dossierId) }}
-            </a>
-          </li>
-          }
-        </ul>
-        }
-      </app-fiche-field>
-    </app-fiche-field-grid>
-  </app-form-section>
-
-  @if (voyage.value().affectations.length > 0) {
-  <app-form-section title="Équipage">
-    <ul class="flex flex-col gap-2 text-sm">
-      @for (affectation of voyage.value().affectations; track $index) {
-      <li class="fiche-inline-card">
-        <p class="font-medium text-ink">
-          {{ chauffeurLabel(affectation.chauffeurId) }}
-          <span class="text-xs text-muted">
-            — {{ affectationRoleLabel(affectation.role) }}
-          </span>
-        </p>
-        <p class="mt-1 font-mono text-xs tabular-nums text-muted">
-          Affecté le {{ formatInstant(affectation.dateAffectation) }}
-        </p>
-      </li>
-      }
-    </ul>
-  </app-form-section>
-  }
-
-  <app-form-section title="Trajet">
-    <p class="font-mono text-sm tabular-nums text-muted">
-      {{ voyage.value().trajet.distanceTotaleKm }} km ·
-      {{ voyage.value().trajet.dureeConduiteMin }} min de conduite ·
-      {{ voyage.value().trajet.dureeTotaleMin }} min au total
-    </p>
-    <ol class="flex flex-col gap-3">
-      @for (etape of voyage.value().trajet.etapes; track etape.ordre) {
-      <li class="fiche-inline-card">
-        <p class="font-medium text-ink">
-          {{ typeEtapeLabel(etape.type) }}
-          <span class="font-mono text-xs text-muted">#{{ etape.ordre }}</span>
-        </p>
-        <p class="mt-1 font-mono text-xs tabular-nums text-muted">
-          ETA {{ formatInstant(etape.eta) }}
-          @if (etape.etd) {
-          · ETD {{ formatInstant(etape.etd) }}
-          }
-        </p>
-        <p class="mt-1 text-xs text-muted">
-          {{ etape.distanceDepuisPrecedenteKm }} km ·
-          {{ etape.chargeApresKg }} kg après étape
-        </p>
-      </li>
-      }
-    </ol>
-  </app-form-section>
-
-  <app-form-section
-    description="Prévu, affectations et événements réels — sans historique de statut."
-    title="Chronologie"
-  >
-    @if (evenements.isLoading() && timelineEntries().length === 0) {
-    <p class="text-sm text-muted" role="status">
-      Chargement de la chronologie…
-    </p>
-    } @else {
-    <app-ops-timeline [entries]="timelineEntries()" />
-    }
-  </app-form-section>
-
-  <app-form-section
-    description="Pas de suppression physique. Annulation = statut Annulé."
-    title="Cycle de vie"
-  >
-    @if (statutError()) {
-    <div class="alert-panel" role="alert">
-      {{ statutError() }}
+  <section aria-label="Résumé du voyage" class="voyage-summary">
+    <div class="voyage-summary__metrics">
+      <z-card class="voyage-metric" zSize="sm">
+        <div class="voyage-metric__head">
+          <ng-icon class="voyage-metric__icon" name="lucideCalendarClock" />
+          <span class="voyage-metric__label">Départ prévu</span>
+        </div>
+        <span class="voyage-metric__value voyage-metric__value--mono">
+          {{ formatInstant(voyage.value().departPrevu) }}
+        </span>
+      </z-card>
+      <z-card class="voyage-metric" zSize="sm">
+        <div class="voyage-metric__head">
+          <ng-icon class="voyage-metric__icon" name="lucideCalendarCheck" />
+          <span class="voyage-metric__label">Arrivée prévue</span>
+        </div>
+        <span class="voyage-metric__value voyage-metric__value--mono">
+          {{ formatInstant(voyage.value().arriveePrevue) }}
+        </span>
+      </z-card>
+      <z-card class="voyage-metric" zSize="sm">
+        <div class="voyage-metric__head">
+          <ng-icon class="voyage-metric__icon" name="lucideRoute" />
+          <span class="voyage-metric__label">Trajet</span>
+        </div>
+        <span class="voyage-metric__value voyage-metric__value--mono">
+          {{ voyage.value().trajet.distanceTotaleKm }} km
+        </span>
+        <span class="voyage-metric__hint">
+          {{ formatDureeMin(voyage.value().trajet.dureeConduiteMin) }} conduite
+          ·
+          {{ formatDureeMin(voyage.value().trajet.dureeTotaleMin) }} total
+        </span>
+      </z-card>
+      <z-card class="voyage-metric" zSize="sm">
+        <div class="voyage-metric__head">
+          <ng-icon class="voyage-metric__icon" name="lucideGauge" />
+          <span class="voyage-metric__label">Remplissage</span>
+        </div>
+        <span class="voyage-metric__value voyage-metric__value--mono">
+          {{ remplissageLabel(voyage.value().tauxRemplissage) }}
+        </span>
+        <div aria-hidden="true" class="voyage-metric__bar">
+          <div
+            [class]="
+              'voyage-metric__bar-fill ' +
+              capaciteTronconToneClass(remplissageTone())
+            "
+            [style.width.%]="remplissagePercent()"
+          ></div>
+        </div>
+      </z-card>
     </div>
-    } @if (nextStatuts(voyage.value().statut).length === 0) {
-    <p class="text-sm text-muted">Aucune transition possible.</p>
-    } @else {
-    <div class="flex flex-wrap gap-2">
-      @for (statut of nextStatuts(voyage.value().statut); track statut) {
-      <button
-        (click)="changerStatut(statut)"
-        class="btn-outline pressable"
-        type="button"
-      >
-        → {{ statutVoyageLabel(statut) }}
-      </button>
-      }
-    </div>
-    }
-  </app-form-section>
+  </section>
 
-  <app-form-section
-    description="Déclarez un événement réel. Il apparaît dans la chronologie ci-dessus."
-    title="Exécution"
-  >
-    @if (evenements.error()) {
-    <p class="text-sm text-brake" role="alert">{{ eventsError() }}</p>
+  <nav aria-label="Sections de la fiche" class="voyage-section-nav">
+    <a class="voyage-section-nav__link" href="#ressources" z-button zSize="sm" zType="outline">
+      <ng-icon aria-hidden="true" name="lucideTruck" />
+      <span class="voyage-section-nav__label">Ressources</span>
+    </a>
+    <a class="voyage-section-nav__link" href="#trajet" z-button zSize="sm" zType="outline">
+      <ng-icon aria-hidden="true" name="lucideRoute" />
+      <span class="voyage-section-nav__label">Trajet</span>
+    </a>
+    @if (voyage.value().remorqueId) {
+    <a class="voyage-section-nav__link" href="#capacite" z-button zSize="sm" zType="outline">
+      <ng-icon aria-hidden="true" name="lucidePackage" />
+      <span class="voyage-section-nav__label">Capacité</span>
+    </a>
     }
+    <a class="voyage-section-nav__link" href="#carburant" z-button zSize="sm" zType="outline">
+      <ng-icon aria-hidden="true" name="lucideFuel" />
+      <span class="voyage-section-nav__label">Carburant</span>
+    </a>
+    <a class="voyage-section-nav__link" href="#chronologie" z-button zSize="sm" zType="outline">
+      <ng-icon aria-hidden="true" name="lucideHistory" />
+      <span class="voyage-section-nav__label">Chronologie</span>
+    </a>
+    <a class="voyage-section-nav__link" href="#actions" z-button zSize="sm" zType="outline">
+      <ng-icon aria-hidden="true" name="lucideZap" />
+      <span class="voyage-section-nav__label">Actions</span>
+    </a>
+  </nav>
 
-    <form (submit)="declarerEvenement($event)" novalidate>
-      <app-form-field inputId="eventType" label="Type d'événement">
-        <app-field-select
-          (selectValueChange)="onEventType($event)"
-          [options]="eventTypeOptions"
-          [selectValue]="eventType()"
-          inputId="eventType"
+  <div class="voyage-detail__layout">
+    <div class="voyage-detail__main">
+      <section class="voyage-detail__section" id="ressources">
+        <z-card>
+          <z-card-header>
+            <z-card-title zTitle="Ressources" />
+            <z-card-description
+              zDescription="Véhicule, remorque, équipage et dossiers liés à ce voyage."
+            />
+          </z-card-header>
+          <z-card-content>
+            <div class="voyage-resource-grid">
+              <a
+                [routerLink]="['/vehicules', voyage.value().vehiculeId]"
+                class="voyage-resource-link"
+                z-card
+                zSize="sm"
+              >
+                <span class="voyage-resource-link__main">
+                  <ng-icon class="voyage-resource-link__icon" name="lucideTruck" />
+                  <span>
+                    <span class="voyage-resource-link__label">Véhicule</span>
+                    <span class="voyage-resource-link__value">
+                      {{ affectedVehiculeLabel() }}
+                    </span>
+                  </span>
+                </span>
+                <ng-icon
+                  aria-hidden="true"
+                  class="voyage-resource-link__chevron"
+                  name="lucideChevronRight"
+                />
+              </a>
+
+              @if (voyage.value().remorqueId; as remorqueId) {
+              <a
+                [routerLink]="['/remorques', remorqueId]"
+                class="voyage-resource-link"
+                z-card
+                zSize="sm"
+              >
+                <span class="voyage-resource-link__main">
+                  <ng-icon class="voyage-resource-link__icon" name="lucideContainer" />
+                  <span>
+                    <span class="voyage-resource-link__label">Remorque</span>
+                    <span class="voyage-resource-link__value">
+                      {{ affectedRemorqueLabel(remorqueId) }}
+                    </span>
+                  </span>
+                </span>
+                <ng-icon
+                  aria-hidden="true"
+                  class="voyage-resource-link__chevron"
+                  name="lucideChevronRight"
+                />
+              </a>
+              }
+
+              @if (voyage.value().affectations.length > 0) {
+              <div class="voyage-resource-grid--span">
+                <div class="fiche-subsection__header">
+                  <h3 class="fiche-subsection__title">
+                    <ng-icon class="voyage-inline-icon" name="lucideUsers" />
+                    Équipage
+                  </h3>
+                  <span class="text-xs text-muted">
+                    {{ voyage.value().affectations.length }}
+                    {{ voyage.value().affectations.length === 1 ? "personne" : "personnes" }}
+                  </span>
+                </div>
+                <div class="voyage-resource-grid">
+                  @for (affectation of voyage.value().affectations; track $index) {
+                  <z-card class="voyage-crew-card" zSize="sm">
+                    <p class="voyage-crew-card__name">
+                      {{ chauffeurLabel(affectation.chauffeurId) }}
+                    </p>
+                    <p class="voyage-crew-card__meta">
+                      <z-badge zType="outline">
+                        {{ affectationRoleLabel(affectation.role) }}
+                      </z-badge>
+                      · Affecté le
+                      {{ formatInstant(affectation.dateAffectation) }}
+                    </p>
+                  </z-card>
+                  }
+                </div>
+              </div>
+              }
+
+              <div class="voyage-resource-grid--span">
+                <div class="fiche-subsection__header">
+                  <h3 class="fiche-subsection__title">
+                    <ng-icon class="voyage-inline-icon" name="lucideFolderOpen" />
+                    Dossiers
+                  </h3>
+                  @if (voyage.value().dossierIds.length > 0) {
+                  <span class="text-xs text-muted">
+                    {{ voyage.value().dossierIds.length }} lié(s)
+                  </span>
+                  }
+                </div>
+                @if (voyage.value().dossierIds.length === 0) {
+                <p class="text-sm text-muted">Aucun dossier lié pour le moment.</p>
+                } @else {
+                <ul class="voyage-dossier-list">
+                  @for (dossierId of voyage.value().dossierIds; track dossierId) {
+                  <li>
+                    <a
+                      [routerLink]="['/dossiers', dossierId]"
+                      class="voyage-resource-link"
+                      z-card
+                      zSize="sm"
+                    >
+                      <span class="voyage-resource-link__main">
+                        <ng-icon
+                          class="voyage-resource-link__icon"
+                          name="lucideFolderOpen"
+                        />
+                        <span class="voyage-resource-link__value">
+                          {{ dossierLabel(dossierId) }}
+                        </span>
+                      </span>
+                      <ng-icon
+                        aria-hidden="true"
+                        class="voyage-resource-link__chevron"
+                        name="lucideChevronRight"
+                      />
+                    </a>
+                  </li>
+                  }
+                </ul>
+                }
+              </div>
+            </div>
+          </z-card-content>
+        </z-card>
+      </section>
+
+      <section class="voyage-detail__section" id="trajet">
+        <z-card>
+          <z-card-header>
+            <z-card-title zTitle="Trajet" />
+            <z-card-description
+              zDescription="Étapes planifiées avec horaires et charge cumulée."
+            />
+          </z-card-header>
+          <z-card-content>
+            <p class="voyage-trajet-summary">
+              <ng-icon class="voyage-inline-icon" name="lucideRoute" />
+              {{ voyage.value().trajet.distanceTotaleKm }} km ·
+              {{ formatDureeMin(voyage.value().trajet.dureeConduiteMin) }} de conduite
+              ·
+              {{ formatDureeMin(voyage.value().trajet.dureeTotaleMin) }} au total
+              ·
+              {{ voyage.value().trajet.etapes.length }}
+              {{ voyage.value().trajet.etapes.length === 1 ? "étape" : "étapes" }}
+            </p>
+
+            <ol class="voyage-trajet-timeline">
+              @for (etape of voyage.value().trajet.etapes; track etape.ordre) {
+              <li class="voyage-trajet-step">
+                <span aria-hidden="true" class="voyage-trajet-step__rail"></span>
+                <span
+                  [class]="
+                    'voyage-trajet-step__dot ' + etapeDotClass(etape.type)
+                  "
+                  aria-hidden="true"
+                ></span>
+                <z-card class="voyage-trajet-step__body" zSize="sm">
+                  <p class="voyage-trajet-step__title">
+                    {{ typeEtapeLabel(etape.type) }}
+                    <span class="voyage-trajet-step__order">#{{ etape.ordre }}</span>
+                  </p>
+                  <p class="voyage-trajet-step__times">
+                    {{ etapeTimesLabel(etape) }}
+                  </p>
+                  <p class="voyage-trajet-step__stats">
+                    @if (etape.distanceDepuisPrecedenteKm > 0) {
+                    {{ etape.distanceDepuisPrecedenteKm }} km depuis l'étape précédente
+                    ·
+                    }
+                    {{ etape.chargeApresKg | number: "1.0-0" }} kg après étape
+                  </p>
+                </z-card>
+              </li>
+              }
+            </ol>
+          </z-card-content>
+        </z-card>
+      </section>
+
+      @if (voyage.value().remorqueId) {
+      <section class="voyage-detail__section voyage-detail__section--stack" id="capacite">
+        <app-remorque-capacity-view [voyageId]="id()" />
+        <app-voyage-ajouter-dossier-form
+          (dossierAdded)="onDossierAjoute()"
+          [dossierIdsOnVoyage]="voyage.value().dossierIds"
+          [voyageId]="id()"
         />
-      </app-form-field>
-
-      <app-form-field inputId="eventComment" label="Commentaire">
-        <input
-          (input)="onEventComment($event)"
-          [value]="eventComment()"
-          class="field"
-          id="eventComment"
-          type="text"
-        >
-      </app-form-field>
-
-      <div class="form-page__coords">
-        <app-form-field inputId="eventLatitude" label="Latitude">
-          <input
-            (input)="onEventLatitude($event)"
-            [value]="eventLatitude()"
-            class="field"
-            id="eventLatitude"
-            placeholder="48.8566"
-            step="any"
-            type="number"
-          >
-        </app-form-field>
-
-        <app-form-field inputId="eventLongitude" label="Longitude">
-          <input
-            (input)="onEventLongitude($event)"
-            [value]="eventLongitude()"
-            class="field"
-            id="eventLongitude"
-            placeholder="2.3522"
-            step="any"
-            type="number"
-          >
-        </app-form-field>
-      </div>
-
-      <button
-        (click)="useCurrentLocation()"
-        class="btn-outline pressable min-h-11 px-5"
-        type="button"
-      >
-        Position actuelle
-      </button>
-
-      @if (eventError()) {
-      <div class="alert-panel" role="alert">
-        {{ eventError() }}
-      </div>
+      </section>
       }
 
-      <app-form-actions>
-        <button class="btn-primary pressable min-h-11 px-5" type="submit">
-          Déclarer
-        </button>
-      </app-form-actions>
-    </form>
-  </app-form-section>
+      <section class="voyage-detail__section" id="carburant">
+        <z-card>
+          <z-card-header>
+            <z-card-title zTitle="Prises de carburant" />
+            <z-card-description
+              zDescription="Tickets enregistrés sur ce voyage."
+            />
+          </z-card-header>
+          <z-card-content>
+            <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <p class="text-sm text-muted">
+                @if (prisesCarburant.hasValue()) {
+                {{ prisesCarburant.value().totalElements }}
+                {{ prisesCarburant.value().totalElements === 1 ? "prise" : "prises" }}
+                } @else { … }
+              </p>
+              <a
+                [queryParams]="{ voyageId: id() }"
+                class="btn-primary pressable min-h-10 px-4 text-sm"
+                routerLink="/carburant/nouveau"
+              >
+                Nouvelle prise
+              </a>
+            </div>
+
+            @if (prisesCarburant.isLoading()) {
+            <p class="fiche-load-hint" role="status">Chargement…</p>
+            } @else if (prisesCarburant.hasValue() && prisesCarburant.value().content.length === 0) {
+            <p class="fiche-meta">Aucune prise enregistrée pour ce voyage.</p>
+            } @else if (prisesCarburant.hasValue()) {
+            <ul class="flex flex-col gap-2">
+              @for (prise of prisesCarburant.value().content; track prise.id) {
+              <li class="fiche-inline-card flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <a
+                    [routerLink]="['/carburant', prise.id]"
+                    class="font-mono text-sm text-pine underline-offset-2 hover:underline"
+                  >
+                    {{ formatPriseShortId(prise.id) }}
+                  </a>
+                  <p class="mt-1 text-sm text-muted">
+                    {{ prise.stationLibelle }} ·
+                    {{ formatLitres(prise.litrage) }} ·
+                    {{ formatMontantTtc(prise.montantTtc) }}
+                  </p>
+                </div>
+                <app-statut-chip
+                  [label]="statutPriseLabel(prise.statut)"
+                  [tone]="statutPriseTone(prise.statut)"
+                />
+              </li>
+              }
+            </ul>
+            }
+          </z-card-content>
+        </z-card>
+      </section>
+
+      <section class="voyage-detail__section" id="chronologie">
+        <z-card>
+          <z-card-header>
+            <z-card-title zTitle="Chronologie" />
+            <z-card-description
+              zDescription="Planning prévu à gauche, exécution réelle déclarée à droite."
+            />
+          </z-card-header>
+          <z-card-content>
+            <div class="voyage-chronologie">
+              <section aria-labelledby="chronologie-prevu-title" class="voyage-chronologie__panel">
+                <h3 class="voyage-chronologie__title" id="chronologie-prevu-title">
+                  Prévu
+                </h3>
+                <p class="voyage-chronologie__hint">
+                  Horaires planifiés du voyage et des étapes.
+                </p>
+                <app-ops-timeline [entries]="plannedTimelineEntries()" />
+              </section>
+
+              <section aria-labelledby="chronologie-reel-title" class="voyage-chronologie__panel">
+                <h3 class="voyage-chronologie__title" id="chronologie-reel-title">
+                  Réel
+                </h3>
+                <p class="voyage-chronologie__hint">
+                  Événements déclarés, classés par horodatage d'enregistrement.
+                </p>
+                @if (evenements.isLoading() && actualTimelineEntries().length === 0) {
+                <p class="text-sm text-muted" role="status">
+                  Chargement des événements…
+                </p>
+                } @else {
+                <app-ops-timeline
+                  [entries]="actualTimelineEntries()"
+                  emptyLabel="Aucun événement déclaré pour l'instant."
+                />
+                }
+              </section>
+            </div>
+          </z-card-content>
+        </z-card>
+      </section>
+    </div>
+
+    <aside class="voyage-detail__aside voyage-detail__section" id="actions">
+      <z-card>
+        <z-card-header>
+          <z-card-title zTitle="Cycle de vie" />
+          <z-card-description
+            zDescription="Pas de suppression physique. Annulation = statut Annulé."
+          />
+        </z-card-header>
+        <z-card-content>
+          @if (statutError()) {
+          <z-alert
+            class="mb-3"
+            zIcon="lucideCircleAlert"
+            zType="destructive"
+            [zDescription]="statutError()!"
+          />
+          }
+          @if (nextStatuts(voyage.value().statut).length === 0) {
+          <p class="text-sm text-muted">Aucune transition possible.</p>
+          } @else {
+          <div class="flex flex-col gap-2">
+            @for (statut of nextStatuts(voyage.value().statut); track statut) {
+            <button
+              (click)="changerStatut(statut)"
+              class="w-full"
+              type="button"
+              z-button
+              zSize="lg"
+              zType="outline"
+            >
+              <ng-icon name="lucideArrowRight" />
+              {{ statutVoyageLabel(statut) }}
+            </button>
+            }
+          </div>
+          }
+        </z-card-content>
+      </z-card>
+
+      <z-card>
+        <z-card-header>
+          <z-card-title zTitle="Exécution" />
+          <z-card-description
+            zDescription="Déclarez un événement réel. Il apparaît dans la chronologie."
+          />
+        </z-card-header>
+        <z-card-content>
+          @if (evenements.error()) {
+          <z-alert
+            class="mb-3"
+            zIcon="lucideCircleAlert"
+            zType="destructive"
+            [zDescription]="eventsError()!"
+          />
+          }
+
+          <form (submit)="declarerEvenement($event)" class="flex flex-col gap-4" novalidate>
+            <app-form-field inputId="eventType" label="Type d'événement">
+              <app-field-select
+                (selectValueChange)="onEventType($event)"
+                [options]="eventTypeOptions"
+                [selectValue]="eventType()"
+                inputId="eventType"
+              />
+            </app-form-field>
+
+            <app-form-field inputId="eventHorodatage" label="Date et heure">
+              <app-iso-datetime-input
+                (isoDatetimeChange)="eventHorodatage.set($event)"
+                [isoDatetime]="eventHorodatage()"
+                [minIsoDatetime]="minEventHorodatage()"
+                inputId="eventHorodatage"
+                timeAriaLabel="Heure de l'événement"
+              />
+              @if (eventHorodatageHint(); as hint) {
+              <p class="text-xs text-muted">{{ hint }}</p>
+              }
+            </app-form-field>
+
+            <app-form-field inputId="eventComment" label="Commentaire">
+              <input
+                (input)="onEventComment($event)"
+                [value]="eventComment()"
+                id="eventComment"
+                type="text"
+                z-input
+              >
+            </app-form-field>
+
+            <details class="fiche-disclosure fiche-inset">
+              <summary class="flex items-center gap-2 text-sm font-medium text-ink">
+                <ng-icon class="size-4 text-muted" name="lucideMapPin" />
+                Position GPS (optionnel)
+              </summary>
+              <div class="mt-4 flex flex-col gap-4">
+                <div class="form-page__coords">
+                  <app-form-field inputId="eventLatitude" label="Latitude">
+                    <input
+                      (input)="onEventLatitude($event)"
+                      [value]="eventLatitude()"
+                      id="eventLatitude"
+                      placeholder="48.8566"
+                      step="any"
+                      type="number"
+                      z-input
+                    >
+                  </app-form-field>
+
+                  <app-form-field inputId="eventLongitude" label="Longitude">
+                    <input
+                      (input)="onEventLongitude($event)"
+                      [value]="eventLongitude()"
+                      id="eventLongitude"
+                      placeholder="2.3522"
+                      step="any"
+                      type="number"
+                      z-input
+                    >
+                  </app-form-field>
+                </div>
+              </div>
+            </details>
+
+            @if (eventError()) {
+            <z-alert
+              zIcon="lucideCircleAlert"
+              zType="destructive"
+              [zDescription]="eventError()!"
+            />
+            }
+
+            <app-form-actions>
+              <button class="w-full" type="submit" z-button zSize="lg" zType="default">
+                <ng-icon name="lucideCircleCheck" />
+                Déclarer
+              </button>
+            </app-form-actions>
+          </form>
+        </z-card-content>
+      </z-card>
+    </aside>
+  </div>
   }
 </div>

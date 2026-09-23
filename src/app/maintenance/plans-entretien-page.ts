@@ -20,6 +20,11 @@ import {
   ListRowKeyboard,
   syncListKeyboardActiveId,
 } from "../shared/ui/list-row-keyboard";
+import {
+  DEFAULT_LIST_PAGE_SIZE,
+  LIST_PAGE_SIZE_OPTIONS,
+  resolveListPageSize,
+} from "../shared/ui/list-page-size";
 import { ListPagination } from "../shared/ui/list-pagination";
 import { MaintenanceTabs } from "./maintenance-tabs";
 import {
@@ -29,7 +34,6 @@ import {
 } from "./plan-entretien";
 import type { VehiculeLookup } from "./ordre-travail";
 
-const PLANS_PAGE_SIZE = 20;
 const LOOKUP_PAGE_SIZE = 50;
 
 @Component({
@@ -53,13 +57,15 @@ export class PlansEntretienPage {
   protected readonly vehiculeLabel = vehiculeLabel;
 
   protected readonly page = signal(0);
+  protected readonly pageSizeOptions = LIST_PAGE_SIZE_OPTIONS;
+  protected readonly pageSize = signal(DEFAULT_LIST_PAGE_SIZE);
   protected readonly activeRowId = signal<string | null>(null);
   protected readonly vehiculeFilterId = signal<string | null>(null);
 
   protected readonly plans = httpResource<PageResponse<PlanEntretien>>(() => {
     const params: Record<string, string | number> = {
       page: this.page(),
-      size: PLANS_PAGE_SIZE,
+      size: resolveListPageSize(this.pageSize()),
     };
     const vehiculeId = this.vehiculeFilterId();
     if (vehiculeId) {

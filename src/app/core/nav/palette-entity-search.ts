@@ -26,7 +26,7 @@ export const PALETTE_ENTITY_CLIENT_SCAN_SIZE = 50;
 
 export type PaletteEntitySourceId = Exclude<
   WorkDestinationId,
-  "maintenance"
+  "maintenance" | "carburant"
 >;
 
 export interface PaletteEntitySource {

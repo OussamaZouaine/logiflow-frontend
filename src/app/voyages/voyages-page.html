@@ -1,5 +1,5 @@
-<div class="flex flex-col gap-6">
-  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+<div class="voyages-page">
+  <div class="voyages-page__header">
     <div>
       <h1 class="module-page-title">Voyages</h1>
       <p class="mt-1 text-sm text-muted">
@@ -7,41 +7,74 @@
       </p>
     </div>
     @if (canPlan()) {
-    <a class="btn-primary pressable" routerLink="/voyages/nouveau">
+    <a class="voyages-page__cta" routerLink="/voyages/nouveau" z-button zType="default">
+      <ng-icon aria-hidden="true" name="lucidePlus" />
       Nouveau voyage
     </a>
     }
   </div>
 
-  <div class="flex flex-col gap-3">
-    <app-list-search-bar
-      [(draft)]="searchDraft"
-      [(query)]="search"
-      inputId="voyage-search"
-      placeholder="Référence…"
-    />
-    <app-list-statut-filter
-      [(selected)]="statutFilter"
-      [options]="statutOptions"
-    />
-  </div>
+  <z-card class="voyages-toolbar">
+    <div class="voyages-toolbar__inner">
+      <app-list-search-bar
+        [(draft)]="searchDraft"
+        [(query)]="search"
+        inputId="voyage-search"
+        placeholder="Référence, type, portée…"
+      />
+      <app-list-statut-filter
+        [(selected)]="statutFilter"
+        [options]="statutOptions"
+      />
+      @if (hasActiveFilters()) {
+      <div class="voyages-toolbar__meta">
+        <p class="voyages-toolbar__meta-text">
+          <ng-icon aria-hidden="true" name="lucideRoute" />
+          @if (search()) {
+          Recherche « {{ search() }} »
+          @if (activeStatutLabel(); as label) {
+          · {{ label }}
+          }
+          } @else if (activeStatutLabel(); as label) {
+          Filtre : {{ label }}
+          }
+        </p>
+        <button
+          (click)="clearFilters()"
+          type="button"
+          z-button
+          zSize="sm"
+          zType="ghost"
+        >
+          <ng-icon aria-hidden="true" name="lucideX" />
+          Effacer
+        </button>
+      </div>
+      }
+    </div>
+  </z-card>
 
   @if (voyages.isLoading()) {
-  <div class="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+  <div class="voyages-layout">
     <app-list-table-skeleton label="Chargement des voyages" />
     <app-map-aside-skeleton />
   </div>
   } @else if (voyages.error()) {
-  <div class="alert-panel" role="alert">
-    <p>{{ errorMessage() }}</p>
-    <button
-      (click)="voyages.reload()"
-      class="pressable mt-2 font-medium text-ink underline underline-offset-2"
-      type="button"
-    >
-      Réessayer
-    </button>
-  </div>
+  <z-alert
+    zIcon="lucideCircleAlert"
+    zType="destructive"
+    [zDescription]="errorMessage()"
+  />
+  <button
+    (click)="voyages.reload()"
+    class="self-start"
+    type="button"
+    z-button
+    zSize="sm"
+    zType="outline"
+  >
+    Réessayer
+  </button>
   } @else if (voyages.hasValue() && voyages.value().content.length === 0) {
   @if (search()) {
   <app-list-empty-state
@@ -71,26 +104,49 @@
     title="Aucun voyage pour ce filtre"
   />
   } @else if (voyages.hasValue()) {
-  <div class="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
-    <div class="flex min-w-0 flex-col gap-3">
+  <div class="voyages-layout">
+    <div class="voyages-table-wrap">
       <div
         appListRowKeyboard
         [(activeId)]="selectedVoyageId"
         [rows]="keyboardRows()"
         aria-label="Liste des voyages — flèches pour naviguer, Entrée pour ouvrir"
-        class="list-table-panel"
+        class="voyages-table-panel"
       >
-        <table class="w-full min-w-xl text-left text-sm">
-          <thead
-            class="list-table-head"
-          >
+        <table>
+          <thead class="voyages-table-head">
             <tr>
-              <th class="px-4 py-3 font-medium" scope="col">Référence</th>
-              <th class="px-4 py-3 font-medium" scope="col">Type</th>
-              <th class="px-4 py-3 font-medium" scope="col">Portée</th>
-              <th class="px-4 py-3 font-medium" scope="col">Départ prévu</th>
-              <th class="px-4 py-3 font-medium" scope="col">Statut</th>
-              <th class="px-4 py-3 font-medium" scope="col">
+              <th scope="col">
+                <span class="voyages-th">
+                  <ng-icon aria-hidden="true" name="lucideHash" />
+                  Référence
+                </span>
+              </th>
+              <th class="voyages-col voyages-col--type" scope="col">
+                <span class="voyages-th">
+                  <ng-icon aria-hidden="true" name="lucideRoute" />
+                  Type
+                </span>
+              </th>
+              <th class="voyages-col voyages-col--portee" scope="col">
+                <span class="voyages-th">
+                  <ng-icon aria-hidden="true" name="lucideGlobe" />
+                  Portée
+                </span>
+              </th>
+              <th class="voyages-col voyages-col--depart" scope="col">
+                <span class="voyages-th">
+                  <ng-icon aria-hidden="true" name="lucideCalendarClock" />
+                  Départ prévu
+                </span>
+              </th>
+              <th scope="col">
+                <span class="voyages-th">
+                  <ng-icon aria-hidden="true" name="lucideCircleDot" />
+                  Statut
+                </span>
+              </th>
+              <th scope="col">
                 <span class="sr-only">Actions</span>
               </th>
             </tr>
@@ -100,40 +156,55 @@
             <tr
               (click)="selectVoyage(voyage.id)"
               [attr.aria-selected]="selectedVoyageId() === voyage.id"
-              [class.bg-pine/5]="selectedVoyageId() === voyage.id"
-              class="list-row cursor-pointer border-b border-line last:border-0 hover:bg-canvas"
+              class="voyages-row"
             >
-              <td class="px-4 py-3">
+              <td>
                 <a
                   (click)="$event.stopPropagation()"
                   [routerLink]="['/voyages', voyage.id]"
-                  class="font-mono text-xs text-pine underline-offset-2 hover:underline"
+                  class="voyages-ref"
                 >
+                  <ng-icon aria-hidden="true" name="lucideHash" />
                   {{ voyage.reference }}
                 </a>
               </td>
-              <td class="px-4 py-3 text-ink">
-                {{ typeVoyageLabel(voyage.typeVoyage) }}
+              <td class="voyages-col voyages-col--type">
+                <span class="voyages-cell">
+                  <ng-icon
+                    aria-hidden="true"
+                    [name]="typeVoyageIcon(voyage.typeVoyage)"
+                  />
+                  {{ typeVoyageLabel(voyage.typeVoyage) }}
+                </span>
               </td>
-              <td class="px-4 py-3 text-muted">
-                {{ porteeLabel(voyage.portee) }}
+              <td class="voyages-col voyages-col--portee">
+                <span class="voyages-cell voyages-cell--muted">
+                  <ng-icon
+                    aria-hidden="true"
+                    [name]="porteeIcon(voyage.portee)"
+                  />
+                  {{ porteeLabel(voyage.portee) }}
+                </span>
               </td>
-              <td class="px-4 py-3 font-mono tabular-nums text-muted">
-                {{ formatInstant(voyage.departPrevu) }}
+              <td class="voyages-col voyages-col--depart">
+                <span class="voyages-cell voyages-cell--muted voyages-cell--mono">
+                  <ng-icon aria-hidden="true" name="lucideCalendarClock" />
+                  {{ formatInstant(voyage.departPrevu) }}
+                </span>
               </td>
-              <td class="px-4 py-3">
-                <app-statut-chip
-                  [label]="statutVoyageLabel(voyage.statut)"
-                  [tone]="voyageStatutTone(voyage.statut)"
-                />
+              <td>
+                <z-badge [zType]="statutBadgeType(voyage.statut)">
+                  {{ statutVoyageLabel(voyage.statut) }}
+                </z-badge>
               </td>
-              <td class="px-4 py-3 text-right">
+              <td class="text-right">
                 <a
                   (click)="$event.stopPropagation()"
                   [routerLink]="['/voyages', voyage.id]"
-                  class="list-row-action text-sm font-medium text-pine underline-offset-2 hover:underline"
+                  class="voyages-row-action"
                 >
                   Ouvrir
+                  <ng-icon aria-hidden="true" name="lucideChevronRight" />
                 </a>
               </td>
             </tr>
@@ -141,26 +212,29 @@
           </tbody>
         </table>
       </div>
-      @if (voyages.value().totalElements) {
-      <p class="font-mono text-sm tabular-nums text-muted">
-        {{ visibleVoyages().length }}
-        affiché(s) /
-        {{ voyages.value().totalElements }}
-        voyage(s)
-      </p>
-      }
       <app-list-pagination
         [(page)]="page"
+        [pageSize]="pageSize()"
+        (pageSizeChange)="pageSize.set($event); page.set(0)"
+        [pageSizeOptions]="pageSizeOptions"
+        [totalElements]="voyages.value().totalElements"
         [totalPages]="voyages.value().totalPages"
+        [visibleCount]="visibleVoyages().length"
+        itemLabel="voyage"
       />
     </div>
 
-    <aside class="surface-panel flex min-h-80 flex-col gap-2">
-      <div class="border-b border-line px-4 py-3">
-        <h2 class="text-sm font-medium text-ink">Itinéraire</h2>
-        <p class="mt-0.5 text-xs text-muted">{{ mapHint() }}</p>
-      </div>
-      <div class="min-h-0 flex-1 p-2">
+    <z-card class="voyages-map-card">
+      <z-card-header>
+        <div class="voyages-map-card__header">
+          <ng-icon aria-hidden="true" class="voyages-map-card__icon" name="lucideMap" />
+          <div>
+            <z-card-title zTitle="Itinéraire" />
+            <z-card-description [zDescription]="mapHint()" />
+          </div>
+        </div>
+      </z-card-header>
+      <div class="voyages-map-card__body">
         <app-geo-markers-map
           [ariaLabel]="
             selectedVoyage()
@@ -169,10 +243,10 @@
           "
           [markers]="mapMarkers()"
           [path]="mapPath()"
-          class="block h-full min-h-72"
         />
       </div>
-    </aside>
+    </z-card>
   </div>
   }
 </div>
+

@@ -28,7 +28,9 @@ function flushUrl(
   url: string,
   body: PageResponse<unknown>
 ): void {
-  http.expectOne((req) => req.url === url).flush(body);
+  for (const req of http.match((request) => request.url === url)) {
+    req.flush(body);
+  }
 }
 
 describe("TableauDeBordPage", () => {
@@ -55,6 +57,7 @@ describe("TableauDeBordPage", () => {
     flushUrl(http, "/api/v1/commandes", pageOf([]));
     flushUrl(http, "/api/v1/dossiers", pageOf([]));
     flushUrl(http, "/api/v1/voyages", pageOf([]));
+    flushUrl(http, "/api/v1/prises-carburant", pageOf([]));
 
     await fixture.whenStable();
     fixture.detectChanges();
@@ -75,6 +78,7 @@ describe("TableauDeBordPage", () => {
 
     const http = TestBed.inject(HttpTestingController);
     flushUrl(http, "/api/v1/voyages", pageOf([]));
+    flushUrl(http, "/api/v1/prises-carburant", pageOf([]));
 
     await fixture.whenStable();
     fixture.detectChanges();
@@ -98,6 +102,7 @@ describe("TableauDeBordPage", () => {
     flushUrl(http, "/api/v1/voyages", pageOf([]));
     flushUrl(http, "/api/v1/ordres-travail", pageOf([], 2));
     flushUrl(http, "/api/v1/utilisateurs", pageOf([]));
+    flushUrl(http, "/api/v1/prises-carburant", pageOf([]));
 
     await fixture.whenStable();
     fixture.detectChanges();

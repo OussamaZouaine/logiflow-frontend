@@ -1,6 +1,9 @@
 import type { Routes } from "@angular/router";
 import { guestGuard, roleGuard, signedInGuard } from "./core/auth/guards";
-import { DOSSIERS_PLAN_ROLES } from "./core/auth/role";
+import {
+  CARBURANT_STATIONS_ALLOWED_ROLES,
+  DOSSIERS_PLAN_ROLES,
+} from "./core/auth/role";
 import { workDestination } from "./core/nav/work-destination";
 
 export const routes: Routes = [
@@ -151,6 +154,60 @@ export const routes: Routes = [
             (module) => module.VoyageDetailPage
           ),
         path: "voyages/:id",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("carburant").roles },
+        loadComponent: () =>
+          import("./carburant/prises-carburant-page").then(
+            (module) => module.PrisesCarburantPage
+          ),
+        path: "carburant",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("carburant").roles },
+        loadComponent: () =>
+          import("./carburant/prise-create-page").then(
+            (module) => module.PriseCreatePage
+          ),
+        path: "carburant/nouveau",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: CARBURANT_STATIONS_ALLOWED_ROLES },
+        loadComponent: () =>
+          import("./carburant/stations-page").then(
+            (module) => module.StationsPage
+          ),
+        path: "carburant/stations",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: CARBURANT_STATIONS_ALLOWED_ROLES },
+        loadComponent: () =>
+          import("./carburant/station-create-page").then(
+            (module) => module.StationCreatePage
+          ),
+        path: "carburant/stations/nouveau",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: CARBURANT_STATIONS_ALLOWED_ROLES },
+        loadComponent: () =>
+          import("./carburant/station-detail-page").then(
+            (module) => module.StationDetailPage
+          ),
+        path: "carburant/stations/:id",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("carburant").roles },
+        loadComponent: () =>
+          import("./carburant/prise-detail-page").then(
+            (module) => module.PriseDetailPage
+          ),
+        path: "carburant/:id",
       },
       {
         canActivate: [roleGuard],

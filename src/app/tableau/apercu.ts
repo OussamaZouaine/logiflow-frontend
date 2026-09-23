@@ -22,6 +22,12 @@ import {
   type VehiculeStatut,
 } from "../vehicules/vehicule";
 import {
+  STATUT_PRISES,
+  type PriseCarburant,
+  type StatutPrise,
+  statutPriseLabel,
+} from "../carburant/prise-carburant";
+import {
   STATUT_VOYAGES,
   type StatutVoyage,
   statutVoyageLabel,
@@ -38,6 +44,7 @@ export const APERCU_COUNTABLE_IDS = [
   "commandes",
   "dossiers",
   "voyages",
+  "carburant",
   "maintenance",
   "utilisateurs",
 ] as const satisfies readonly WorkDestinationId[];
@@ -73,7 +80,13 @@ export function apercuDestinations(
 
 /** List API segment (differs from sidebar path for maintenance). */
 export function apercuApiPath(id: ApercuCountableId): string {
-  return id === "maintenance" ? "ordres-travail" : id;
+  if (id === "maintenance") {
+    return "ordres-travail";
+  }
+  if (id === "carburant") {
+    return "prises-carburant";
+  }
+  return id;
 }
 
 export function isCompleteCollection<T>(page: PageResponse<T>): boolean {
@@ -161,6 +174,17 @@ export function commandeStatutSlices(
   );
 }
 
+export function priseStatutSlices(
+  prises: readonly Pick<PriseCarburant, "statut">[]
+): StatutSlice[] {
+  return slicesFor(
+    prises.map((prise) => prise.statut),
+    STATUT_PRISES,
+    statutPriseLabel,
+    priseStatutTone
+  );
+}
+
 export function dossierStatutSlices(
   dossiers: readonly Pick<Dossier, "statut">[]
 ): StatutSlice[] {
@@ -226,6 +250,19 @@ export function voyageStatutTone(statut: StatutVoyage): ApercuTone {
       return "ink";
     case "ANNULE":
       return "brake";
+    default: {
+      const _exhaustive: never = statut;
+      return _exhaustive;
+    }
+  }
+}
+
+export function priseStatutTone(statut: StatutPrise): ApercuTone {
+  switch (statut) {
+    case "BROUILLON":
+      return "amber";
+    case "VALIDEE":
+      return "pine";
     default: {
       const _exhaustive: never = statut;
       return _exhaustive;

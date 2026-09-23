@@ -152,7 +152,13 @@
   }
   <app-list-pagination
     [(page)]="page"
+    [pageSize]="pageSize()"
+    (pageSizeChange)="pageSize.set($event); page.set(0)"
+    [pageSizeOptions]="pageSizeOptions"
+    [totalElements]="ordres.value().totalElements"
     [totalPages]="ordres.value().totalPages"
+    [visibleCount]="visibleOrdres().length"
+    itemLabel="ordre"
   />
   }
 </div>

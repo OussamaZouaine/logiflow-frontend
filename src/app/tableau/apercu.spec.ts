@@ -40,6 +40,7 @@ describe("apercuDestinations", () => {
 describe("apercuApiPath", () => {
   it("maps maintenance to ordres-travail", () => {
     expect(apercuApiPath("maintenance")).toBe("ordres-travail");
+    expect(apercuApiPath("carburant")).toBe("prises-carburant");
     expect(apercuApiPath("sites")).toBe("sites");
   });
 });

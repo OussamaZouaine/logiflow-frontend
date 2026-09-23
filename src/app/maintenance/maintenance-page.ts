@@ -15,6 +15,11 @@ import type { PageResponse } from "../core/api/page-response";
 import { filterByStatut, statutOptionsFrom } from "../shared/ui/list-filter";
 import { ListEmptyState } from "../shared/ui/list-empty-state";
 import { ListTableSkeleton } from "../shared/ui/list-table-skeleton";
+import {
+  DEFAULT_LIST_PAGE_SIZE,
+  LIST_PAGE_SIZE_OPTIONS,
+  resolveListPageSize,
+} from "../shared/ui/list-page-size";
 import { ListPagination } from "../shared/ui/list-pagination";
 import { connectListQueryState } from "../shared/ui/list-query-state";
 import {
@@ -38,7 +43,6 @@ import {
   vehiculeLabel,
 } from "./ordre-travail";
 
-const ORDRES_PAGE_SIZE = 20;
 const VEHICULE_LOOKUP_PAGE_SIZE = 50;
 
 @Component({
@@ -74,13 +78,15 @@ export class MaintenancePage {
 
   protected readonly statutFilter = signal<string | null>(null);
   protected readonly page = signal(0);
+  protected readonly pageSizeOptions = LIST_PAGE_SIZE_OPTIONS;
+  protected readonly pageSize = signal(DEFAULT_LIST_PAGE_SIZE);
   protected readonly activeRowId = signal<string | null>(null);
   protected readonly vehiculeFilterId = signal<string | null>(null);
 
   protected readonly ordres = httpResource<PageResponse<OrdreTravail>>(() => {
     const params: Record<string, string | number> = {
       page: this.page(),
-      size: ORDRES_PAGE_SIZE,
+      size: resolveListPageSize(this.pageSize()),
     };
     const vehiculeId = this.vehiculeFilterId();
     if (vehiculeId) {

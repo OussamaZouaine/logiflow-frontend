@@ -145,7 +145,7 @@ describe("SitesPage", () => {
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain("Page 1 / 2");
+    expect(compiled.textContent).toContain("page 1/2");
     expect(compiled.textContent).toContain("Précédent");
     expect(compiled.textContent).toContain("Suivant");
 
@@ -181,7 +181,7 @@ describe("SitesPage", () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(compiled.textContent).toContain("Page 2 / 2");
+    expect(compiled.textContent).toContain("page 2/2");
     expect(compiled.textContent).toContain("Site B");
     http.verify();
   });

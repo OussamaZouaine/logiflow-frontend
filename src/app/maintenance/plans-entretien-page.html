@@ -128,7 +128,12 @@
   }
   <app-list-pagination
     [(page)]="page"
+    [pageSize]="pageSize()"
+    (pageSizeChange)="pageSize.set($event); page.set(0)"
+    [pageSizeOptions]="pageSizeOptions"
+    [totalElements]="plans.value().totalElements"
     [totalPages]="plans.value().totalPages"
+    itemLabel="plan"
   />
   }
 </div>

@@ -3,6 +3,10 @@ import { inject, Service } from "@angular/core";
 import { firstValueFrom } from "rxjs";
 import { environment } from "../../environments/environment";
 import type {
+  AjouterDossierVoyageWrite,
+  VerifierAjoutDossierResult,
+} from "./voyage-ajouter-dossier";
+import type {
   EvenementVoyage,
   EvenementVoyageWrite,
   StatutVoyage,
@@ -46,6 +50,27 @@ export class VoyageApi {
         `${environment.apiBaseUrl}/evenements-voyage`,
         body
       )
+    );
+  }
+
+  verifierAjoutDossier(
+    voyageId: string,
+    body: AjouterDossierVoyageWrite
+  ): Promise<VerifierAjoutDossierResult> {
+    return firstValueFrom(
+      this.http.post<VerifierAjoutDossierResult>(
+        `${this.baseUrl}/${voyageId}/dossiers/check`,
+        body
+      )
+    );
+  }
+
+  ajouterDossier(
+    voyageId: string,
+    body: AjouterDossierVoyageWrite
+  ): Promise<void> {
+    return firstValueFrom(
+      this.http.post<void>(`${this.baseUrl}/${voyageId}/dossiers`, body)
     );
   }
 }

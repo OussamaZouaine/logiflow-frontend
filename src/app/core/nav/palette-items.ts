@@ -84,6 +84,13 @@ const CREATE_ACTIONS: readonly PaletteActionDef[] = [
     roles: VOYAGES_PLAN_ROLES,
   },
   {
+    icon: DESTINATION_NAV_ICON.carburant,
+    keywords: ["nouvelle", "créer", "prise", "carburant", "plein"],
+    label: "Nouvelle prise de carburant",
+    path: "/carburant/nouveau",
+    roles: workDestination("carburant").roles,
+  },
+  {
     icon: DESTINATION_NAV_ICON.maintenance,
     keywords: ["nouvel", "créer", "ordre", "maintenance", "atelier"],
     label: "Nouvel ordre de travail",

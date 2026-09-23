@@ -13,6 +13,7 @@ describe("buildFileDuJour", () => {
       allowedIds: new Set(["dossiers", "commandes"]),
       commandes: [{ statut: "RECUE" }, { statut: "RECUE" }],
       dossiers: [{ statut: "INCIDENT" }, { statut: "CREE" }],
+      prisesCarburant: null,
       vehicules: null,
       voyages: null,
     });
@@ -27,11 +28,35 @@ describe("buildFileDuJour", () => {
     expect(items[1]?.tone).toBe("amber");
   });
 
+  it("includes carburant brouillons when the module is allowed", () => {
+    const items = buildFileDuJour({
+      allowedIds: new Set(["carburant"]),
+      commandes: null,
+      dossiers: null,
+      prisesCarburant: [
+        { statut: "BROUILLON" },
+        { statut: "BROUILLON" },
+        { statut: "VALIDEE" },
+      ],
+      vehicules: null,
+      voyages: null,
+    });
+
+    expect(items).toEqual([
+      expect.objectContaining({
+        count: 2,
+        id: "prises-brouillon",
+        path: "/carburant",
+      }),
+    ]);
+  });
+
   it("omits modules the role cannot open", () => {
     const items = buildFileDuJour({
       allowedIds: new Set(["voyages"]),
       commandes: [{ statut: "RECUE" }],
       dossiers: [{ statut: "INCIDENT" }],
+      prisesCarburant: null,
       vehicules: [{ statut: "IMMOBILISE" }],
       voyages: [{ statut: "EN_COURS" }],
     });
@@ -44,6 +69,7 @@ describe("buildFileDuJour", () => {
       allowedIds: new Set(["dossiers", "voyages", "commandes", "vehicules"]),
       commandes: [{ statut: "CONFIRMEE" }],
       dossiers: [{ statut: "CLOTURE" }],
+      prisesCarburant: [{ statut: "VALIDEE" }],
       vehicules: [{ statut: "DISPONIBLE" }],
       voyages: [{ statut: "TERMINE" }],
     });
@@ -58,6 +84,7 @@ describe("fileDuJourSummary", () => {
       allowedIds: new Set(["dossiers", "commandes"]),
       commandes: [{ statut: "RECUE" }, { statut: "RECUE" }],
       dossiers: [{ statut: "INCIDENT" }],
+      prisesCarburant: null,
       vehicules: null,
       voyages: null,
     });
@@ -88,6 +115,7 @@ describe("groupFileDuJourByTone", () => {
         { statut: "CREE" },
         { statut: "EN_TRANSIT" },
       ],
+      prisesCarburant: null,
       vehicules: null,
       voyages: [{ statut: "PLANIFIE" }, { statut: "AFFECTE" }],
     });
@@ -113,6 +141,7 @@ describe("fileDuJourToneCounts", () => {
       allowedIds: new Set(["dossiers", "commandes"]),
       commandes: [{ statut: "RECUE" }, { statut: "RECUE" }],
       dossiers: [{ statut: "INCIDENT" }],
+      prisesCarburant: null,
       vehicules: null,
       voyages: null,
     });

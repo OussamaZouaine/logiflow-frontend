@@ -14,6 +14,11 @@ import type { PageResponse } from "../core/api/page-response";
 import { filterByStatut } from "../shared/ui/list-filter";
 import { ListEmptyState } from "../shared/ui/list-empty-state";
 import { ListTableSkeleton } from "../shared/ui/list-table-skeleton";
+import {
+  DEFAULT_LIST_PAGE_SIZE,
+  LIST_PAGE_SIZE_OPTIONS,
+  resolveListPageSize,
+} from "../shared/ui/list-page-size";
 import { ListPagination } from "../shared/ui/list-pagination";
 import { ListSearchBar } from "../shared/ui/list-search-bar";
 import {
@@ -32,8 +37,6 @@ import {
   StatutChip,
 } from "../shared/ui/statut-chip";
 import { formatRoles, type Utilisateur } from "./utilisateur";
-
-const UTILISATEURS_PAGE_SIZE = 20;
 
 const ACTIF_OPTIONS: readonly ListStatutOption[] = [
   { label: "Actif", value: "true" },
@@ -67,6 +70,8 @@ export class UtilisateursPage {
   protected readonly search = signal("");
   protected readonly actifFilter = signal<string | null>(null);
   protected readonly page = signal(0);
+  protected readonly pageSizeOptions = LIST_PAGE_SIZE_OPTIONS;
+  protected readonly pageSize = signal(DEFAULT_LIST_PAGE_SIZE);
   protected readonly activeRowId = signal<string | null>(null);
 
   protected readonly utilisateurs = httpResource<PageResponse<Utilisateur>>(
@@ -74,7 +79,7 @@ export class UtilisateursPage {
       params: {
         page: this.page(),
         q: this.search().trim(),
-        size: UTILISATEURS_PAGE_SIZE,
+        size: resolveListPageSize(this.pageSize()),
       },
       url: `${environment.apiBaseUrl}/utilisateurs`,
     })

@@ -1,0 +1,216 @@
+<div class="fiche-page">
+  <app-fiche-header listLabel="Carburant" listLink="/carburant">
+    @if (prise.isLoading()) {
+    <p class="fiche-load-hint" role="status">Chargement…</p>
+    } @else if (prise.error()) {
+    <app-fiche-error (retry)="prise.reload()" [message]="loadError()" />
+    } @else if (prise.hasValue()) {
+    <app-fiche-title-row
+      [mono]="true"
+      [title]="formatPriseShortId(prise.value().id)"
+    >
+      <app-statut-chip
+        [label]="statutPriseLabel(prise.value().statut)"
+        [tone]="statutPriseTone(prise.value().statut)"
+      />
+    </app-fiche-title-row>
+    <p class="fiche-meta">
+      Voyage
+      <a
+        [routerLink]="['/voyages', prise.value().voyageId]"
+        class="font-mono text-pine underline-offset-2 hover:underline"
+      >
+        {{ prise.value().voyageReference }}
+      </a>
+      · {{ prise.value().datePrise | date: 'short' }}
+    </p>
+    }
+  </app-fiche-header>
+
+  @if (prise.hasValue()) {
+  <app-form-section title="Détails">
+    <app-fiche-field-grid>
+      <app-fiche-field label="Station">
+        {{ prise.value().stationCode }} — {{ prise.value().stationLibelle }}
+      </app-fiche-field>
+      <app-fiche-field label="Type">
+        {{ typeCarburantLabel(prise.value().typeCarburant) }}
+      </app-fiche-field>
+      <app-fiche-field label="Litrage">
+        {{ formatLitres(prise.value().litrage) }}
+      </app-fiche-field>
+      <app-fiche-field label="Montant TTC">
+        {{ formatMontantTtc(prise.value().montantTtc) }}
+      </app-fiche-field>
+      <app-fiche-field label="Prix / L">
+        {{ formatPrixUnitaire(prise.value().prixUnitaire) }}
+      </app-fiche-field>
+      <app-fiche-field label="Engin">
+        @if (prise.value().vehiculeId) { Véhicule } @else { Remorque }
+      </app-fiche-field>
+    </app-fiche-field-grid>
+  </app-form-section>
+
+  @if (isEditable()) {
+  <app-form-section
+    description="Modification possible tant que la prise est en brouillon."
+    title="Modifier"
+  >
+    <form (submit)="saveEdits($event)" class="form-page max-w-lg" novalidate>
+      <app-form-field inputId="editStation" label="Station">
+        <select
+          (change)="onStationChange($event)"
+          [value]="editDraft().stationId"
+          class="field"
+          id="editStation"
+        >
+          @for (station of stations.value()?.content ?? []; track station.id) {
+          @if (station.actif) {
+          <option [value]="station.id">
+            {{ station.code }} — {{ station.libelle }}
+          </option>
+          }
+          }
+        </select>
+      </app-form-field>
+
+      <app-form-field inputId="editType" label="Type">
+        <select
+          (change)="onTypeChange($event)"
+          [value]="editDraft().typeCarburant"
+          class="field"
+          id="editType"
+        >
+          @for (type of fuelTypes; track type) {
+          <option [value]="type">{{ typeCarburantLabel(type) }}</option>
+          }
+        </select>
+      </app-form-field>
+
+      <app-form-field inputId="editLitrage" label="Litrage (L)">
+        <input
+          [formField]="editForm.litrage"
+          class="field"
+          id="editLitrage"
+          step="0.1"
+          type="number"
+        />
+      </app-form-field>
+
+      <app-form-field inputId="editMontant" label="Montant TTC (€)">
+        <input
+          [formField]="editForm.montantTtc"
+          class="field"
+          id="editMontant"
+          step="0.01"
+          type="number"
+        />
+      </app-form-field>
+
+      @if (formError()) {
+      <div class="alert-panel" role="alert">{{ formError() }}</div>
+      }
+
+      <button class="btn-primary pressable mt-4 min-h-11 px-5" type="submit">
+        Enregistrer
+      </button>
+    </form>
+  </app-form-section>
+  }
+
+  <app-form-section
+    description="Tickets, photos de pompe ou justificatifs liés à cette prise."
+    title="Documents"
+  >
+    @if (documents.isLoading()) {
+    <p class="fiche-load-hint" role="status">Chargement…</p>
+    } @else if (documents.error()) {
+    <app-fiche-error
+      (retry)="documents.reload()"
+      [message]="documentsLoadError()"
+    />
+    } @else if (documents.hasValue()) {
+    @if (documents.value().length === 0) {
+    <p class="fiche-meta">Aucun document.</p>
+    } @else {
+    <ul class="flex flex-col gap-2">
+      @for (document of documents.value(); track document.id) {
+      <li
+        class="fiche-inline-card flex flex-wrap items-end justify-between gap-3"
+      >
+        <div class="min-w-0 flex-1">
+          <p class="font-medium text-ink">
+            {{ documentTypeLabel(document.typeDocument) }}
+          </p>
+          <p class="mt-1 text-sm text-muted">{{ document.reference }}</p>
+          @if (document.url) {
+          <a
+            [href]="document.url"
+            class="mt-2 inline-block text-xs text-pine underline-offset-2 hover:underline"
+            rel="noopener"
+            target="_blank"
+          >
+            Ouvrir le fichier
+          </a>
+          }
+        </div>
+        @if (isEditable()) {
+        <button
+          (click)="deleteDocument(document.id)"
+          class="btn-danger-outline pressable h-10 px-3 text-xs"
+          type="button"
+        >
+          Supprimer
+        </button>
+        }
+      </li>
+      }
+    </ul>
+    }
+
+    @if (isEditable()) {
+    <details class="fiche-disclosure fiche-inset mt-4">
+      <summary class="text-sm font-medium text-ink">
+        Téléverser un document
+      </summary>
+      <form (submit)="uploadDocument($event)" class="mt-4" novalidate>
+        <app-form-field inputId="documentFichier" label="Fichier">
+          <input
+            (change)="onFileSelected($event)"
+            accept=".pdf,.png,.jpg,.jpeg,.webp"
+            class="field"
+            id="documentFichier"
+            type="file"
+          >
+        </app-form-field>
+        @if (uploadError()) {
+        <div class="alert-panel mt-3" role="alert">{{ uploadError() }}</div>
+        }
+        <button class="btn-primary pressable mt-4 min-h-10 px-4" type="submit">
+          Téléverser
+        </button>
+      </form>
+    </details>
+    }
+    }
+  </app-form-section>
+
+  @if (isEditable() && canValidate()) {
+  <app-form-section title="Validation">
+    <p class="fiche-meta mb-4">
+      Passe la prise en lecture seule une fois les informations vérifiées.
+    </p>
+    @if (validateError()) {
+    <div class="alert-panel mb-4" role="alert">{{ validateError() }}</div>
+    }
+    <button
+      (click)="valider()"
+      class="btn-primary pressable min-h-11 px-5"
+      type="button"
+    >
+      Valider la prise
+    </button>
+  </app-form-section>
+  }
+  }
+</div>

@@ -39,10 +39,6 @@ function messageFromHttpError(error: HttpErrorResponse): string {
     return serviceUnavailableMessage(body, correlationId);
   }
 
-  if (error.status >= 500) {
-    return serverErrorMessage(error.status, correlationId);
-  }
-
   const violations = readViolations(body);
   if (violations.length > 0) {
     return validationMessage(violations);
@@ -51,6 +47,10 @@ function messageFromHttpError(error: HttpErrorResponse): string {
   const detail = readDetail(body);
   if (detail && !isGenericInternalMessage(detail)) {
     return detail;
+  }
+
+  if (error.status >= 500) {
+    return serverErrorMessage(error.status, correlationId);
   }
 
   return fallbackForStatus(error.status, correlationId);

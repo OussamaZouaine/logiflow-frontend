@@ -1,0 +1,145 @@
+<app-form-page-header
+  [listLink]="backLink()"
+  [listLabel]="backLabel()"
+  description="La prise est créée en brouillon — l'exploitation la valide ensuite."
+  title="Nouvelle prise de carburant"
+/>
+
+<form (submit)="onSubmit($event)" class="form-page" novalidate>
+  <app-form-validation-summary
+    [show]="createForm().touched() && createForm().invalid()"
+  />
+
+  <app-form-section title="Contexte">
+    <app-form-field
+      [error]="
+        !voyageLocked() && showFieldError(createForm.voyageId())
+          ? firstFieldError(createForm.voyageId().errors())
+          : null
+      "
+      inputId="voyageId"
+      label="Voyage"
+    >
+      @if (voyageLocked()) {
+      <p class="field font-mono text-sm">{{ selectedVoyage()?.reference ?? "…" }}</p>
+      } @else {
+      <app-field-select
+        (selectValueChange)="onVoyageIdChange($event)"
+        [formField]="createForm.voyageId"
+        [invalid]="showFieldError(createForm.voyageId())"
+        [options]="voyageSelectOptions()"
+        inputId="voyageId"
+        placeholder="Sélectionner un voyage…"
+      />
+      }
+    </app-form-field>
+
+    @if (enginOptions().length > 0) {
+    <app-form-field inputId="engin" label="Engin">
+      <app-field-select
+        [formField]="createForm.engin"
+        [options]="enginOptions()"
+        inputId="engin"
+      />
+    </app-form-field>
+    }
+  </app-form-section>
+
+  <app-form-section title="Ticket">
+    <app-form-field
+      [error]="
+        showFieldError(createForm.stationId())
+          ? firstFieldError(createForm.stationId().errors())
+          : null
+      "
+      inputId="stationId"
+      label="Station"
+    >
+      <app-field-select
+        [formField]="createForm.stationId"
+        [invalid]="showFieldError(createForm.stationId())"
+        [options]="stationSelectOptions()"
+        inputId="stationId"
+        placeholder="Sélectionner une station…"
+      />
+    </app-form-field>
+
+    <app-form-field inputId="typeCarburant" label="Type">
+      <app-field-select
+        [formField]="createForm.typeCarburant"
+        [options]="typeOptions"
+        inputId="typeCarburant"
+      />
+    </app-form-field>
+
+    <app-form-field
+      [error]="
+        showFieldError(createForm.datePrise())
+          ? firstFieldError(createForm.datePrise().errors())
+          : null
+      "
+      inputId="datePrise"
+      label="Date de prise"
+    >
+      <app-iso-datetime-input
+        [ariaInvalid]="showFieldError(createForm.datePrise())"
+        [formField]="createForm.datePrise"
+        inputId="datePrise"
+        timeAriaLabel="Heure de prise"
+      />
+    </app-form-field>
+
+    <app-form-field
+      [error]="
+        showFieldError(createForm.litrage())
+          ? firstFieldError(createForm.litrage().errors())
+          : null
+      "
+      inputId="litrage"
+      label="Litrage (L)"
+    >
+      <input
+        [attr.aria-invalid]="showFieldError(createForm.litrage()) || null"
+        [class]="fieldClasses(createForm.litrage())"
+        [formField]="createForm.litrage"
+        id="litrage"
+        inputmode="decimal"
+        step="0.1"
+        type="number"
+      />
+    </app-form-field>
+
+    <app-form-field
+      [error]="
+        showFieldError(createForm.montantTtc())
+          ? firstFieldError(createForm.montantTtc().errors())
+          : null
+      "
+      inputId="montantTtc"
+      label="Montant TTC (€)"
+    >
+      <input
+        [attr.aria-invalid]="showFieldError(createForm.montantTtc()) || null"
+        [class]="fieldClasses(createForm.montantTtc())"
+        [formField]="createForm.montantTtc"
+        id="montantTtc"
+        inputmode="decimal"
+        step="0.01"
+        type="number"
+      />
+    </app-form-field>
+  </app-form-section>
+
+  @if (formError()) {
+  <div class="alert-panel" role="alert">{{ formError() }}</div>
+  }
+
+  <app-form-actions>
+    <button class="btn-primary pressable min-h-11 px-5" type="submit">
+      Enregistrer
+    </button>
+    <a [routerLink]="backLink()" class="btn-outline pressable min-h-11 px-5">
+      Annuler
+    </a>
+  </app-form-actions>
+</form>

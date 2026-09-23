@@ -1,0 +1,77 @@
+<div class="fiche-page">
+  <app-fiche-header listLabel="Stations" listLink="/carburant/stations">
+    @if (station.isLoading()) {
+    <p class="fiche-load-hint" role="status">Chargement…</p>
+    } @else if (station.error()) {
+    <app-fiche-error (retry)="station.reload()" [message]="loadError()" />
+    } @else if (station.hasValue()) {
+    <app-fiche-title-row [mono]="true" [title]="station.value().code">
+      <app-statut-chip
+        [label]="actifLabel(station.value().actif)"
+        [tone]="actifTone(station.value().actif)"
+      />
+    </app-fiche-title-row>
+    <p class="fiche-meta">{{ station.value().libelle }}</p>
+    }
+  </app-fiche-header>
+
+  @if (station.hasValue()) {
+  <form (submit)="onSubmit($event)" class="form-page max-w-lg" novalidate>
+    <app-form-section title="Fiche">
+      <app-form-field inputId="code" label="Code">
+        <p class="field font-mono text-sm">{{ station.value().code }}</p>
+      </app-form-field>
+
+      <app-form-field
+        [error]="
+          showFieldError(editForm.libelle())
+            ? firstFieldError(editForm.libelle().errors())
+            : null
+        "
+        inputId="libelle"
+        label="Libellé"
+      >
+        <input
+          [attr.aria-invalid]="showFieldError(editForm.libelle()) || null"
+          [class]="fieldClasses(editForm.libelle())"
+          [formField]="editForm.libelle"
+          id="libelle"
+          type="text"
+        />
+      </app-form-field>
+
+      <app-form-field inputId="adresse" label="Adresse">
+        <input [formField]="editForm.adresse" class="field" id="adresse" type="text" />
+      </app-form-field>
+    </app-form-section>
+
+    @if (formError()) {
+    <div class="alert-panel" role="alert">{{ formError() }}</div>
+    }
+
+    <app-form-actions>
+      <button class="btn-primary pressable min-h-11 px-5" type="submit">
+        Enregistrer
+      </button>
+    </app-form-actions>
+  </form>
+
+  @if (station.value().actif) {
+  <app-fiche-danger-zone
+    description="Pas de suppression physique. Désactivation = retrait du select des prises."
+    title="Désactivation"
+  >
+    @if (deactivateError()) {
+    <div class="alert-panel" role="alert">{{ deactivateError() }}</div>
+    }
+    <button
+      (click)="desactiver()"
+      class="btn-danger-outline pressable w-fit"
+      type="button"
+    >
+      Désactiver
+    </button>
+  </app-fiche-danger-zone>
+  }
+  }
+</div>

@@ -1,352 +1,474 @@
-<app-form-page-header
-  description="Conformité bloquante : véhicule disponible, documents valides, chauffeur disponible, solde de conduite suffisant."
-  listLabel="Voyages"
-  listLink="/voyages"
-  title="Nouveau voyage"
-/>
-
-@if (
-  vehicules.isLoading() ||
-  dossiers.isLoading() ||
-  chauffeurs.isLoading() ||
-  sites.isLoading()
-) {
-<p class="text-sm text-muted" role="status">Chargement des ressources…</p>
-} @else if (lookupsError()) {
-<div class="alert-panel" role="alert">
-  <p>{{ lookupsError() }}</p>
-</div>
-} @else if (lookupsReady()) {
-<form (submit)="onSubmit($event)" class="form-page" novalidate>
-  <app-form-validation-summary
-    [show]="createForm().touched() && createForm().invalid()"
+<div class="voyage-create">
+  <app-form-page-header
+    description="Conformité bloquante : véhicule disponible, documents valides, chauffeur disponible, solde de conduite suffisant."
+    listLabel="Voyages"
+    listLink="/voyages"
+    title="Nouveau voyage"
   />
 
-  <app-form-section title="Planification">
-    <div class="form-page__coords">
-      <app-form-field
-        [error]="
-          showFieldError(createForm.typeVoyage())
-            ? firstFieldError(createForm.typeVoyage().errors())
-            : null
-        "
-        inputId="typeVoyage"
-        label="Type *"
-      >
-        <app-field-select
-          [formField]="createForm.typeVoyage"
-          [invalid]="showFieldError(createForm.typeVoyage())"
-          [options]="typeVoyageOptions"
-          inputId="typeVoyage"
-        />
-      </app-form-field>
+  @if (
+    vehicules.isLoading() ||
+      dossiers.isLoading() ||
+      chauffeurs.isLoading() ||
+      sites.isLoading()
+  ) {
+  <p class="voyage-create__loading" role="status">
+    <ng-icon aria-hidden="true" class="animate-spin" name="lucideLoaderCircle" />
+    Chargement des ressources…
+  </p>
+  } @else if (lookupsError()) {
+  <z-alert
+    zIcon="lucideCircleAlert"
+    zType="destructive"
+    [zDescription]="lookupsError()!"
+  />
+  } @else if (lookupsReady()) {
+  <form (submit)="onSubmit($event)" class="voyage-create__form" novalidate>
+    <app-form-validation-summary
+      [show]="createForm().touched() && createForm().invalid()"
+    />
 
-      <app-form-field
-        [error]="
-          showFieldError(createForm.portee())
-            ? firstFieldError(createForm.portee().errors())
-            : null
-        "
-        inputId="portee"
-        label="Portée *"
-      >
-        <app-field-select
-          [formField]="createForm.portee"
-          [invalid]="showFieldError(createForm.portee())"
-          [options]="porteeOptions"
-          inputId="portee"
-        />
-      </app-form-field>
-    </div>
-
-    <div class="form-page__coords">
-      <app-form-field
-        [error]="
-          showFieldError(createForm.departPrevu())
-            ? firstFieldError(createForm.departPrevu().errors())
-            : null
-        "
-        inputId="departPrevu"
-        label="Départ prévu *"
-      >
-        <app-iso-datetime-input
-          [ariaInvalid]="showFieldError(createForm.departPrevu())"
-          [formField]="createForm.departPrevu"
-          inputId="departPrevu"
-          timeAriaLabel="Heure de départ prévue"
-        />
-      </app-form-field>
-
-      <app-form-field
-        [error]="
-          showFieldError(createForm.arriveePrevue())
-            ? firstFieldError(createForm.arriveePrevue().errors())
-            : null
-        "
-        inputId="arriveePrevue"
-        label="Arrivée prévue *"
-      >
-        <app-iso-datetime-input
-          [ariaInvalid]="showFieldError(createForm.arriveePrevue())"
-          [formField]="createForm.arriveePrevue"
-          inputId="arriveePrevue"
-          timeAriaLabel="Heure d'arrivée prévue"
-        />
-      </app-form-field>
-    </div>
-
-    <app-form-field
-      [error]="
-        showFieldError(createForm.vehiculeId())
-          ? firstFieldError(createForm.vehiculeId().errors())
-          : null
-      "
-      inputId="vehiculeId"
-      label="Véhicule *"
-    >
-      <app-field-select
-        [formField]="createForm.vehiculeId"
-        [invalid]="showFieldError(createForm.vehiculeId())"
-        [options]="vehiculeSelectOptions()"
-        inputId="vehiculeId"
-        placeholder="Choisir un véhicule…"
-      />
-      @if (vehiculeOptions().length === 0) {
-      <p class="text-xs text-muted">
-        Aucun véhicule.
-        <a
-          class="text-pine underline-offset-2 hover:underline"
-          routerLink="/vehicules/nouveau"
-        >
-          En créer un
-        </a>
-      </p>
-      }
-    </app-form-field>
-
-    <app-form-field inputId="remorqueId" label="Remorque">
-      <app-field-select
-        [formField]="createForm.remorqueId"
-        [options]="remorqueSelectOptions()"
-        inputId="remorqueId"
-        placeholder="Sans remorque"
-      />
-      @if (remorquesLoading()) {
-      <p class="text-xs text-muted" role="status">Chargement des remorques…</p>
-      } @else if (remorqueLookupError()) {
-      <p class="text-xs text-brake" role="alert">{{ remorqueLookupError() }}</p>
-      <p class="text-xs text-muted">
-        Le voyage peut être créé sans remorque.
-      </p>
-      } @else if (remorqueOptions().length === 0) {
-      <p class="text-xs text-muted">Aucune remorque en base.</p>
-      }
-    </app-form-field>
-  </app-form-section>
-
-  <app-form-section
-    description="Propositions à partir des dossiers Créé groupables visibles dans la liste ci-dessous."
-    title="Dossiers & groupage IA"
-  >
-    <fieldset class="flex flex-col gap-2 border-0 p-0">
-      <legend class="text-xs font-medium text-muted">
-        Dossiers (statut Créé) *
-      </legend>
-      <p class="text-sm text-muted">
-        Sélectionnez un ou plusieurs dossiers pour ce voyage.
-      </p>
-      @if (dossierSelectionError()) {
-      <div class="alert-panel" role="alert">{{ dossierSelectionError() }}</div>
-      }
-      @if (dossierOptions().length === 0) {
-      <p class="text-sm text-muted">
-        Aucun dossier au statut Créé. Planifiez depuis une fiche dossier ou
-        créez-en un depuis une commande confirmée.
-      </p>
-      } @else {
-      <ul class="flex flex-col gap-2">
-        @for (dossier of dossierOptions(); track dossier.id) {
-        <li>
-          <label
-            class="flex cursor-pointer items-start gap-2 rounded-lg border border-line/80 bg-canvas px-3 py-2 text-sm hover:border-pine/30"
-          >
-            <input
-              (change)="toggleDossier(dossier.id, $any($event.target).checked)"
-              [checked]="isDossierSelected(dossier.id)"
-              class="mt-0.5 size-4 accent-pine"
-              type="checkbox"
+    <z-card>
+      <z-card-header>
+        <div class="voyage-create__section-head">
+          <ng-icon
+            aria-hidden="true"
+            class="voyage-create__section-icon"
+            name="lucideCalendarClock"
+          />
+          <div class="voyage-create__section-copy">
+            <z-card-title zTitle="Planification" />
+            <z-card-description
+              zDescription="Type, fenêtre horaire et moyens de transport."
             />
-            <span>
-              <span class="font-mono font-medium text-ink">
-                {{ formatDossierVoyageLabel(dossier) }}
-              </span>
-              @if (dossier.groupable) {
-              <span class="mt-0.5 block text-xs text-muted">Groupable</span>
-              }
-            </span>
-          </label>
-        </li>
-        }
-      </ul>
-      }
-    </fieldset>
-
-    <div class="flex flex-wrap items-start justify-between gap-3">
-      <p class="text-xs text-muted">
-        Lance une analyse IA sur les dossiers groupables.
-      </p>
-      <button
-        (click)="suggererGroupage()"
-        [disabled]="!canSuggererGroupage() || groupageLoading()"
-        class="btn-outline pressable min-h-10 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
-        type="button"
-      >
-        {{ groupageLoading() ? "Analyse…" : "Suggérer un groupage" }}
-      </button>
-    </div>
-    @if (groupageHint()) {
-    <p class="text-xs text-muted">{{ groupageHint() }}</p>
-    }
-    @if (groupageError()) {
-    <p class="text-xs text-brake" role="alert">{{ groupageError() }}</p>
-    }
-    @if (groupagePropositions().length > 0) {
-    <ul class="mt-1 flex flex-col gap-2">
-      @for (
-        proposition of groupagePropositions();
-        track proposition.dossierIds.join(",")
-      ) {
-      <li class="rounded-lg border border-line/80 bg-canvas px-3 py-3 text-sm">
-        <div class="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p class="font-mono text-xs text-ink">
-              {{
-                dossierReferencesForIds(
-                  proposition.dossierIds,
-                  dossiersById()
-                ).join(" · ")
-              }}
-            </p>
-            <p class="mt-1 text-xs text-muted">
-              Score {{ formatPropositionScore(proposition.score) }}
-              @if (formatPropositionGainKm(proposition.gainKm); as gainKm) {
-              · gain {{ gainKm }}
-              }
-              · {{ propositionSourceLabel(proposition.genereParIa) }}
-            </p>
-            <p class="mt-2 text-xs text-ink">
-              {{ proposition.justification }}
-            </p>
           </div>
-          <button
-            (click)="appliquerProposition(proposition)"
-            class="btn-outline pressable min-h-9 px-3 py-1.5 text-xs text-pine"
-            type="button"
+        </div>
+      </z-card-header>
+      <z-card-content class="voyage-create__card-body flex flex-col">
+        <div class="form-page__coords">
+          <app-form-field
+            [error]="
+              showFieldError(createForm.typeVoyage())
+                ? firstFieldError(createForm.typeVoyage().errors())
+                : null
+            "
+            inputId="typeVoyage"
+            label="Type *"
           >
-            Appliquer
+            <app-field-select
+              [formField]="createForm.typeVoyage"
+              [invalid]="showFieldError(createForm.typeVoyage())"
+              [options]="typeVoyageOptions"
+              inputId="typeVoyage"
+            />
+          </app-form-field>
+
+          <app-form-field
+            [error]="
+              showFieldError(createForm.portee())
+                ? firstFieldError(createForm.portee().errors())
+                : null
+            "
+            inputId="portee"
+            label="Portée *"
+          >
+            <app-field-select
+              [formField]="createForm.portee"
+              [invalid]="showFieldError(createForm.portee())"
+              [options]="porteeOptions"
+              inputId="portee"
+            />
+          </app-form-field>
+        </div>
+
+        <div class="form-page__coords">
+          <app-form-field
+            [error]="
+              showFieldError(createForm.departPrevu())
+                ? firstFieldError(createForm.departPrevu().errors())
+                : null
+            "
+            inputId="departPrevu"
+            label="Départ prévu *"
+          >
+            <app-iso-datetime-input
+              [ariaInvalid]="showFieldError(createForm.departPrevu())"
+              [formField]="createForm.departPrevu"
+              inputId="departPrevu"
+              timeAriaLabel="Heure de départ prévue"
+            />
+          </app-form-field>
+
+          <app-form-field
+            [error]="
+              showFieldError(createForm.arriveePrevue())
+                ? firstFieldError(createForm.arriveePrevue().errors())
+                : null
+            "
+            inputId="arriveePrevue"
+            label="Arrivée prévue *"
+          >
+            <app-iso-datetime-input
+              [ariaInvalid]="showFieldError(createForm.arriveePrevue())"
+              [formField]="createForm.arriveePrevue"
+              inputId="arriveePrevue"
+              timeAriaLabel="Heure d'arrivée prévue"
+            />
+          </app-form-field>
+        </div>
+
+        <app-form-field
+          [error]="
+            showFieldError(createForm.vehiculeId())
+              ? firstFieldError(createForm.vehiculeId().errors())
+              : null
+          "
+          inputId="vehiculeId"
+          label="Véhicule *"
+        >
+          <app-field-select
+            [formField]="createForm.vehiculeId"
+            [invalid]="showFieldError(createForm.vehiculeId())"
+            [options]="vehiculeSelectOptions()"
+            inputId="vehiculeId"
+            placeholder="Choisir un véhicule…"
+          />
+          @if (vehiculeOptions().length === 0) {
+          <p class="voyage-create__hint">
+            <ng-icon aria-hidden="true" name="lucideTruck" />
+            Aucun véhicule.
+            <a class="voyage-create__link" routerLink="/vehicules/nouveau">
+              En créer un
+            </a>
+          </p>
+          }
+        </app-form-field>
+
+        <app-form-field inputId="remorqueId" label="Remorque">
+          <app-field-select
+            [formField]="createForm.remorqueId"
+            [options]="remorqueSelectOptions()"
+            inputId="remorqueId"
+            placeholder="Sans remorque"
+          />
+          @if (remorquesLoading()) {
+          <p class="voyage-create__hint" role="status">
+            <ng-icon aria-hidden="true" class="animate-spin" name="lucideLoaderCircle" />
+            Chargement des remorques…
+          </p>
+          } @else if (remorqueLookupError()) {
+          <p class="voyage-create__hint voyage-create__hint--error" role="alert">
+            <ng-icon aria-hidden="true" name="lucideCircleAlert" />
+            {{ remorqueLookupError() }}
+          </p>
+          <p class="voyage-create__hint">
+            Le voyage peut être créé sans remorque.
+          </p>
+          } @else if (remorqueOptions().length === 0) {
+          <p class="voyage-create__hint">
+            <ng-icon aria-hidden="true" name="lucideContainer" />
+            Aucune remorque en base.
+          </p>
+          }
+        </app-form-field>
+      </z-card-content>
+    </z-card>
+
+    <z-card>
+      <z-card-header>
+        <div class="voyage-create__section-head">
+          <ng-icon
+            aria-hidden="true"
+            class="voyage-create__section-icon"
+            name="lucideFolderOpen"
+          />
+          <div class="voyage-create__section-copy">
+            <z-card-title zTitle="Dossiers & groupage IA" />
+            <z-card-description
+              zDescription="Propositions à partir des dossiers Créé groupables visibles ci-dessous."
+            />
+          </div>
+        </div>
+      </z-card-header>
+      <z-card-content class="voyage-create__card-body flex flex-col">
+        <fieldset class="flex flex-col gap-3 border-0 p-0">
+          <legend class="sr-only">Dossiers (statut Créé)</legend>
+          <p class="text-sm text-muted">
+            Sélectionnez un ou plusieurs dossiers pour ce voyage.
+            @if (selectedDossierIds().length > 0) {
+            <span class="font-mono tabular-nums text-ink">
+              · {{ selectedDossierIds().length }} sélectionné(s)
+            </span>
+            }
+          </p>
+          @if (dossierSelectionError()) {
+          <z-alert
+            zIcon="lucideCircleAlert"
+            zType="destructive"
+            [zDescription]="dossierSelectionError()!"
+          />
+          }
+          @if (dossierOptions().length === 0) {
+          <p class="voyage-create__hint">
+            <ng-icon aria-hidden="true" name="lucideFolderOpen" />
+            Aucun dossier au statut Créé. Planifiez depuis une fiche dossier ou
+            créez-en un depuis une commande confirmée.
+          </p>
+          } @else {
+          <ul class="voyage-create__dossiers">
+            @for (dossier of dossierOptions(); track dossier.id) {
+            <li>
+              <label
+                [class.voyage-create__dossier--selected]="
+                  isDossierSelected(dossier.id)
+                "
+                class="voyage-create__dossier"
+              >
+                <input
+                  (change)="toggleDossier(dossier.id, $any($event.target).checked)"
+                  [checked]="isDossierSelected(dossier.id)"
+                  class="voyage-create__dossier-check"
+                  type="checkbox"
+                />
+                <ng-icon
+                  aria-hidden="true"
+                  class="voyage-create__dossier-icon"
+                  name="lucideFolderOpen"
+                />
+                <span class="voyage-create__dossier-body">
+                  <span class="voyage-create__dossier-ref">
+                    {{ formatDossierVoyageLabel(dossier) }}
+                  </span>
+                  @if (dossier.groupable) {
+                  <z-badge zType="secondary">Groupable</z-badge>
+                  }
+                </span>
+              </label>
+            </li>
+            }
+          </ul>
+          }
+        </fieldset>
+
+        <div class="voyage-create__ia-row">
+          <p class="voyage-create__ia-copy">
+            <ng-icon aria-hidden="true" name="lucideSparkles" />
+            Lance une analyse IA sur les dossiers groupables.
+          </p>
+          <button
+            (click)="suggererGroupage()"
+            [disabled]="!canSuggererGroupage() || groupageLoading()"
+            type="button"
+            z-button
+            zSize="sm"
+            zType="outline"
+            [zLoading]="groupageLoading()"
+          >
+            <ng-icon aria-hidden="true" name="lucideSparkles" />
+            {{ groupageLoading() ? "Analyse…" : "Suggérer un groupage" }}
           </button>
         </div>
-      </li>
-      }
-    </ul>
+        @if (groupageHint()) {
+        <p class="voyage-create__hint">
+          <ng-icon aria-hidden="true" name="lucideInfo" />
+          {{ groupageHint() }}
+        </p>
+        }
+        @if (groupageError()) {
+        <p class="voyage-create__hint voyage-create__hint--error" role="alert">
+          <ng-icon aria-hidden="true" name="lucideCircleAlert" />
+          {{ groupageError() }}
+        </p>
+        }
+        @if (groupagePropositions().length > 0) {
+        <ul class="voyage-create__propositions">
+          @for (
+            proposition of groupagePropositions();
+            track proposition.dossierIds.join(",")
+          ) {
+          <li class="voyage-create__proposition">
+            <div>
+              <p class="voyage-create__proposition-refs">
+                {{
+                  dossierReferencesForIds(
+                    proposition.dossierIds,
+                    dossiersById()
+                  ).join(" · ")
+                }}
+              </p>
+              <p class="mt-1 text-xs text-muted">
+                Score {{ formatPropositionScore(proposition.score) }}
+                @if (formatPropositionGainKm(proposition.gainKm); as gainKm) {
+                · gain {{ gainKm }}
+                }
+                · {{ propositionSourceLabel(proposition.genereParIa) }}
+              </p>
+              <p class="mt-2 text-xs text-ink">
+                {{ proposition.justification }}
+              </p>
+            </div>
+            <button
+              (click)="appliquerProposition(proposition)"
+              type="button"
+              z-button
+              zSize="sm"
+              zType="outline"
+            >
+              <ng-icon aria-hidden="true" name="lucideCheck" />
+              Appliquer
+            </button>
+          </li>
+          }
+        </ul>
+        }
+      </z-card-content>
+    </z-card>
+
+    <app-remorque-capacity-preview
+      [dossierIds]="selectedDossierIds()"
+      [dossiersById]="dossiersById()"
+      [remorqueId]="draft().remorqueId"
+      [remorqueOptions]="remorqueOptions()"
+      [sitesById]="sitesById()"
+    />
+
+    <z-card>
+      <z-card-header>
+        <div class="voyage-create__section-head">
+          <ng-icon
+            aria-hidden="true"
+            class="voyage-create__section-icon"
+            name="lucideRoute"
+          />
+          <div class="voyage-create__section-copy">
+            <z-card-title zTitle="Équipage & itinéraire" />
+            <z-card-description
+              zDescription="Distance et durée de conduite à partir des segments des dossiers sélectionnés (OSRM via le backend)."
+            />
+          </div>
+        </div>
+      </z-card-header>
+      <z-card-content class="voyage-create__card-body flex flex-col">
+        <app-form-field
+          [error]="
+            showFieldError(createForm.chauffeurId())
+              ? firstFieldError(createForm.chauffeurId().errors())
+              : null
+          "
+          inputId="chauffeurId"
+          label="Chauffeur titulaire *"
+        >
+          <app-field-select
+            [formField]="createForm.chauffeurId"
+            [invalid]="showFieldError(createForm.chauffeurId())"
+            [options]="chauffeurSelectOptions()"
+            inputId="chauffeurId"
+            placeholder="Choisir un chauffeur…"
+          />
+          @if (chauffeurOptions().length === 0) {
+          <p class="voyage-create__hint">
+            <ng-icon aria-hidden="true" name="lucideUsers" />
+            Aucun chauffeur en base.
+          </p>
+          }
+        </app-form-field>
+
+        <div class="voyage-create__ia-row">
+          <p class="voyage-create__ia-copy">
+            <ng-icon aria-hidden="true" name="lucideRoute" />
+            Calcule distance et durée de conduite sur l'itinéraire des dossiers.
+          </p>
+          <button
+            (click)="calculerItineraire()"
+            [disabled]="!canCalculerItineraire() || itineraireCalculating()"
+            type="button"
+            z-button
+            zSize="sm"
+            zType="outline"
+            [zLoading]="itineraireCalculating()"
+          >
+            <ng-icon aria-hidden="true" name="lucideSparkles" />
+            {{ itineraireCalculating() ? "Calcul…" : "Calculer via IA" }}
+          </button>
+        </div>
+        @if (itineraireHint()) {
+        <p class="voyage-create__hint">
+          <ng-icon aria-hidden="true" name="lucideInfo" />
+          {{ itineraireHint() }}
+        </p>
+        }
+        @if (itineraireError()) {
+        <p class="voyage-create__hint voyage-create__hint--error" role="alert">
+          <ng-icon aria-hidden="true" name="lucideCircleAlert" />
+          {{ itineraireError() }}
+        </p>
+        }
+
+        <div class="form-page__coords">
+          <app-form-field
+            [error]="
+              showFieldError(createForm.distanceTotaleKm())
+                ? firstFieldError(createForm.distanceTotaleKm().errors())
+                : null
+            "
+            inputId="distanceTotaleKm"
+            label="Distance (km)"
+          >
+            <input
+              [attr.aria-invalid]="
+                showFieldError(createForm.distanceTotaleKm()) || null
+              "
+              [class]="fieldClasses(createForm.distanceTotaleKm(), 'z-input w-full')"
+              [formField]="createForm.distanceTotaleKm"
+              id="distanceTotaleKm"
+              step="1"
+              type="number"
+              z-input
+            >
+          </app-form-field>
+
+          <app-form-field
+            [error]="
+              showFieldError(createForm.dureeConduiteMin())
+                ? firstFieldError(createForm.dureeConduiteMin().errors())
+                : null
+            "
+            inputId="dureeConduiteMin"
+            label="Conduite (min)"
+          >
+            <input
+              [attr.aria-invalid]="
+                showFieldError(createForm.dureeConduiteMin()) || null
+              "
+              [class]="fieldClasses(createForm.dureeConduiteMin(), 'z-input w-full')"
+              [formField]="createForm.dureeConduiteMin"
+              id="dureeConduiteMin"
+              step="1"
+              type="number"
+              z-input
+            >
+          </app-form-field>
+        </div>
+      </z-card-content>
+    </z-card>
+
+    @if (formError()) {
+    <z-alert
+      zIcon="lucideCircleAlert"
+      zType="destructive"
+      [zDescription]="formError()!"
+    />
     }
-  </app-form-section>
 
-  <app-form-section
-    description="Distance et durée de conduite à partir des segments des dossiers sélectionnés (OSRM via le backend)."
-    title="Équipage & itinéraire"
-  >
-    <app-form-field
-      [error]="
-        showFieldError(createForm.chauffeurId())
-          ? firstFieldError(createForm.chauffeurId().errors())
-          : null
-      "
-      inputId="chauffeurId"
-      label="Chauffeur titulaire *"
-    >
-      <app-field-select
-        [formField]="createForm.chauffeurId"
-        [invalid]="showFieldError(createForm.chauffeurId())"
-        [options]="chauffeurSelectOptions()"
-        inputId="chauffeurId"
-        placeholder="Choisir un chauffeur…"
-      />
-      @if (chauffeurOptions().length === 0) {
-      <p class="text-xs text-muted">Aucun chauffeur en base.</p>
-      }
-    </app-form-field>
-
-    <div class="flex flex-wrap items-start justify-between gap-3">
-      <p class="text-xs font-medium text-muted">Itinéraire (IA)</p>
-      <button
-        (click)="calculerItineraire()"
-        [disabled]="!canCalculerItineraire() || itineraireCalculating()"
-        class="btn-outline pressable min-h-10 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
-        type="button"
-      >
-        {{ itineraireCalculating() ? "Calcul…" : "Calculer via IA" }}
+    <app-form-actions>
+      <button type="submit" z-button zType="default">
+        <ng-icon aria-hidden="true" name="lucideSave" />
+        Enregistrer
       </button>
-    </div>
-    @if (itineraireHint()) {
-    <p class="text-xs text-muted">{{ itineraireHint() }}</p>
-    }
-    @if (itineraireError()) {
-    <p class="text-xs text-brake" role="alert">{{ itineraireError() }}</p>
-    }
-
-    <div class="form-page__coords">
-      <app-form-field
-        [error]="
-          showFieldError(createForm.distanceTotaleKm())
-            ? firstFieldError(createForm.distanceTotaleKm().errors())
-            : null
-        "
-        inputId="distanceTotaleKm"
-        label="Distance (km)"
-      >
-        <input
-          [attr.aria-invalid]="showFieldError(createForm.distanceTotaleKm()) || null"
-          [class]="fieldClasses(createForm.distanceTotaleKm())"
-          [formField]="createForm.distanceTotaleKm"
-          id="distanceTotaleKm"
-          step="1"
-          type="number"
-        >
-      </app-form-field>
-
-      <app-form-field
-        [error]="
-          showFieldError(createForm.dureeConduiteMin())
-            ? firstFieldError(createForm.dureeConduiteMin().errors())
-            : null
-        "
-        inputId="dureeConduiteMin"
-        label="Conduite (min)"
-      >
-        <input
-          [attr.aria-invalid]="showFieldError(createForm.dureeConduiteMin()) || null"
-          [class]="fieldClasses(createForm.dureeConduiteMin())"
-          [formField]="createForm.dureeConduiteMin"
-          id="dureeConduiteMin"
-          step="1"
-          type="number"
-        >
-      </app-form-field>
-    </div>
-  </app-form-section>
-
-  @if (formError()) {
-  <div class="alert-panel" role="alert">{{ formError() }}</div>
+      <a routerLink="/voyages" z-button zType="outline">
+        Annuler
+      </a>
+    </app-form-actions>
+  </form>
   }
-
-  <app-form-actions>
-    <button class="btn-primary pressable min-h-11 px-5" type="submit">
-      Enregistrer
-    </button>
-    <a class="btn-outline pressable min-h-11 px-5" routerLink="/voyages">
-      Annuler
-    </a>
-  </app-form-actions>
-</form>
-}
+</div>

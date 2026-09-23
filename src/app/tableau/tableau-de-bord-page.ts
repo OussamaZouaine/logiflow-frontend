@@ -24,6 +24,7 @@ import type { OrdreTravail } from "../maintenance/ordre-travail";
 import type { Site } from "../sites/site";
 import type { Utilisateur } from "../utilisateurs/utilisateur";
 import {
+	APERCU_CHART_PAGE_SIZE,
 	APERCU_COUNT_PAGE_SIZE,
 	type ApercuCountableId,
 	apercuApiPath,
@@ -32,11 +33,13 @@ import {
 	apercuToneClass,
 	commandeStatutSlices,
 	dossierStatutSlices,
+	priseStatutSlices,
 	type StatutSlice,
 	shouldShowStatutBreakdown,
 	vehiculeStatutSlices,
 	voyageStatutSlices,
 } from "./apercu";
+import type { PriseCarburant } from "../carburant/prise-carburant";
 import { FileDuJourStore } from "./file-du-jour-store";
 import {
 	fileDuJourIcon,
@@ -119,6 +122,10 @@ export class TableauDeBordPage {
 		() => this.listRequest("maintenance", APERCU_COUNT_PAGE_SIZE),
 	);
 
+	protected readonly prisesCarburant = httpResource<
+		PageResponse<PriseCarburant>
+	>(() => this.listRequest("carburant", APERCU_CHART_PAGE_SIZE));
+
 	protected readonly fileDuJour = this.fileDuJourStore.items;
 
 	protected readonly fileDuJourLoading = this.fileDuJourStore.loading;
@@ -157,6 +164,12 @@ export class TableauDeBordPage {
 						destination,
 						this.dossiers,
 						dossierStatutSlices,
+					);
+				case "carburant":
+					return this.chartTile(
+						destination,
+						this.prisesCarburant,
+						priseStatutSlices,
 					);
 				case "maintenance":
 					return this.countTile(destination, this.ordresTravail);

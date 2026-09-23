@@ -2,34 +2,18 @@ import type { OpsTimelineEntry } from "../shared/ui/ops-timeline";
 import {
   type EvenementVoyage,
   formatInstant,
-  statutVoyageLabel,
   typeEtapeLabel,
   typeEvenementLabel,
   type Voyage,
 } from "./voyage";
 
 interface SortableEntry extends OpsTimelineEntry {
-  readonly sortKey: string | null;
-}
-
-function roleLabel(role: "TITULAIRE" | "RENFORT"): string {
-  return role === "TITULAIRE" ? "Titulaire" : "Renfort";
+  readonly sortKey: string;
 }
 
 function sortEntries(entries: SortableEntry[]): OpsTimelineEntry[] {
   return [...entries]
-    .sort((left, right) => {
-      if (left.sortKey === null && right.sortKey === null) {
-        return 0;
-      }
-      if (left.sortKey === null) {
-        return 1;
-      }
-      if (right.sortKey === null) {
-        return -1;
-      }
-      return left.sortKey.localeCompare(right.sortKey);
-    })
+    .sort((left, right) => left.sortKey.localeCompare(right.sortKey))
     .map(({ sortKey: _sortKey, ...entry }) => entry);
 }
 
@@ -50,13 +34,21 @@ function dated(
   };
 }
 
-/** Chronological ops timeline from voyage payload + événements (no new API). */
-export function voyageTimelineEntries(
-  voyage: Voyage,
-  evenements: readonly EvenementVoyage[],
-  resolveChauffeurLabel: (chauffeurId: string) => string = (chauffeurId) =>
-    `${chauffeurId.slice(0, 8)}…`
-): OpsTimelineEntry[] {
+function evenementDetail(evenement: EvenementVoyage): string | null {
+  const parts: string[] = [];
+  if (evenement.commentaire?.trim()) {
+    parts.push(evenement.commentaire.trim());
+  }
+  if (evenement.position) {
+    parts.push(
+      `${evenement.position.latitude.toFixed(5)}, ${evenement.position.longitude.toFixed(5)}`
+    );
+  }
+  return parts.length > 0 ? parts.join(" · ") : null;
+}
+
+/** Planned schedule: départ, arrivée and étapes (ETA/ETD). */
+export function voyagePlannedTimelineEntries(voyage: Voyage): OpsTimelineEntry[] {
   const entries: SortableEntry[] = [
     dated("planned-depart", "planned", "Départ prévu", voyage.departPrevu),
     dated(
@@ -88,17 +80,14 @@ export function voyageTimelineEntries(
     }
   }
 
-  for (const [index, affectation] of voyage.affectations.entries()) {
-    entries.push(
-      dated(
-        `affectation-${index}`,
-        "actual",
-        `Affectation · ${roleLabel(affectation.role)}`,
-        affectation.dateAffectation,
-        resolveChauffeurLabel(affectation.chauffeurId)
-      )
-    );
-  }
+  return sortEntries(entries);
+}
+
+/** Actual execution: declared événements ordered by horodatage. */
+export function voyageActualTimelineEntries(
+  evenements: readonly EvenementVoyage[]
+): OpsTimelineEntry[] {
+  const entries: SortableEntry[] = [];
 
   for (const evenement of evenements) {
     if (evenement.type === "POSITION") {
@@ -110,19 +99,10 @@ export function voyageTimelineEntries(
         "actual",
         typeEvenementLabel(evenement.type),
         evenement.horodatage,
-        evenement.commentaire
+        evenementDetail(evenement)
       )
     );
   }
-
-  entries.push({
-    at: null,
-    detail: statutVoyageLabel(voyage.statut),
-    id: "state-statut",
-    kind: "state",
-    label: "Statut actuel",
-    sortKey: null,
-  });
 
   return sortEntries(entries);
 }

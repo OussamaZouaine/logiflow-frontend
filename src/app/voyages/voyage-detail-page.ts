@@ -1,6 +1,47 @@
+import { DecimalPipe } from "@angular/common";
 import { httpResource } from "@angular/common/http";
-import { Component, computed, inject, input, signal } from "@angular/core";
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+  viewChild,
+} from "@angular/core";
 import { RouterLink } from "@angular/router";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import {
+  lucideArrowRight,
+  lucideCalendarCheck,
+  lucideCalendarClock,
+  lucideChevronRight,
+  lucideCircleAlert,
+  lucideCircleCheck,
+  lucideContainer,
+  lucideFolderOpen,
+  lucideFuel,
+  lucideGauge,
+  lucideHistory,
+  lucideMapPin,
+  lucidePackage,
+  lucideRoute,
+  lucideTruck,
+  lucideUsers,
+  lucideZap,
+} from "@ng-icons/lucide";
+import { ZardAlertComponent } from "@/shared/components/alert";
+import { ZardBadgeComponent } from "@/shared/components/badge";
+import type { ZardBadgeTypeVariants } from "@/shared/components/badge/badge.variants";
+import { ZardButtonComponent } from "@/shared/components/button";
+import {
+  ZardCardComponent,
+  ZardCardContentComponent,
+  ZardCardDescriptionComponent,
+  ZardCardHeaderComponent,
+  ZardCardTitleComponent,
+} from "@/shared/components/card/card.component";
+import { ZardInputComponent } from "@/shared/components/input";
 import { environment } from "../../environments/environment";
 import {
   type ChauffeurListItem,
@@ -15,13 +56,16 @@ import {
 import type { RemorqueListItem } from "../remorques/remorque";
 import { enumToSelectOptions } from "../shared/ui/field-select";
 import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
+import { apercuToneToBadgeType } from "../shared/ui/apercu-zard";
 import { OpsTimeline } from "../shared/ui/ops-timeline";
 import { StatutChip } from "../shared/ui/statut-chip";
 import { ToastService } from "../shared/ui/toast";
 import { voyageStatutTone } from "../tableau/apercu";
 import {
   affectationRoleLabel,
+  type Etape,
   type EvenementVoyage,
+  formatDureeMin,
   formatInstant,
   type GeoPoint,
   isTypeEvenement,
@@ -31,32 +75,128 @@ import {
   type StatutVoyage,
   statutVoyageLabel,
   TYPE_EVENEMENTS,
+  type TypeEtape,
   type TypeEvenement,
   typeEtapeLabel,
   typeEvenementLabel,
   typeVoyageLabel,
   type Voyage,
+  compareDatetimeLocal,
+  datetimeLocalToIso,
+  formatDatetimeLocalForDisplay,
+  maxDatetimeLocal,
+  minEvenementHorodatageLocal,
+  suggestedEvenementHorodatageLocal,
+  toDatetimeLocal,
 } from "./voyage";
+import { RemorqueCapacityView } from "./remorque-capacity-view";
+import {
+  capaciteTronconTone,
+  capaciteTronconToneClass,
+} from "./voyage-capacite";
+import { VoyageAjouterDossierForm } from "./voyage-ajouter-dossier-form";
+import {
+  formatLitres,
+  formatMontantTtc,
+  formatPriseShortId,
+  statutPriseLabel,
+  statutPriseTone,
+  type PriseCarburant,
+} from "../carburant/prise-carburant";
 import { VoyageApi } from "./voyage-api";
-import { voyageTimelineEntries } from "./voyage-timeline";
+import {
+  voyageActualTimelineEntries,
+  voyagePlannedTimelineEntries,
+} from "./voyage-timeline";
 
 interface DossierLink {
   id: string;
   reference: string;
 }
 
+const ETAPE_DOT_CLASS: Record<TypeEtape, string> = {
+  CARBURANT: "bg-amber",
+  CHARGEMENT: "bg-pine",
+  DECHARGEMENT: "bg-pine",
+  DEPOT: "bg-muted",
+  FRONTIERE: "bg-ink",
+  PAUSE: "bg-muted",
+  REPOS: "bg-muted",
+};
+
 @Component({
-  imports: [RouterLink, OpsTimeline, StatutChip, ...FICHE_PAGE_IMPORTS],
+  imports: [
+    DecimalPipe,
+    NgIcon,
+    RouterLink,
+    ZardAlertComponent,
+    ZardBadgeComponent,
+    ZardButtonComponent,
+    ZardInputComponent,
+    OpsTimeline,
+    StatutChip,
+    RemorqueCapacityView,
+    VoyageAjouterDossierForm,
+    ZardCardComponent,
+    ZardCardContentComponent,
+    ZardCardDescriptionComponent,
+    ZardCardHeaderComponent,
+    ZardCardTitleComponent,
+    ...FICHE_PAGE_IMPORTS,
+  ],
+  providers: [
+    provideIcons({
+      lucideArrowRight,
+      lucideCalendarCheck,
+      lucideCalendarClock,
+      lucideChevronRight,
+      lucideCircleAlert,
+      lucideCircleCheck,
+      lucideContainer,
+      lucideFolderOpen,
+      lucideFuel,
+      lucideGauge,
+      lucideHistory,
+      lucideMapPin,
+      lucidePackage,
+      lucideRoute,
+      lucideTruck,
+      lucideUsers,
+      lucideZap,
+    }),
+  ],
   selector: "app-voyage-detail-page",
+  styleUrl: "./voyage-detail-page.css",
   templateUrl: "./voyage-detail-page.html",
 })
 export class VoyageDetailPage {
   private readonly api = inject(VoyageApi);
   private readonly toast = inject(ToastService);
+  private readonly capacityView = viewChild(RemorqueCapacityView);
 
   readonly id = input.required<string>();
 
+  constructor() {
+    effect(() => {
+      const suggested = suggestedEvenementHorodatageLocal(
+        this.evenements.value() ?? []
+      );
+      const minimum = this.minEventHorodatage();
+      const current = this.eventHorodatage();
+      if (current.length === 0) {
+        this.eventHorodatage.set(suggested);
+        return;
+      }
+      if (minimum && compareDatetimeLocal(current, minimum) < 0) {
+        this.eventHorodatage.set(suggested);
+      }
+    });
+  }
+
   protected readonly affectationRoleLabel = affectationRoleLabel;
+  protected readonly capaciteTronconTone = capaciteTronconTone;
+  protected readonly capaciteTronconToneClass = capaciteTronconToneClass;
+  protected readonly formatDureeMin = formatDureeMin;
   protected readonly formatInstant = formatInstant;
   protected readonly nextStatuts = nextStatuts;
   protected readonly porteeLabel = porteeLabel;
@@ -75,6 +215,7 @@ export class VoyageDetailPage {
   protected readonly statutError = signal<string | null>(null);
   protected readonly eventError = signal<string | null>(null);
   protected readonly eventType = signal<TypeEvenement>("DEPART");
+  protected readonly eventHorodatage = signal("");
   protected readonly eventComment = signal("");
   protected readonly eventLatitude = signal("");
   protected readonly eventLongitude = signal("");
@@ -132,17 +273,41 @@ export class VoyageDetailPage {
     url: `${environment.apiBaseUrl}/voyages/${this.id()}/evenements`,
   }));
 
-  protected readonly timelineEntries = computed(() => {
+  protected readonly prisesCarburant = httpResource<PageResponse<PriseCarburant>>(
+    () => ({
+      params: { page: 0, size: 20, voyageId: this.id() },
+      url: `${environment.apiBaseUrl}/prises-carburant`,
+    })
+  );
+
+  protected readonly formatLitres = formatLitres;
+  protected readonly formatMontantTtc = formatMontantTtc;
+  protected readonly formatPriseShortId = formatPriseShortId;
+  protected readonly statutPriseLabel = statutPriseLabel;
+  protected readonly statutPriseTone = statutPriseTone;
+
+  protected readonly plannedTimelineEntries = computed(() => {
     const voyage = this.voyage.value();
     if (!voyage) {
       return [];
     }
-    return voyageTimelineEntries(
-      voyage,
-      this.evenements.value() ?? [],
-      (chauffeurId) =>
-        chauffeurLabelFromLookup(chauffeurId, this.chauffeursById())
-    );
+    return voyagePlannedTimelineEntries(voyage);
+  });
+
+  protected readonly actualTimelineEntries = computed(() =>
+    voyageActualTimelineEntries(this.evenements.value() ?? [])
+  );
+
+  protected readonly minEventHorodatage = computed(() =>
+    minEvenementHorodatageLocal(this.evenements.value() ?? [])
+  );
+
+  protected readonly eventHorodatageHint = computed(() => {
+    const minimum = this.minEventHorodatage();
+    if (!minimum) {
+      return null;
+    }
+    return `Au plus tôt : ${formatDatetimeLocalForDisplay(minimum)} (dernier événement enregistré).`;
   });
 
   protected readonly loadError = computed(() =>
@@ -194,6 +359,34 @@ export class VoyageDetailPage {
     return remorque?.immatriculation ?? remorqueId;
   }
 
+  protected remplissagePercent(): number {
+    const voyage = this.voyage.value();
+    if (!voyage) {
+      return 0;
+    }
+    return Math.min(Math.max(Math.round(voyage.tauxRemplissage * 100), 0), 100);
+  }
+
+  protected remplissageTone(): ReturnType<typeof capaciteTronconTone> {
+    return capaciteTronconTone(this.remplissagePercent());
+  }
+
+  protected etapeDotClass(type: TypeEtape): string {
+    return ETAPE_DOT_CLASS[type];
+  }
+
+  protected etapeTimesLabel(etape: Etape): string {
+    const parts = [`ETA ${formatInstant(etape.eta)}`];
+    if (etape.etd) {
+      parts.push(`ETD ${formatInstant(etape.etd)}`);
+    }
+    return parts.join(" · ");
+  }
+
+  protected statutBadgeType(statut: StatutVoyage): ZardBadgeTypeVariants {
+    return apercuToneToBadgeType(voyageStatutTone(statut));
+  }
+
   protected onEventType(value: string): void {
     if (isTypeEvenement(value)) {
       this.eventType.set(value);
@@ -221,23 +414,10 @@ export class VoyageDetailPage {
     }
   }
 
-  protected useCurrentLocation(): void {
-    if (!navigator.geolocation) {
-      this.eventError.set(
-        "La géolocalisation n'est pas disponible sur ce navigateur."
-      );
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        this.eventLatitude.set(String(position.coords.latitude));
-        this.eventLongitude.set(String(position.coords.longitude));
-        this.eventError.set(null);
-      },
-      () => {
-        this.eventError.set("Impossible d'obtenir la position actuelle.");
-      }
-    );
+  protected onDossierAjoute(): void {
+    this.voyage.reload();
+    this.dossiers.reload();
+    this.capacityView()?.reload();
   }
 
   protected async changerStatut(valeur: StatutVoyage): Promise<void> {
@@ -257,6 +437,25 @@ export class VoyageDetailPage {
     event.preventDefault();
     this.eventError.set(null);
     const commentaire = this.eventComment().trim();
+    const horodatageLocal = this.eventHorodatage().trim();
+    if (horodatageLocal.length === 0) {
+      this.eventError.set("La date et l'heure sont obligatoires.");
+      return;
+    }
+    const minimum = this.minEventHorodatage();
+    if (minimum && compareDatetimeLocal(horodatageLocal, minimum) < 0) {
+      this.eventError.set(
+        `La date et l'heure doivent être postérieures ou égales au dernier événement (${formatDatetimeLocalForDisplay(minimum)}).`
+      );
+      return;
+    }
+    let horodatage: string;
+    try {
+      horodatage = datetimeLocalToIso(horodatageLocal);
+    } catch {
+      this.eventError.set("Date ou heure invalide.");
+      return;
+    }
     const position = this.parseEventPosition();
     if (position === undefined) {
       return;
@@ -264,15 +463,18 @@ export class VoyageDetailPage {
     try {
       await this.api.declarerEvenement({
         commentaire: commentaire.length > 0 ? commentaire : null,
-        horodatage: new Date().toISOString(),
+        horodatage,
         position,
         type: this.eventType(),
         voyageId: this.id(),
       });
+      this.evenements.reload();
+      this.eventHorodatage.set(
+        maxDatetimeLocal(horodatageLocal, toDatetimeLocal(new Date()))
+      );
       this.eventComment.set("");
       this.eventLatitude.set("");
       this.eventLongitude.set("");
-      this.evenements.reload();
       this.toast.success("Événement enregistré.");
     } catch (error) {
       this.eventError.set(httpErrorMessage(error));

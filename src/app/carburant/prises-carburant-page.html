@@ -1,0 +1,170 @@
+<div class="flex flex-col gap-6">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <h1 class="module-page-title">Carburant</h1>
+      <p class="mt-1 text-sm text-muted">
+        Prises de carburant liées aux voyages.
+      </p>
+    </div>
+    <a class="btn-primary pressable" routerLink="/carburant/nouveau">
+      Nouvelle prise
+    </a>
+  </div>
+
+  <app-carburant-tabs />
+
+  @if (stats.hasValue()) {
+  <div class="grid gap-3 sm:grid-cols-3">
+    <div class="rounded-xl border border-line/80 bg-surface px-4 py-3">
+      <p class="text-xs text-muted">Prises</p>
+      <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">
+        {{ stats.value().nombre }}
+      </p>
+    </div>
+    <div class="rounded-xl border border-line/80 bg-surface px-4 py-3">
+      <p class="text-xs text-muted">Litres</p>
+      <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">
+        {{ formatLitres(stats.value().litresTotal) }}
+      </p>
+    </div>
+    <div class="rounded-xl border border-line/80 bg-surface px-4 py-3">
+      <p class="text-xs text-muted">Montant TTC</p>
+      <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">
+        {{ formatMontantTtc(stats.value().montantTotal) }}
+      </p>
+    </div>
+  </div>
+  }
+
+  <div class="flex flex-col gap-3">
+    <app-list-search-bar
+      [(draft)]="searchDraft"
+      [(query)]="search"
+      inputId="prise-search"
+      placeholder="Station (code ou libellé)…"
+    />
+    <app-list-statut-filter
+      [(selected)]="statutFilter"
+      [options]="statutOptions"
+      ariaLabel="Filtrer par statut"
+    />
+  </div>
+
+  @if (prises.isLoading()) {
+  <app-list-table-skeleton [columns]="9" label="Chargement des prises" />
+  } @else if (prises.error()) {
+  <div class="alert-panel" role="alert">
+    <p>{{ errorMessage() }}</p>
+    <button
+      (click)="prises.reload()"
+      class="pressable mt-2 font-medium text-ink underline underline-offset-2"
+      type="button"
+    >
+      Réessayer
+    </button>
+  </div>
+  } @else if (prises.hasValue() && prises.value().content.length === 0) {
+  @if (search()) {
+  <app-list-empty-state
+    (action)="resetFilters()"
+    actionLabel="Effacer la recherche"
+    description="Aucune prise ne correspond à « {{ search() }} »."
+    title="Aucun résultat"
+  />
+  } @else {
+  <app-list-empty-state
+    actionLabel="Nouvelle prise"
+    actionLink="/carburant/nouveau"
+    description="Enregistrez une première prise de carburant."
+    title="Aucune prise en base"
+  />
+  }
+  } @else if (prises.hasValue() && visiblePrises().length === 0) {
+  <app-list-empty-state
+    (action)="resetFilters()"
+    actionLabel="Réinitialiser les filtres"
+    description="Élargissez le filtre de statut pour revoir la liste."
+    title="Aucune prise pour ce filtre"
+  />
+  } @else if (prises.hasValue()) {
+  <div
+    appListRowKeyboard
+    [(activeId)]="selectedPriseId"
+    [rows]="keyboardRows()"
+    aria-label="Liste des prises — flèches pour naviguer, Entrée pour ouvrir"
+    class="list-table-panel"
+  >
+    <table class="w-full min-w-xl text-left text-sm">
+      <thead class="list-table-head">
+        <tr>
+          <th class="px-4 py-3 font-medium" scope="col">Réf.</th>
+          <th class="px-4 py-3 font-medium" scope="col">Voyage</th>
+          <th class="px-4 py-3 font-medium" scope="col">Date</th>
+          <th class="px-4 py-3 font-medium" scope="col">Station</th>
+          <th class="px-4 py-3 font-medium" scope="col">Type</th>
+          <th class="px-4 py-3 font-medium" scope="col">Litres</th>
+          <th class="px-4 py-3 font-medium" scope="col">Montant</th>
+          <th class="px-4 py-3 font-medium" scope="col">Statut</th>
+          <th class="px-4 py-3 font-medium" scope="col">
+            <span class="sr-only">Actions</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (prise of visiblePrises(); track prise.id) {
+        <tr
+          (click)="selectPrise(prise.id)"
+          [attr.aria-selected]="selectedPriseId() === prise.id"
+          [class.bg-pine/5]="selectedPriseId() === prise.id"
+          class="list-row cursor-pointer border-b border-line last:border-0 hover:bg-canvas"
+        >
+          <td class="px-4 py-3">
+            <a
+              (click)="$event.stopPropagation()"
+              [routerLink]="['/carburant', prise.id]"
+              class="font-mono text-xs text-pine underline-offset-2 hover:underline"
+            >
+              {{ formatPriseShortId(prise.id) }}
+            </a>
+          </td>
+          <td class="px-4 py-3 font-mono text-xs">{{ prise.voyageReference }}</td>
+          <td class="px-4 py-3">{{ prise.datePrise | date: 'short' }}</td>
+          <td class="px-4 py-3">{{ prise.stationLibelle }}</td>
+          <td class="px-4 py-3">{{ typeCarburantLabel(prise.typeCarburant) }}</td>
+          <td class="px-4 py-3 tabular-nums">{{ formatLitres(prise.litrage) }}</td>
+          <td class="px-4 py-3 tabular-nums">
+            {{ formatMontantTtc(prise.montantTtc) }}
+          </td>
+          <td class="px-4 py-3">
+            <app-statut-chip
+              [label]="statutPriseLabel(prise.statut)"
+              [tone]="statutPriseTone(prise.statut)"
+            />
+          </td>
+          <td class="px-4 py-3 text-right">
+            <a
+              (click)="$event.stopPropagation()"
+              [routerLink]="['/carburant', prise.id]"
+              class="text-sm font-medium text-pine underline-offset-2 hover:underline"
+            >
+              Ouvrir
+            </a>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <app-list-pagination
+    [(page)]="page"
+    [pageSize]="pageSize()"
+    (pageSizeChange)="pageSize.set($event); page.set(0)"
+    [pageSizeOptions]="pageSizeOptions"
+    [totalElements]="prises.value().totalElements"
+    [totalPages]="prises.value().totalPages"
+    [visibleCount]="visiblePrises().length"
+    itemLabel="prise"
+  />
+  }
+</div>

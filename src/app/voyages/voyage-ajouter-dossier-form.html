@@ -1,0 +1,223 @@
+<z-card>
+  <z-card-header>
+    <z-card-title zTitle="Nouveau dossier" />
+    <z-card-description
+      zDescription="Choisissez un dossier au statut Créé, ses arrêts de chargement et de déchargement. La faisabilité est vérifiée avant envoi."
+    />
+  </z-card-header>
+  <z-card-content>
+    @if (capacite.error()) {
+    <z-alert
+      class="mb-4"
+      zIcon="lucideCircleAlert"
+      zType="destructive"
+      zDescription="Impossible de charger les arrêts du voyage."
+    />
+    }
+
+    <form (submit)="submit($event)" class="flex flex-col gap-5" novalidate>
+      <app-form-field inputId="ajoutDossierId" label="Dossier">
+        @if (dossierOptions().length === 0) {
+        <p class="text-sm text-muted">
+          Aucun dossier au statut Créé disponible pour ce voyage.
+        </p>
+        } @else {
+        <app-field-select
+          (selectValueChange)="onDossierId($event)"
+          [options]="dossierOptions()"
+          [selectValue]="dossierId()"
+          inputId="ajoutDossierId"
+          placeholder="Sélectionner un dossier"
+        />
+        }
+      </app-form-field>
+
+      <fieldset class="flex flex-col gap-3 border-0 p-0">
+        <legend class="text-sm font-medium text-ink">Chargement</legend>
+        <div class="flex flex-wrap gap-2">
+          <button
+            (click)="onChargementMode('existing')"
+            type="button"
+            z-button
+            zSize="sm"
+            [zType]="chargementMode() === 'existing' ? 'default' : 'outline'"
+          >
+            Arrêt existant
+          </button>
+          <button
+            (click)="onChargementMode('new')"
+            type="button"
+            z-button
+            zSize="sm"
+            [zType]="chargementMode() === 'new' ? 'default' : 'outline'"
+          >
+            Nouveau point
+          </button>
+        </div>
+        @if (chargementMode() === 'existing') {
+        <app-form-field inputId="chargementArretId" label="Arrêt de chargement">
+          <app-field-select
+            (selectValueChange)="onChargementArretId($event)"
+            [options]="arretOptions()"
+            [selectValue]="chargementArretId()"
+            inputId="chargementArretId"
+            placeholder="Sélectionner un arrêt"
+          />
+        </app-form-field>
+        } @else {
+        <app-form-field inputId="chargementLibelle" label="Libellé">
+          <input
+            (input)="onChargementLibelle($event)"
+            [value]="chargementLibelle()"
+            id="chargementLibelle"
+            type="text"
+            z-input
+          >
+        </app-form-field>
+        <div class="form-page__coords">
+          <app-form-field inputId="chargementLatitude" label="Latitude">
+            <input
+              (input)="onChargementLatitude($event)"
+              [value]="chargementLatitude()"
+              id="chargementLatitude"
+              step="any"
+              type="number"
+              z-input
+            >
+          </app-form-field>
+          <app-form-field inputId="chargementLongitude" label="Longitude">
+            <input
+              (input)="onChargementLongitude($event)"
+              [value]="chargementLongitude()"
+              id="chargementLongitude"
+              step="any"
+              type="number"
+              z-input
+            >
+          </app-form-field>
+        </div>
+        }
+      </fieldset>
+
+      <fieldset class="flex flex-col gap-3 border-0 p-0">
+        <legend class="text-sm font-medium text-ink">Déchargement</legend>
+        <div class="flex flex-wrap gap-2">
+          <button
+            (click)="onDechargementMode('existing')"
+            type="button"
+            z-button
+            zSize="sm"
+            [zType]="dechargementMode() === 'existing' ? 'default' : 'outline'"
+          >
+            Arrêt existant
+          </button>
+          <button
+            (click)="onDechargementMode('new')"
+            type="button"
+            z-button
+            zSize="sm"
+            [zType]="dechargementMode() === 'new' ? 'default' : 'outline'"
+          >
+            Nouveau point
+          </button>
+        </div>
+        @if (dechargementMode() === 'existing') {
+        <app-form-field inputId="dechargementArretId" label="Arrêt de déchargement">
+          <app-field-select
+            (selectValueChange)="onDechargementArretId($event)"
+            [options]="arretOptions()"
+            [selectValue]="dechargementArretId()"
+            inputId="dechargementArretId"
+            placeholder="Sélectionner un arrêt"
+          />
+        </app-form-field>
+        } @else {
+        <app-form-field inputId="dechargementLibelle" label="Libellé">
+          <input
+            (input)="onDechargementLibelle($event)"
+            [value]="dechargementLibelle()"
+            id="dechargementLibelle"
+            type="text"
+            z-input
+          >
+        </app-form-field>
+        <div class="form-page__coords">
+          <app-form-field inputId="dechargementLatitude" label="Latitude">
+            <input
+              (input)="onDechargementLatitude($event)"
+              [value]="dechargementLatitude()"
+              id="dechargementLatitude"
+              step="any"
+              type="number"
+              z-input
+            >
+          </app-form-field>
+          <app-form-field inputId="dechargementLongitude" label="Longitude">
+            <input
+              (input)="onDechargementLongitude($event)"
+              [value]="dechargementLongitude()"
+              id="dechargementLongitude"
+              step="any"
+              type="number"
+              z-input
+            >
+          </app-form-field>
+        </div>
+        }
+      </fieldset>
+
+      <div aria-live="polite" class="min-h-8">
+        @if (checkPending()) {
+        <p class="text-sm text-muted" role="status">Vérification en cours…</p>
+        } @else if (checkError()) {
+        <z-alert
+          zIcon="lucideCircleAlert"
+          zType="destructive"
+          [zDescription]="checkError()!"
+        />
+        } @else if (checkResult()?.compatible) {
+        <z-alert
+          zIcon="lucideCircleCheck"
+          zDescription="Le dossier tient sur l'itinéraire."
+        />
+        } @else if (checkResult()?.deviation; as deviation) {
+        <z-alert
+          zIcon="lucideCircleAlert"
+          zType="destructive"
+          [zDescription]="deviationAjoutDossierMessage(deviation)"
+        />
+        } @else if (checkResult()?.failedLegs; as failedLegs) {
+        @if (failedLegs.length > 0) {
+        <z-alert
+          zIcon="lucideCircleAlert"
+          zType="destructive"
+          [zDescription]="capaciteAjoutDossierMessage(failedLegs)"
+        />
+        }
+        }
+      </div>
+
+      @if (submitError()) {
+      <z-alert
+        zIcon="lucideCircleAlert"
+        zType="destructive"
+        [zDescription]="submitError()!"
+      />
+      }
+
+      <app-form-actions>
+        <button
+          [zDisabled]="!canSubmit()"
+          [zLoading]="submitting()"
+          class="w-full"
+          type="submit"
+          z-button
+          zSize="lg"
+          zType="default"
+        >
+          {{ submitting() ? "Ajout…" : "Ajouter au voyage" }}
+        </button>
+      </app-form-actions>
+    </form>
+  </z-card-content>
+</z-card>

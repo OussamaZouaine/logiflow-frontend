@@ -2,6 +2,32 @@ import { httpResource } from "@angular/common/http";
 import { Component, computed, inject, signal } from "@angular/core";
 import { FormField, form, min, required, submit } from "@angular/forms/signals";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import {
+  lucideCalendarClock,
+  lucideCheck,
+  lucideCircleAlert,
+  lucideContainer,
+  lucideFolderOpen,
+  lucideInfo,
+  lucideLoaderCircle,
+  lucideRoute,
+  lucideSave,
+  lucideSparkles,
+  lucideTruck,
+  lucideUsers,
+} from "@ng-icons/lucide";
+import { ZardAlertComponent } from "@/shared/components/alert";
+import { ZardBadgeComponent } from "@/shared/components/badge";
+import { ZardButtonComponent } from "@/shared/components/button";
+import {
+  ZardCardComponent,
+  ZardCardContentComponent,
+  ZardCardDescriptionComponent,
+  ZardCardHeaderComponent,
+  ZardCardTitleComponent,
+} from "@/shared/components/card/card.component";
+import { ZardInputComponent } from "@/shared/components/input";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import {
@@ -55,13 +81,46 @@ import {
   type VoyageLookupVehicule,
 } from "./voyage";
 import { VoyageApi } from "./voyage-api";
+import { RemorqueCapacityPreview } from "./remorque-capacity-preview";
 
 const LOOKUP_PAGE_SIZE = 50;
 
 @Component({
-  imports: [FormField, RouterLink, ...FORM_PAGE_IMPORTS],
+  imports: [
+    FormField,
+    RemorqueCapacityPreview,
+    RouterLink,
+    NgIcon,
+    ZardAlertComponent,
+    ZardBadgeComponent,
+    ZardButtonComponent,
+    ZardCardComponent,
+    ZardCardContentComponent,
+    ZardCardDescriptionComponent,
+    ZardCardHeaderComponent,
+    ZardCardTitleComponent,
+    ZardInputComponent,
+    ...FORM_PAGE_IMPORTS,
+  ],
   selector: "app-voyage-create-page",
   templateUrl: "./voyage-create-page.html",
+  styleUrl: "./voyage-create-page.css",
+  viewProviders: [
+    provideIcons({
+      lucideCalendarClock,
+      lucideCheck,
+      lucideCircleAlert,
+      lucideContainer,
+      lucideFolderOpen,
+      lucideInfo,
+      lucideLoaderCircle,
+      lucideRoute,
+      lucideSave,
+      lucideSparkles,
+      lucideTruck,
+      lucideUsers,
+    }),
+  ],
 })
 export class VoyageCreatePage {
   private readonly api = inject(VoyageApi);

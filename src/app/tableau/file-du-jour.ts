@@ -6,6 +6,7 @@ import {
 } from "../core/nav/work-destination";
 import type { Dossier } from "../dossiers/dossier";
 import type { Vehicule } from "../vehicules/vehicule";
+import type { PriseCarburant } from "../carburant/prise-carburant";
 import type { Voyage } from "../voyages/voyage";
 import type { ApercuTone } from "./apercu";
 
@@ -30,6 +31,7 @@ export interface FileDuJourInput {
   allowedIds: ReadonlySet<WorkDestinationId>;
   commandes: readonly Pick<Commande, "statut">[] | null;
   dossiers: readonly Pick<Dossier, "statut">[] | null;
+  prisesCarburant: readonly Pick<PriseCarburant, "statut">[] | null;
   vehicules: readonly Pick<Vehicule, "statut">[] | null;
   voyages: readonly Pick<Voyage, "statut">[] | null;
 }
@@ -241,6 +243,23 @@ export function buildFileDuJour(input: FileDuJourInput): FileDuJourItem[] {
       )
     );
     if (aConfirmer) items.push(aConfirmer);
+  }
+
+  if (input.allowedIds.has("carburant") && input.prisesCarburant) {
+    const aValider = item(
+      "prises-brouillon",
+      "Prises à valider",
+      "Brouillons carburant en attente d'exploitation",
+      "/carburant",
+      "amber",
+      countBy(
+        input.prisesCarburant.map((prise) => prise.statut),
+        new Set(["BROUILLON"])
+      )
+    );
+    if (aValider) {
+      items.push(aValider);
+    }
   }
 
   if (input.allowedIds.has("vehicules") && input.vehicules) {

@@ -139,7 +139,13 @@
   }
   <app-list-pagination
     [(page)]="page"
+    [pageSize]="pageSize()"
+    (pageSizeChange)="pageSize.set($event); page.set(0)"
+    [pageSizeOptions]="pageSizeOptions"
+    [totalElements]="vehicules.value().totalElements"
     [totalPages]="vehicules.value().totalPages"
+    [visibleCount]="visibleVehicules().length"
+    itemLabel="véhicule"
   />
   }
 </div>

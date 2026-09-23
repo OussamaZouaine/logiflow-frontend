@@ -72,6 +72,46 @@ export function datetimeLocalToDate(value: string): Date | null {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
+export function isoInstantToDatetimeLocal(iso: string): string {
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) {
+    return "";
+  }
+  return toDatetimeLocal(parsed);
+}
+
+export function compareDatetimeLocal(a: string, b: string): number {
+  const left = datetimeLocalToDate(a);
+  const right = datetimeLocalToDate(b);
+  if (!left && !right) {
+    return 0;
+  }
+  if (!left) {
+    return -1;
+  }
+  if (!right) {
+    return 1;
+  }
+  return left.getTime() - right.getTime();
+}
+
+export function maxDatetimeLocal(...values: readonly string[]): string {
+  const candidates = values.filter((value) => value.trim().length > 0);
+  if (candidates.length === 0) {
+    return "";
+  }
+  return candidates.reduce((latest, current) =>
+    compareDatetimeLocal(current, latest) > 0 ? current : latest
+  );
+}
+
+export function clampDatetimeLocal(value: string, min: string): string {
+  if (min.trim().length === 0 || value.trim().length === 0) {
+    return value;
+  }
+  return compareDatetimeLocal(value, min) < 0 ? min : value;
+}
+
 export function formatDatetimeLocalForDisplay(value: string): string {
   const { date, time } = splitDatetimeLocal(value);
   if (date.length === 0) {

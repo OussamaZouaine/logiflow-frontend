@@ -129,7 +129,13 @@
   }
   <app-list-pagination
     [(page)]="page"
+    [pageSize]="pageSize()"
+    (pageSizeChange)="pageSize.set($event); page.set(0)"
+    [pageSizeOptions]="pageSizeOptions"
+    [totalElements]="marchandises.value().totalElements"
     [totalPages]="marchandises.value().totalPages"
+    [visibleCount]="visibleMarchandises().length"
+    itemLabel="marchandise"
   />
   }
 </div>

@@ -12,6 +12,7 @@ export const DESTINATION_NAV_ICON: Record<WorkDestinationId, string> = {
   utilisateurs: "lucideUsers",
   vehicules: "lucideTruck",
   voyages: "lucideRoute",
+  carburant: "lucideFuel",
 };
 
 export const TABLEAU_NAV_ICON = "lucideLayoutDashboard";

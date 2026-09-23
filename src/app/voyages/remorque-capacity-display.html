@@ -1,0 +1,81 @@
+<z-card>
+  <z-card-header>
+    <z-card-title zTitle="Capacité remorque" />
+    <z-card-description
+      [zDescription]="
+        preview()
+          ? 'Estimation à partir des dossiers sélectionnés et de la remorque choisie (avant enregistrement).'
+          : 'Charge cumulée sur chaque tronçon entre deux arrêts, par rapport à la remorque affectée.'
+      "
+    />
+  </z-card-header>
+  <z-card-content>
+    @if (loading()) {
+    <p class="text-sm text-muted" role="status">Chargement de la capacité…</p>
+    } @else if (error()) {
+    <z-alert zIcon="lucideCircleAlert" zType="destructive" [zDescription]="error()!" />
+    } @else if (capacite(); as capaciteValue) {
+    <p class="font-mono text-xs tabular-nums text-muted">
+      Max {{ capaciteValue.capacitePoidsKg | number: "1.0-0" }} kg ·
+      {{ capaciteValue.capaciteVolumeM3 | number: "1.0-1" }} m³
+      @if (preview()) {
+      <span class="text-muted">· estimation</span>
+      }
+    </p>
+
+    @if (capaciteValue.arrets.length < 2) {
+    <p class="text-sm text-muted">
+      Au moins deux arrêts sont nécessaires pour afficher les tronçons.
+    </p>
+    } @else {
+    <ol class="flex flex-col gap-3">
+      @for (arret of capaciteValue.arrets; track arret.id; let last = $last) {
+      <li>
+        <p class="font-medium text-ink">
+          {{ arret.libelle }}
+          <span class="font-mono text-xs text-muted">#{{ arret.indiceSequence }}</span>
+        </p>
+
+        @if (!last) {
+        @let troncon = tronconParDepart(capaciteValue.troncons, arret.id);
+        @if (troncon) {
+        <div class="mt-2 space-y-1 border-l border-line/80 pl-3">
+          <div class="flex items-center justify-between gap-3 text-xs">
+            <span class="text-muted">Tronçon suivant</span>
+            <span
+              [class]="
+                'font-mono tabular-nums ' +
+                (capaciteTronconTone(troncon.pourcentageMax) === 'brake'
+                  ? 'text-brake'
+                  : capaciteTronconTone(troncon.pourcentageMax) === 'amber'
+                    ? 'text-amber'
+                    : 'text-pine')
+              "
+            >
+              {{ capaciteTronconLabel(troncon.pourcentageMax) }}
+            </span>
+          </div>
+          <div
+            aria-hidden="true"
+            class="h-1.5 w-full overflow-hidden rounded-full bg-line"
+          >
+            <div
+              [class]="capaciteTronconToneClass(capaciteTronconTone(troncon.pourcentageMax))"
+              [style.width.%]="barWidth(troncon.pourcentageMax)"
+              class="h-full"
+            ></div>
+          </div>
+          <p class="font-mono text-[0.65rem] tabular-nums text-muted">
+            {{ troncon.poidsUtiliseKg | number: "1.0-0" }} kg ·
+            {{ troncon.volumeUtiliseM3 | number: "1.0-1" }} m³
+          </p>
+        </div>
+        }
+        }
+      </li>
+      }
+    </ol>
+    }
+    }
+  </z-card-content>
+</z-card>

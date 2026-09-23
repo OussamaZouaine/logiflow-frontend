@@ -8,6 +8,35 @@ import {
   signal,
 } from "@angular/core";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import {
+  lucideCalendarClock,
+  lucideChevronRight,
+  lucideCircleAlert,
+  lucideCircleDot,
+  lucideGlobe,
+  lucideHash,
+  lucideInbox,
+  lucideMap,
+  lucideMapPin,
+  lucidePackage,
+  lucidePlus,
+  lucideRepeat,
+  lucideRoute,
+  lucideShare2,
+  lucideTruck,
+  lucideX,
+} from "@ng-icons/lucide";
+import { ZardAlertComponent } from "@/shared/components/alert";
+import { ZardBadgeComponent } from "@/shared/components/badge";
+import type { ZardBadgeTypeVariants } from "@/shared/components/badge/badge.variants";
+import { ZardButtonComponent } from "@/shared/components/button";
+import {
+  ZardCardComponent,
+  ZardCardDescriptionComponent,
+  ZardCardHeaderComponent,
+  ZardCardTitleComponent,
+} from "@/shared/components/card/card.component";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
@@ -26,18 +55,26 @@ import {
   ListRowKeyboard,
   syncListKeyboardActiveId,
 } from "../shared/ui/list-row-keyboard";
+import {
+  DEFAULT_LIST_PAGE_SIZE,
+  LIST_PAGE_SIZE_OPTIONS,
+  resolveListPageSize,
+} from "../shared/ui/list-page-size";
 import { ListPagination } from "../shared/ui/list-pagination";
 import { ListSearchBar } from "../shared/ui/list-search-bar";
 import { ListStatutFilter } from "../shared/ui/list-statut-filter";
 import type { Site } from "../sites/site";
-import { StatutChip } from "../shared/ui/statut-chip";
+import { apercuToneToBadgeType } from "../shared/ui/apercu-zard";
 import { voyageStatutTone } from "../tableau/apercu";
 import {
   formatInstant,
   porteeLabel,
   STATUT_VOYAGES,
   statutVoyageLabel,
+  type Portee,
   typeVoyageLabel,
+  type StatutVoyage,
+  type TypeVoyage,
   type Voyage,
 } from "./voyage";
 import { ItineraireApi } from "../ia/itineraire-api";
@@ -50,13 +87,19 @@ import {
   voyageSiteMarkers,
 } from "./voyage-sites-map-markers";
 
-const VOYAGES_PAGE_SIZE = 20;
 const LOOKUP_PAGE_SIZE = 100;
 
 @Component({
   imports: [
     RouterLink,
-    StatutChip,
+    NgIcon,
+    ZardAlertComponent,
+    ZardBadgeComponent,
+    ZardButtonComponent,
+    ZardCardComponent,
+    ZardCardDescriptionComponent,
+    ZardCardHeaderComponent,
+    ZardCardTitleComponent,
     ListSearchBar,
     ListStatutFilter,
     ListPagination,
@@ -68,6 +111,27 @@ const LOOKUP_PAGE_SIZE = 100;
   ],
   selector: "app-voyages-page",
   templateUrl: "./voyages-page.html",
+  styleUrl: "./voyages-page.css",
+  viewProviders: [
+    provideIcons({
+      lucideCalendarClock,
+      lucideChevronRight,
+      lucideCircleAlert,
+      lucideCircleDot,
+      lucideGlobe,
+      lucideHash,
+      lucideInbox,
+      lucideMap,
+      lucideMapPin,
+      lucidePackage,
+      lucidePlus,
+      lucideRepeat,
+      lucideRoute,
+      lucideShare2,
+      lucideTruck,
+      lucideX,
+    }),
+  ],
 })
 export class VoyagesPage {
   private readonly session = inject(DemoSessionService);
@@ -85,6 +149,8 @@ export class VoyagesPage {
     STATUT_VOYAGES,
     statutVoyageLabel
   );
+  protected readonly pageSizeOptions = LIST_PAGE_SIZE_OPTIONS;
+  protected readonly pageSize = signal(DEFAULT_LIST_PAGE_SIZE);
   protected readonly searchDraft = signal("");
   protected readonly search = signal("");
   protected readonly statutFilter = signal<string | null>(null);
@@ -102,7 +168,7 @@ export class VoyagesPage {
     params: {
       page: this.page(),
       q: this.search().trim(),
-      size: VOYAGES_PAGE_SIZE,
+      size: resolveListPageSize(this.pageSize()),
     },
     url: `${environment.apiBaseUrl}/voyages`,
   }));
@@ -209,6 +275,18 @@ export class VoyagesPage {
     httpErrorMessage(this.voyages.error())
   );
 
+  protected readonly hasActiveFilters = computed(
+    () => this.search().trim() !== "" || this.statutFilter() !== null
+  );
+
+  protected readonly activeStatutLabel = computed(() => {
+    const statut = this.statutFilter();
+    if (statut === null) {
+      return null;
+    }
+    return statutVoyageLabel(statut as StatutVoyage);
+  });
+
   protected readonly keyboardRows = computed(() =>
     listKeyboardRows(
       this.visibleVoyages(),
@@ -279,6 +357,33 @@ export class VoyagesPage {
     this.search.set("");
     this.statutFilter.set(null);
     this.page.set(0);
+  }
+
+  protected statutBadgeType(statut: StatutVoyage): ZardBadgeTypeVariants {
+    return apercuToneToBadgeType(voyageStatutTone(statut));
+  }
+
+  protected typeVoyageIcon(type: TypeVoyage): string {
+    switch (type) {
+      case "SIMPLE":
+        return "lucideTruck";
+      case "GROUPAGE":
+        return "lucidePackage";
+      case "RAMASSE":
+        return "lucideInbox";
+      case "DISTRIBUTION":
+        return "lucideShare2";
+      case "NAVETTE":
+        return "lucideRepeat";
+      default: {
+        const _exhaustive: never = type;
+        return _exhaustive;
+      }
+    }
+  }
+
+  protected porteeIcon(portee: Portee): string {
+    return portee === "INTERNATIONAL" ? "lucideGlobe" : "lucideMapPin";
   }
 
   protected selectVoyage(voyageId: string): void {

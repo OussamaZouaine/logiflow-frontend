@@ -7,6 +7,7 @@ import { DemoSessionService } from "../core/auth/demo-session";
 import { destinationsForRoles } from "../core/nav/work-destination";
 import type { Dossier } from "../dossiers/dossier";
 import type { Vehicule } from "../vehicules/vehicule";
+import type { PriseCarburant } from "../carburant/prise-carburant";
 import type { Voyage } from "../voyages/voyage";
 import { APERCU_CHART_PAGE_SIZE } from "./apercu";
 import {
@@ -16,7 +17,12 @@ import {
   type FileDuJourSummary,
 } from "./file-du-jour";
 
-type FileDuJourModuleId = "commandes" | "dossiers" | "vehicules" | "voyages";
+type FileDuJourModuleId =
+  | "carburant"
+  | "commandes"
+  | "dossiers"
+  | "vehicules"
+  | "voyages";
 
 /** Shared file-du-jour data for the Tableau de bord and App Shell badge. */
 @Injectable({ providedIn: "root" })
@@ -47,11 +53,16 @@ export class FileDuJourStore {
     this.listRequest("voyages")
   );
 
+  readonly prisesCarburant = httpResource<PageResponse<PriseCarburant>>(() =>
+    this.listRequest("carburant")
+  );
+
   readonly items = computed((): FileDuJourItem[] =>
     buildFileDuJour({
       allowedIds: this.allowedIds(),
       commandes: this.commandes.value()?.content ?? null,
       dossiers: this.dossiers.value()?.content ?? null,
+      prisesCarburant: this.prisesCarburant.value()?.content ?? null,
       vehicules: this.vehicules.value()?.content ?? null,
       voyages: this.voyages.value()?.content ?? null,
     })
@@ -63,7 +74,8 @@ export class FileDuJourStore {
       (ids.has("commandes") && this.commandes.isLoading()) ||
       (ids.has("dossiers") && this.dossiers.isLoading()) ||
       (ids.has("vehicules") && this.vehicules.isLoading()) ||
-      (ids.has("voyages") && this.voyages.isLoading())
+      (ids.has("voyages") && this.voyages.isLoading()) ||
+      (ids.has("carburant") && this.prisesCarburant.isLoading())
     );
   });
 
@@ -84,7 +96,7 @@ export class FileDuJourStore {
       params: needsQuery
         ? { page: 0, q: "", size: APERCU_CHART_PAGE_SIZE }
         : { page: 0, size: APERCU_CHART_PAGE_SIZE },
-      url: `${environment.apiBaseUrl}/${id}`,
+      url: `${environment.apiBaseUrl}/${id === "carburant" ? "prises-carburant" : id}`,
     };
   }
 }

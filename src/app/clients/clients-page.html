@@ -125,7 +125,13 @@
   }
   <app-list-pagination
     [(page)]="page"
+    [pageSize]="pageSize()"
+    (pageSizeChange)="pageSize.set($event); page.set(0)"
+    [pageSizeOptions]="pageSizeOptions"
+    [totalElements]="clients.value().totalElements"
     [totalPages]="clients.value().totalPages"
+    [visibleCount]="visibleClients().length"
+    itemLabel="client"
   />
   }
 </div>

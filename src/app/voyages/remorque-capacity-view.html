@@ -1,0 +1,5 @@
+<app-remorque-capacity-display
+  [capacite]="capacite.hasValue() ? capacite.value() : null"
+  [error]="capacite.error() ? loadError() : null"
+  [loading]="capacite.isLoading()"
+/>

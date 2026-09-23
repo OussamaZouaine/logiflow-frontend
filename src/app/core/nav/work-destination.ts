@@ -1,4 +1,5 @@
 import {
+  CARBURANT_PRISES_ALLOWED_ROLES,
   CLIENTS_ALLOWED_ROLES,
   DOSSIERS_ALLOWED_ROLES,
   MARCHANDISES_ALLOWED_ROLES,
@@ -16,6 +17,7 @@ export const WORK_DESTINATION_IDS = [
   "commandes",
   "dossiers",
   "voyages",
+  "carburant",
   "maintenance",
   "utilisateurs",
 ] as const;
@@ -143,6 +145,16 @@ export const WORK_DESTINATIONS: Record<WorkDestinationId, WorkDestination> = {
       "CHAUFFEUR",
     ],
     section: "Planning",
+  },
+  carburant: {
+    apiHint: "/api/v1/prises-carburant",
+    blurb: "Prises de carburant et stations.",
+    id: "carburant",
+    label: "Carburant",
+    live: true,
+    path: "carburant",
+    roles: CARBURANT_PRISES_ALLOWED_ROLES,
+    section: "Exploitation",
   },
 };
 
