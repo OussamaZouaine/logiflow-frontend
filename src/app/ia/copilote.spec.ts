@@ -1,7 +1,8 @@
 import {
-  canSubmitCopiloteQuestion,
   COPILOTE_QUESTION_MAX_LENGTH,
-  formatCopiloteConfiance,
+  canSubmitCopiloteQuestion,
+  libelleTypeSource,
+  routeSource,
 } from "./copilote";
 
 describe("copilote helpers", () => {
@@ -14,9 +15,23 @@ describe("copilote helpers", () => {
     ).toBe(false);
   });
 
-  it("formats confidence", () => {
-    expect(formatCopiloteConfiance(0.82)).toBe("82 %");
-    expect(formatCopiloteConfiance(null)).toBeNull();
-    expect(formatCopiloteConfiance(undefined)).toBeNull();
+  it("maps cited sources to detail pages", () => {
+    expect(
+      routeSource({ id: "v-1", reference: "VOY-2026-00003", type: "VOYAGE" })
+    ).toBe("/voyages/v-1");
+    expect(
+      routeSource({ id: "d-1", reference: "DOS-1", type: "DOSSIER" })
+    ).toBe("/dossiers/d-1");
+    expect(
+      routeSource({ id: "c-1", reference: "Jean Dupont", type: "CHAUFFEUR" })
+    ).toBeNull();
+    expect(
+      routeSource({ id: null, reference: "VOY-1", type: "VOYAGE" })
+    ).toBeNull();
+  });
+
+  it("labels source types", () => {
+    expect(libelleTypeSource("VEHICULE")).toBe("Véhicule");
+    expect(libelleTypeSource("INCONNU")).toBe("INCONNU");
   });
 });

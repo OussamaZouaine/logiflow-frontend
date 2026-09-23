@@ -819,3 +819,64 @@
   border-radius: 5px;
   background: var(--muted);
 }
+
+/* Réponses du copilote rendues en Markdown (innerHTML, hors encapsulation du composant). */
+.copilote-markdown :where(p, ul, ol, table, pre, h3, h4, h5, h6) {
+  margin-block: 0 0.5rem;
+}
+
+.copilote-markdown :where(p, ul, ol, table, pre):last-child {
+  margin-bottom: 0;
+}
+
+.copilote-markdown :where(ul) {
+  padding-left: 1.125rem;
+  list-style: disc;
+}
+
+.copilote-markdown :where(ol) {
+  padding-left: 1.25rem;
+  list-style: decimal;
+}
+
+.copilote-markdown :where(h3, h4, h5, h6) {
+  font-weight: 600;
+}
+
+.copilote-markdown :where(code) {
+  padding: 0 0.25rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8125em;
+  background: var(--color-canvas);
+  border-radius: 0.25rem;
+}
+
+.copilote-markdown :where(pre) {
+  padding: 0.5rem 0.75rem;
+  overflow-x: auto;
+  background: var(--color-canvas);
+  border-radius: var(--radius-md);
+}
+
+.copilote-markdown :where(pre code) {
+  padding: 0;
+  background: none;
+}
+
+.copilote-markdown :where(table) {
+  display: block;
+  overflow-x: auto;
+  font-size: 0.8125rem;
+  border-collapse: collapse;
+}
+
+.copilote-markdown :where(th, td) {
+  padding: 0.25rem 0.5rem;
+  text-align: left;
+  border: 1px solid color-mix(in oklch, var(--color-line) 90%, transparent);
+}
+
+.copilote-markdown :where(th) {
+  font-weight: 600;
+  background: var(--color-canvas);
+}

@@ -1,0 +1,178 @@
+:host {
+  display: contents;
+}
+
+.copilote-panneau {
+  position: fixed;
+  inset-block: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  width: min(100vw, 30rem);
+  background: var(--color-surface);
+  border-left: 1px solid color-mix(in oklch, var(--color-line) 85%, transparent);
+  box-shadow: -12px 0 32px oklch(0 0 0 / 0.1);
+  animation: copilote-entree 180ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+@keyframes copilote-entree {
+  from {
+    opacity: 0;
+    transform: translateX(1.5rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copilote-panneau {
+    animation: none;
+  }
+}
+
+.copilote-entete {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+  padding: 0.75rem 0.75rem 0.75rem 1rem;
+  border-bottom: 1px solid
+    color-mix(in oklch, var(--color-line) 80%, transparent);
+}
+
+.copilote-corps {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--color-canvas);
+}
+
+.copilote-alerte {
+  padding: 0.5rem 0.75rem;
+  margin: 0.5rem 0.75rem 0;
+  font-size: 0.75rem;
+  color: var(--color-brake);
+  background: color-mix(in oklch, var(--color-brake) 5%, transparent);
+  border: 1px solid color-mix(in oklch, var(--color-brake) 25%, transparent);
+  border-radius: var(--radius-md);
+}
+
+.copilote-message {
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid color-mix(in oklch, var(--color-line) 80%, transparent);
+  border-radius: var(--radius-lg);
+}
+
+.copilote-message--user {
+  align-self: flex-end;
+  max-width: 85%;
+  color: var(--color-surface);
+  background: var(--color-pine);
+  border-color: transparent;
+}
+
+.copilote-outil {
+  display: inline-flex;
+  gap: 0.25rem;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.6875rem;
+  color: var(--color-pine);
+  background: color-mix(in oklch, var(--color-pine) 8%, transparent);
+  border-radius: 999px;
+}
+
+.copilote-outil--erreur {
+  color: var(--color-amber);
+  background: color-mix(in oklch, var(--color-amber) 10%, transparent);
+}
+
+.copilote-source {
+  display: inline-flex;
+  padding: 0.125rem 0.5rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.6875rem;
+  color: var(--color-ink);
+  background: var(--color-canvas);
+  border: 1px solid color-mix(in oklch, var(--color-line) 90%, transparent);
+  border-radius: var(--radius-md);
+}
+
+a.copilote-source:hover,
+a.copilote-source:focus-visible {
+  color: var(--color-pine);
+  border-color: color-mix(in oklch, var(--color-pine) 40%, var(--color-line));
+}
+
+.copilote-avis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+  border-radius: var(--radius-md);
+}
+
+.copilote-avis[aria-pressed="true"] {
+  color: var(--color-pine);
+  background: color-mix(in oklch, var(--color-pine) 10%, transparent);
+}
+
+.copilote-suggestion {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--color-ink);
+  text-align: left;
+  background: var(--color-surface);
+  border: 1px solid color-mix(in oklch, var(--color-line) 85%, transparent);
+  border-radius: var(--radius-lg);
+}
+
+.copilote-suggestion:hover,
+.copilote-suggestion:focus-visible {
+  border-color: color-mix(in oklch, var(--color-pine) 35%, var(--color-line));
+}
+
+.copilote-conversation {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+  padding: 0.125rem 0.25rem 0.125rem 0.75rem;
+  border-radius: var(--radius-md);
+}
+
+.copilote-conversation.is-active {
+  background: color-mix(in oklch, var(--color-pine) 8%, transparent);
+}
+
+.copilote-saisie {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+  padding: 0.75rem;
+  border-top: 1px solid color-mix(in oklch, var(--color-line) 80%, transparent);
+}
+
+.copilote-envoi {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--color-surface);
+  background: var(--color-pine);
+  border-radius: var(--radius-md);
+}
+
+.copilote-envoi:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
