@@ -29,30 +29,16 @@ import {
 } from "@/shared/components/card/card.component";
 import { ZardInputComponent } from "@/shared/components/input";
 import { environment } from "../../environments/environment";
-import { httpErrorMessage } from "../core/api/http-error";
 import {
-  enumToSelectOptions,
-  type FieldSelectOption,
-  withNoneSelectOption,
-} from "../shared/ui/field-select";
-import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
-import { ToastService } from "../shared/ui/toast";
+  type ChauffeurListItem,
+  formatChauffeurLabel,
+} from "../chauffeurs/chauffeur";
+import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
 import { firstFieldError } from "../core/forms/first-field-error";
 import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
 import { validateTimeWindowEndAfterStart } from "../core/forms/time-window-validation";
-import {
-  formatChauffeurLabel,
-  type ChauffeurListItem,
-} from "../chauffeurs/chauffeur";
 import type { Dossier } from "../dossiers/dossier";
-import {
-  buildItinerairePoints,
-  canCalculerItineraire,
-  roundDistanceKm,
-  roundDureeConduiteMin,
-} from "../ia/itineraire";
-import { ItineraireApi } from "../ia/itineraire-api";
 import {
   canSuggererGroupage,
   dossierReferencesForIds,
@@ -64,10 +50,25 @@ import {
 } from "../ia/groupage";
 import { GroupageApi } from "../ia/groupage-api";
 import {
+  buildItinerairePoints,
+  canCalculerItineraire,
+  roundDistanceKm,
+  roundDureeConduiteMin,
+} from "../ia/itineraire";
+import { ItineraireApi } from "../ia/itineraire-api";
+import {
   formatRemorqueLabel,
   type RemorqueListItem,
 } from "../remorques/remorque";
+import {
+  enumToSelectOptions,
+  type FieldSelectOption,
+  withNoneSelectOption,
+} from "../shared/ui/field-select";
+import { FORM_PAGE_IMPORTS } from "../shared/ui/form-page";
+import { ToastService } from "../shared/ui/toast";
 import type { Site } from "../sites/site";
+import { RemorqueCapacityPreview } from "./remorque-capacity-preview";
 import {
   draftToWrite,
   emptyVoyageDraft,
@@ -77,11 +78,10 @@ import {
   porteeLabel,
   TYPE_VOYAGES,
   typeVoyageLabel,
-  validateDossierIds,
   type VoyageLookupVehicule,
+  validateDossierIds,
 } from "./voyage";
 import { VoyageApi } from "./voyage-api";
-import { RemorqueCapacityPreview } from "./remorque-capacity-preview";
 
 const LOOKUP_PAGE_SIZE = 50;
 
@@ -103,8 +103,8 @@ const LOOKUP_PAGE_SIZE = 50;
     ...FORM_PAGE_IMPORTS,
   ],
   selector: "app-voyage-create-page",
-  templateUrl: "./voyage-create-page.html",
   styleUrl: "./voyage-create-page.css",
+  templateUrl: "./voyage-create-page.html",
   viewProviders: [
     provideIcons({
       lucideCalendarClock,
@@ -182,12 +182,18 @@ export class VoyageCreatePage {
     url: `${environment.apiBaseUrl}/sites`,
   }));
 
-  protected readonly chauffeurs = httpResource<
-    PageResponse<ChauffeurListItem>
-  >(() => ({
-    params: { page: 0, size: LOOKUP_PAGE_SIZE },
-    url: `${environment.apiBaseUrl}/chauffeurs`,
-  }));
+  protected readonly chauffeurs = httpResource<PageResponse<ChauffeurListItem>>(
+    () => ({
+      // Seuls les chauffeurs affectables aujourd'hui sont proposés.
+      params: {
+        disponibilite: "DISPONIBLE",
+        page: 0,
+        size: LOOKUP_PAGE_SIZE,
+        statut: "ACTIF",
+      },
+      url: `${environment.apiBaseUrl}/chauffeurs`,
+    })
+  );
 
   protected readonly remorques = httpResource<PageResponse<RemorqueListItem>>(
     () => ({
@@ -278,6 +284,16 @@ export class VoyageCreatePage {
       label: formatChauffeurLabel(chauffeur),
       value: chauffeur.id,
     }))
+  );
+
+  /** Renfort : tous les chauffeurs sauf le titulaire, avec l'option « aucun ». */
+  protected readonly chauffeurRenfortOptions = computed(() =>
+    withNoneSelectOption(
+      "Aucun renfort",
+      this.chauffeurSelectOptions().filter(
+        (option) => option.value !== this.draft().chauffeurId
+      )
+    )
   );
 
   protected readonly remorquesLoading = computed(

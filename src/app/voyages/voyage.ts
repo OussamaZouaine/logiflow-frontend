@@ -124,6 +124,8 @@ export interface VoyageWrite {
 export interface VoyageDraft {
   arriveePrevue: string;
   chauffeurId: string;
+  /** Chauffeur de renfort (double équipage), optionnel. */
+  chauffeurRenfortId: string;
   departPrevu: string;
   distanceTotaleKm: number;
   dureeConduiteMin: number;
@@ -231,6 +233,7 @@ export function emptyVoyageDraft(): VoyageDraft {
   return {
     arriveePrevue: toDatetimeLocal(arrivee),
     chauffeurId: "",
+    chauffeurRenfortId: "",
     departPrevu: toDatetimeLocal(depart),
     distanceTotaleKm: 450,
     dureeConduiteMin: 360,
@@ -241,7 +244,9 @@ export function emptyVoyageDraft(): VoyageDraft {
   };
 }
 
-export function validateDossierIds(dossierIds: readonly string[]): string | null {
+export function validateDossierIds(
+  dossierIds: readonly string[]
+): string | null {
   if (dossierIds.length === 0) {
     return "Sélectionnez au moins un dossier au statut Créé.";
   }
@@ -270,12 +275,37 @@ export function formatDossierVoyageLabel(
   return `${dossier.reference} — ${dossier.poidsBrutKg} kg · ${dossier.volumeM3} m³`;
 }
 
+/** Titulaire obligatoire, puis renfort s'il est choisi (et différent du titulaire). */
+export function affectationsDepuisDraft(
+  draft: Pick<VoyageDraft, "chauffeurId" | "chauffeurRenfortId">
+): Affectation[] {
+  const maintenant = new Date().toISOString();
+  const affectations: Affectation[] = [
+    {
+      chauffeurId: draft.chauffeurId,
+      dateAffectation: maintenant,
+      role: "TITULAIRE",
+    },
+  ];
+  const renfort = draft.chauffeurRenfortId.trim();
+  if (!isFieldSelectNone(renfort) && renfort !== draft.chauffeurId) {
+    affectations.push({
+      chauffeurId: renfort,
+      dateAffectation: maintenant,
+      role: "RENFORT",
+    });
+  }
+  return affectations;
+}
+
 /** Maps UI draft to POST /voyages — see {@link VoyageApi} for API contract. */
 export function draftToWrite(
   draft: VoyageDraft,
   dossierIds: readonly string[],
-  dossiersById: ReadonlyMap<string, Pick<VoyageLookupDossier, "poidsBrutKg">> =
-    new Map()
+  dossiersById: ReadonlyMap<
+    string,
+    Pick<VoyageLookupDossier, "poidsBrutKg">
+  > = new Map()
 ): VoyageWrite {
   const departPrevu = datetimeLocalToIso(draft.departPrevu);
   const arriveePrevue = datetimeLocalToIso(draft.arriveePrevue);
@@ -283,18 +313,14 @@ export function draftToWrite(
   const dureeTotaleMin = Math.max(draft.dureeConduiteMin, spanMin);
   const chargeApresKg = totalChargeKgFromDossiers(dossierIds, dossiersById);
   return {
-    affectations: [
-      {
-        chauffeurId: draft.chauffeurId,
-        dateAffectation: new Date().toISOString(),
-        role: "TITULAIRE",
-      },
-    ],
+    affectations: affectationsDepuisDraft(draft),
     arriveePrevue,
     departPrevu,
     dossierIds: [...dossierIds],
     portee: draft.portee,
-    remorqueId: isFieldSelectNone(draft.remorqueId) ? null : draft.remorqueId.trim(),
+    remorqueId: isFieldSelectNone(draft.remorqueId)
+      ? null
+      : draft.remorqueId.trim(),
     trajet: {
       distanceTotaleKm: draft.distanceTotaleKm,
       dureeConduiteMin: draft.dureeConduiteMin,

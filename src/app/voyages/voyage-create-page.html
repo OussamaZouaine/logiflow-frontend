@@ -367,9 +367,20 @@
           @if (chauffeurOptions().length === 0) {
           <p class="voyage-create__hint">
             <ng-icon aria-hidden="true" name="lucideUsers" />
-            Aucun chauffeur en base.
+            Aucun chauffeur actif et disponible.
           </p>
           }
+        </app-form-field>
+        <app-form-field
+          inputId="chauffeurRenfortId"
+          label="Chauffeur de renfort (double équipage)"
+        >
+          <app-field-select
+            [formField]="createForm.chauffeurRenfortId"
+            [options]="chauffeurRenfortOptions()"
+            inputId="chauffeurRenfortId"
+            placeholder="Aucun renfort"
+          />
         </app-form-field>
 
         <div class="voyage-create__ia-row">

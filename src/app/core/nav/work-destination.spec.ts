@@ -19,7 +19,7 @@ describe("destinationsForRoles", () => {
   });
 
   it("gives admin every destination", () => {
-    expect(destinationsForRoles(["ADMINISTRATEUR"])).toHaveLength(11);
+    expect(destinationsForRoles(["ADMINISTRATEUR"])).toHaveLength(12);
   });
 
   it("includes Dossiers for commercial and exploitant", () => {

@@ -145,6 +145,54 @@ export const routes: Routes = [
       {
         canActivate: [roleGuard],
         data: {
+          roles: workDestination("chauffeurs").roles,
+          ...shellBreadcrumb.list("Chauffeurs"),
+        },
+        loadComponent: () =>
+          import("./chauffeurs/chauffeurs-page").then(
+            (module) => module.ChauffeursPage
+          ),
+        path: "chauffeurs",
+      },
+      {
+        canActivate: [roleGuard],
+        data: {
+          roles: workDestination("chauffeurs").roles,
+          ...shellBreadcrumb.create("Chauffeurs", "/chauffeurs"),
+        },
+        loadComponent: () =>
+          import("./chauffeurs/chauffeur-form-page").then(
+            (module) => module.ChauffeurFormPage
+          ),
+        path: "chauffeurs/nouveau",
+      },
+      {
+        canActivate: [roleGuard],
+        data: {
+          roles: workDestination("chauffeurs").roles,
+          ...shellBreadcrumb.nested("Chauffeurs", "/chauffeurs", "Modifier"),
+        },
+        loadComponent: () =>
+          import("./chauffeurs/chauffeur-form-page").then(
+            (module) => module.ChauffeurFormPage
+          ),
+        path: "chauffeurs/:id/modifier",
+      },
+      {
+        canActivate: [roleGuard],
+        data: {
+          roles: workDestination("chauffeurs").roles,
+          ...shellBreadcrumb.detail("Chauffeurs", "/chauffeurs"),
+        },
+        loadComponent: () =>
+          import("./chauffeurs/chauffeur-detail-page").then(
+            (module) => module.ChauffeurDetailPage
+          ),
+        path: "chauffeurs/:id",
+      },
+      {
+        canActivate: [roleGuard],
+        data: {
           roles: workDestination("remorques").roles,
           ...shellBreadcrumb.list("Remorques"),
         },

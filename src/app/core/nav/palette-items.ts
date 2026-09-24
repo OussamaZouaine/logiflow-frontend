@@ -7,10 +7,7 @@ import {
   VOYAGES_PLAN_ROLES,
 } from "../auth/role";
 import { DESTINATION_NAV_ICON, TABLEAU_NAV_ICON } from "./nav-icon";
-import {
-  destinationsForRoles,
-  workDestination,
-} from "./work-destination";
+import { destinationsForRoles, workDestination } from "./work-destination";
 
 export type PaletteItemKind = "module" | "action" | "entity";
 export type PaletteSection = "Modules" | "Actions" | "Références";
@@ -61,6 +58,13 @@ const CREATE_ACTIONS: readonly PaletteActionDef[] = [
     label: "Nouvelle remorque",
     path: "/remorques/nouveau",
     roles: REMORQUES_ALLOWED_ROLES,
+  },
+  {
+    icon: DESTINATION_NAV_ICON.chauffeurs,
+    keywords: ["nouveau", "créer", "chauffeur", "conducteur"],
+    label: "Nouveau chauffeur",
+    path: "/chauffeurs/nouveau",
+    roles: workDestination("chauffeurs").roles,
   },
   {
     icon: DESTINATION_NAV_ICON.commandes,
@@ -121,9 +125,7 @@ function roleAllowed(
 }
 
 /** Role-scoped modules + create actions for the App Shell palette (Ctrl/Cmd+K). */
-export function paletteItemsForRoles(
-  roles: readonly Role[]
-): PaletteItem[] {
+export function paletteItemsForRoles(roles: readonly Role[]): PaletteItem[] {
   const modules: PaletteItem[] = [
     {
       icon: TABLEAU_NAV_ICON,
@@ -174,9 +176,7 @@ export function filterPaletteItems(
     return [...items];
   }
   return items.filter((item) => {
-    const haystack = [item.label, ...item.keywords]
-      .join(" ")
-      .toLowerCase();
+    const haystack = [item.label, ...item.keywords].join(" ").toLowerCase();
     return tokens.every((token) => haystack.includes(token));
   });
 }

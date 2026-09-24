@@ -1,0 +1,275 @@
+<div class="fiche-page">
+  <app-fiche-header listLabel="Chauffeurs" listLink="/chauffeurs">
+    @if (chauffeur.isLoading() && !chauffeur.hasValue()) {
+    <p class="fiche-load-hint" role="status">Chargement…</p>
+    } @else if (chauffeur.error()) {
+    <app-fiche-error (retry)="chauffeur.reload()" [message]="loadError()" />
+    } @else if (chauffeur.hasValue()) {
+    <app-fiche-title-row
+      [title]="chauffeur.value().prenom + ' ' + chauffeur.value().nom"
+    >
+      <app-statut-chip
+        [label]="chauffeurDisponibiliteLabel(chauffeur.value().disponibilite)"
+        [tone]="chauffeurDisponibiliteTone(chauffeur.value().disponibilite)"
+      />
+      @if (chauffeur.value().statut !== "ACTIF") {
+      <app-statut-chip
+        [label]="chauffeurStatutLabel(chauffeur.value().statut)"
+        [tone]="chauffeurStatutTone(chauffeur.value().statut)"
+      />
+      }
+    </app-fiche-title-row>
+    <p class="fiche-meta">
+      <span class="font-mono">{{ chauffeur.value().matricule }}</span>
+      @if (chauffeur.value().specialisation) {
+      · {{ chauffeur.value().specialisation }}
+      }
+      · Conduite restante
+      {{ formatSoldeConduite(chauffeur.value().soldeTempsConduiteMinutes) }}
+    </p>
+    }
+  </app-fiche-header>
+
+  @if (chauffeur.hasValue()) {
+  <div class="flex flex-wrap items-end gap-3">
+    <div class="w-48">
+      <app-form-field inputId="fiche-disponibilite" label="Disponibilité">
+        <app-field-select
+          (selectValueChange)="changerDisponibilite($event)"
+          [options]="disponibiliteOptions"
+          [selectValue]="chauffeur.value().disponibilite"
+          inputId="fiche-disponibilite"
+        />
+      </app-form-field>
+    </div>
+    <div class="w-48">
+      <app-form-field inputId="fiche-statut" label="Statut">
+        <app-field-select
+          (selectValueChange)="changerStatut($event)"
+          [options]="statutOptions"
+          [selectValue]="chauffeur.value().statut"
+          inputId="fiche-statut"
+        />
+      </app-form-field>
+    </div>
+    <a
+      [routerLink]="['/chauffeurs', chauffeur.value().id, 'modifier']"
+      class="btn-outline pressable ml-auto min-h-11 px-5"
+    >
+      Modifier la fiche
+    </a>
+  </div>
+
+  @if (actionError()) {
+  <div class="alert-panel" role="alert">{{ actionError() }}</div>
+  }
+
+  @if (alertes().length > 0) {
+  <div
+    class="rounded-lg border border-amber/30 bg-amber/5 px-4 py-3 text-sm"
+    role="status"
+  >
+    <p class="font-medium text-ink">À renouveler</p>
+    <ul class="mt-1 list-disc pl-5 text-muted">
+      @for (alerte of alertes(); track alerte.libelle) {
+      <li [class.text-brake]="alerte.niveau === 'expire'">
+        {{ alerte.libelle }} —
+        {{ alerte.niveau === "expire" ? "expiré" : "expire sous 30 jours" }}
+      </li>
+      }
+    </ul>
+  </div>
+  }
+
+  <app-form-section title="Identité et contact">
+    <app-fiche-field-grid>
+      <app-fiche-field [mono]="true" label="Matricule">
+        {{ chauffeur.value().matricule }}
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="CIN">
+        {{ chauffeur.value().cin ?? "—" }}
+      </app-fiche-field>
+      <app-fiche-field label="Naissance">
+        {{ formatChauffeurDate(chauffeur.value().dateNaissance) }}
+        @if (chauffeur.value().lieuNaissance) {
+        à {{ chauffeur.value().lieuNaissance }}
+        }
+      </app-fiche-field>
+      <app-fiche-field label="Nationalité">
+        {{ chauffeur.value().nationalite ?? "—" }}
+      </app-fiche-field>
+      <app-fiche-field label="Téléphone">
+        {{ chauffeur.value().telephone ?? "—" }}
+      </app-fiche-field>
+      <app-fiche-field label="E-mail">
+        {{ chauffeur.value().email ?? "—" }}
+      </app-fiche-field>
+      <app-fiche-field label="Adresse">
+        {{ chauffeur.value().adresse ?? "—" }}
+      </app-fiche-field>
+    </app-fiche-field-grid>
+  </app-form-section>
+
+  <app-form-section title="Permis de conduire">
+    <app-fiche-field-grid>
+      <app-fiche-field [mono]="true" label="Catégories">
+        {{ chauffeur.value().categoriesPermis.join(" · ") || "—" }}
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="N° de permis">
+        {{ chauffeur.value().numeroPermis ?? "—" }}
+      </app-fiche-field>
+      <app-fiche-field label="Obtention">
+        {{ formatChauffeurDate(chauffeur.value().dateObtentionPermis) }}
+      </app-fiche-field>
+      <app-fiche-field label="Expiration">
+        <span class="inline-flex items-center gap-2">
+          {{ formatChauffeurDate(chauffeur.value().dateExpirationPermis) }}
+          @if (chauffeur.value().dateExpirationPermis) {
+          <app-statut-chip
+            [label]="etatValiditeLabel(etat(chauffeur.value().dateExpirationPermis))"
+            [tone]="etatValiditeTone(etat(chauffeur.value().dateExpirationPermis))"
+          />
+          }
+        </span>
+      </app-fiche-field>
+    </app-fiche-field-grid>
+  </app-form-section>
+
+  <app-form-section
+    description="Contrôlées à la date de chaque voyage."
+    title="Habilitations"
+  >
+    @if (chauffeur.value().habilitations.length === 0) {
+    <p class="text-sm text-muted">Aucune habilitation déclarée.</p>
+    } @else {
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-lg text-left text-sm">
+        <thead class="list-table-head">
+          <tr>
+            <th class="px-3 py-2 font-medium" scope="col">Type</th>
+            <th class="px-3 py-2 font-medium" scope="col">Référence</th>
+            <th class="px-3 py-2 font-medium" scope="col">Validité</th>
+            <th class="px-3 py-2 font-medium" scope="col">État</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (habilitation of chauffeur.value().habilitations; track $index) {
+          <tr class="border-b border-line last:border-0">
+            <td class="px-3 py-2 text-ink">
+              {{ habilitationLabel(habilitation.type) }}
+            </td>
+            <td class="px-3 py-2 font-mono text-xs">{{ habilitation.reference }}</td>
+            <td class="px-3 py-2 font-mono text-xs tabular-nums text-muted">
+              {{ formatChauffeurDate(habilitation.dateObtention) }} →
+              {{ formatChauffeurDate(habilitation.dateExpiration) }}
+            </td>
+            <td class="px-3 py-2">
+              <app-statut-chip
+                [label]="etatValiditeLabel(etat(habilitation.dateExpiration))"
+                [tone]="etatValiditeTone(etat(habilitation.dateExpiration))"
+              />
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </app-form-section>
+
+  <app-form-section title="Passeport et visa">
+    <app-fiche-field-grid>
+      <app-fiche-field [mono]="true" label="Passeport">
+        {{ chauffeur.value().numeroPasseport ?? "—" }}
+        @if (chauffeur.value().paysDelivrancePasseport) {
+        ({{ chauffeur.value().paysDelivrancePasseport }})
+        }
+      </app-fiche-field>
+      <app-fiche-field label="Expiration du passeport">
+        <span class="inline-flex items-center gap-2">
+          {{ formatChauffeurDate(chauffeur.value().dateExpirationPasseport) }}
+          @if (chauffeur.value().dateExpirationPasseport) {
+          <app-statut-chip
+            [label]="etatValiditeLabel(etat(chauffeur.value().dateExpirationPasseport))"
+            [tone]="etatValiditeTone(etat(chauffeur.value().dateExpirationPasseport))"
+          />
+          }
+        </span>
+      </app-fiche-field>
+      <app-fiche-field [mono]="true" label="Visa">
+        {{ chauffeur.value().numeroVisa ?? "—" }}
+        @if (chauffeur.value().typeVisa) {
+        · {{ chauffeur.value().typeVisa }}
+        }
+      </app-fiche-field>
+      <app-fiche-field label="Expiration du visa">
+        {{ formatChauffeurDate(chauffeur.value().dateExpirationVisa) }}
+      </app-fiche-field>
+    </app-fiche-field-grid>
+  </app-form-section>
+
+  <app-form-section title="Emploi">
+    <app-fiche-field-grid>
+      <app-fiche-field label="Contrat">
+        {{ typeContratLabel(chauffeur.value().typeContrat) }}
+      </app-fiche-field>
+      <app-fiche-field label="Embauche">
+        {{ formatChauffeurDate(chauffeur.value().dateEmbauche) }}
+      </app-fiche-field>
+      <app-fiche-field label="Expérience">
+        @if (chauffeur.value().experienceAnnees != null) {
+        {{ chauffeur.value().experienceAnnees }} an(s)
+        } @else {
+        —
+        }
+      </app-fiche-field>
+      <app-fiche-field label="Site de rattachement">
+        @if (site.hasValue()) {
+        <a
+          [routerLink]="['/sites', site.value().id]"
+          class="text-pine underline-offset-2 hover:underline"
+        >
+          {{ site.value().code }} — {{ site.value().libelle }}
+        </a>
+        } @else {
+        —
+        }
+      </app-fiche-field>
+    </app-fiche-field-grid>
+  </app-form-section>
+
+  <app-documents-section
+    [entiteId]="chauffeur.value().id"
+    description="Permis, carte conducteur, FIMO, visite médicale, pièces d'identité — tous facultatifs."
+    typeEntite="CHAUFFEUR"
+  />
+
+  <app-form-section title="Voyages">
+    @if (voyages.isLoading()) {
+    <p class="text-sm text-muted" role="status">Chargement…</p>
+    } @else if (voyages.hasValue() && voyages.value().content.length === 0) {
+    <p class="text-sm text-muted">Aucun voyage affecté.</p>
+    } @else if (voyages.hasValue()) {
+    <ul class="flex flex-col gap-2">
+      @for (voyage of voyages.value().content; track voyage.id) {
+      <li
+        class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line/80 bg-canvas px-3 py-2 text-sm"
+      >
+        <a
+          [routerLink]="['/voyages', voyage.id]"
+          class="font-mono text-xs text-pine underline-offset-2 hover:underline"
+        >
+          {{ voyage.reference }}
+        </a>
+        <span class="text-muted">
+          {{ formatInstant(voyage.departPrevu) }} → {{ formatInstant(voyage.arriveePrevue) }}
+        </span>
+        <span class="text-xs text-muted">{{ roleDans(voyage) }}</span>
+        <span class="text-xs text-ink">{{ statutVoyageLabel(voyage.statut) }}</span>
+      </li>
+      }
+    </ul>
+    }
+  </app-form-section>
+  }
+</div>

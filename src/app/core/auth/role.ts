@@ -27,6 +27,13 @@ export const CLIENTS_ALLOWED_ROLES: readonly Role[] = [
   "COMMERCIAL",
 ];
 
+/** Gestion des chauffeurs (fiches, habilitations, documents) — exploitation. */
+export const CHAUFFEURS_ALLOWED_ROLES: readonly Role[] = [
+  "ADMINISTRATEUR",
+  "RESPONSABLE_EXPLOITATION",
+  "EXPLOITANT",
+];
+
 /** Flotte semi-remorques — same reach as Véhicules. */
 export const REMORQUES_ALLOWED_ROLES: readonly Role[] = [
   "ADMINISTRATEUR",

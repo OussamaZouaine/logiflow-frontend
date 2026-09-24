@@ -1,0 +1,504 @@
+<app-form-page-header
+  [description]="
+    edition()
+      ? 'Profil, permis, habilitations. Le matricule ne se modifie pas.'
+      : 'Seuls matricule, nom et prénom sont obligatoires ; le reste aide à proposer les bons chauffeurs.'
+  "
+  [title]="edition() ? 'Modifier le chauffeur' : 'Nouveau chauffeur'"
+  listLabel="Chauffeurs"
+  listLink="/chauffeurs"
+/>
+
+@if (chargement()) {
+<p class="text-sm text-muted" role="status">Chargement…</p>
+} @else {
+<form (submit)="onSubmit($event)" class="form-page" novalidate>
+  <app-form-validation-summary
+    [show]="chauffeurForm().touched() && chauffeurForm().invalid()"
+  />
+
+  <!-- ═══ Identité ═══ -->
+  <app-form-section title="Identité">
+    <div class="form-page__coords">
+      <app-form-field
+        [error]="
+          showFieldError(chauffeurForm.matricule())
+            ? firstFieldError(chauffeurForm.matricule().errors())
+            : null
+        "
+        inputId="matricule"
+        label="Matricule *"
+      >
+        @if (edition()) {
+        <p class="field flex items-center font-mono text-muted" id="matricule">
+          {{ draft().matricule }}
+        </p>
+        } @else {
+        <input
+          [attr.aria-invalid]="showFieldError(chauffeurForm.matricule()) || null"
+          [class]="fieldClasses(chauffeurForm.matricule())"
+          [formField]="chauffeurForm.matricule"
+          autocomplete="off"
+          id="matricule"
+          placeholder="DRV-0042"
+          type="text"
+        >
+        }
+      </app-form-field>
+      <app-form-field inputId="cin" label="N° pièce d'identité (CIN)">
+        <input
+          [class]="fieldClasses(chauffeurForm.cin())"
+          [formField]="chauffeurForm.cin"
+          autocomplete="off"
+          id="cin"
+          type="text"
+        >
+      </app-form-field>
+    </div>
+    <div class="form-page__coords">
+      <app-form-field
+        [error]="
+          showFieldError(chauffeurForm.nom())
+            ? firstFieldError(chauffeurForm.nom().errors())
+            : null
+        "
+        inputId="nom"
+        label="Nom *"
+      >
+        <input
+          [attr.aria-invalid]="showFieldError(chauffeurForm.nom()) || null"
+          [class]="fieldClasses(chauffeurForm.nom())"
+          [formField]="chauffeurForm.nom"
+          autocomplete="family-name"
+          id="nom"
+          type="text"
+        >
+      </app-form-field>
+      <app-form-field
+        [error]="
+          showFieldError(chauffeurForm.prenom())
+            ? firstFieldError(chauffeurForm.prenom().errors())
+            : null
+        "
+        inputId="prenom"
+        label="Prénom *"
+      >
+        <input
+          [attr.aria-invalid]="showFieldError(chauffeurForm.prenom()) || null"
+          [class]="fieldClasses(chauffeurForm.prenom())"
+          [formField]="chauffeurForm.prenom"
+          autocomplete="given-name"
+          id="prenom"
+          type="text"
+        >
+      </app-form-field>
+    </div>
+    <div class="form-page__coords">
+      <app-form-field inputId="dateNaissance" label="Date de naissance">
+        <app-iso-date-input
+          [formField]="chauffeurForm.dateNaissance"
+          inputId="dateNaissance"
+        />
+      </app-form-field>
+      <app-form-field inputId="lieuNaissance" label="Lieu de naissance">
+        <input
+          [class]="fieldClasses(chauffeurForm.lieuNaissance())"
+          [formField]="chauffeurForm.lieuNaissance"
+          id="lieuNaissance"
+          type="text"
+        >
+      </app-form-field>
+    </div>
+    <app-form-field inputId="nationalite" label="Nationalité">
+      <input
+        [class]="fieldClasses(chauffeurForm.nationalite())"
+        [formField]="chauffeurForm.nationalite"
+        id="nationalite"
+        type="text"
+      >
+    </app-form-field>
+  </app-form-section>
+
+  <!-- ═══ Contact ═══ -->
+  <app-form-section title="Contact">
+    <div class="form-page__coords">
+      <app-form-field inputId="telephone" label="Téléphone">
+        <input
+          [class]="fieldClasses(chauffeurForm.telephone())"
+          [formField]="chauffeurForm.telephone"
+          autocomplete="tel"
+          id="telephone"
+          type="tel"
+        >
+      </app-form-field>
+      <app-form-field
+        [error]="
+          showFieldError(chauffeurForm.email())
+            ? firstFieldError(chauffeurForm.email().errors())
+            : null
+        "
+        inputId="email"
+        label="E-mail"
+      >
+        <input
+          [attr.aria-invalid]="showFieldError(chauffeurForm.email()) || null"
+          [class]="fieldClasses(chauffeurForm.email())"
+          [formField]="chauffeurForm.email"
+          autocomplete="email"
+          id="email"
+          type="email"
+        >
+      </app-form-field>
+    </div>
+    <app-form-field inputId="adresse" label="Adresse">
+      <input
+        [class]="fieldClasses(chauffeurForm.adresse())"
+        [formField]="chauffeurForm.adresse"
+        autocomplete="street-address"
+        id="adresse"
+        type="text"
+      >
+    </app-form-field>
+  </app-form-section>
+
+  <!-- ═══ Permis ═══ -->
+  <app-form-section
+    description="CE est requis pour un tracteur attelé à une semi-remorque ; C pour un porteur."
+    title="Permis de conduire"
+  >
+    <fieldset class="flex flex-col gap-2">
+      <legend class="text-sm font-medium text-ink">Catégories</legend>
+      <div class="flex flex-wrap gap-2">
+        @for (categorie of categoriesPermis; track categorie) {
+        <label
+          [class.border-pine]="categorieCochee(categorie)"
+          [class.bg-pine/5]="categorieCochee(categorie)"
+          class="pressable flex min-h-11 cursor-pointer items-center gap-2 rounded-md border border-line px-3 font-mono text-sm"
+        >
+          <input
+            (change)="basculerCategorie(categorie)"
+            [checked]="categorieCochee(categorie)"
+            type="checkbox"
+          >
+          {{ categorie }}
+        </label>
+        }
+      </div>
+    </fieldset>
+    <div class="form-page__coords">
+      <app-form-field inputId="numeroPermis" label="N° de permis">
+        <input
+          [class]="fieldClasses(chauffeurForm.numeroPermis())"
+          [formField]="chauffeurForm.numeroPermis"
+          autocomplete="off"
+          id="numeroPermis"
+          type="text"
+        >
+      </app-form-field>
+      <app-form-field inputId="dateObtentionPermis" label="Obtention">
+        <app-iso-date-input
+          [formField]="chauffeurForm.dateObtentionPermis"
+          inputId="dateObtentionPermis"
+        />
+      </app-form-field>
+    </div>
+    <app-form-field
+      [error]="
+        showFieldError(chauffeurForm.dateExpirationPermis())
+          ? firstFieldError(chauffeurForm.dateExpirationPermis().errors())
+          : null
+      "
+      inputId="dateExpirationPermis"
+      label="Expiration"
+    >
+      <app-iso-date-input
+        [formField]="chauffeurForm.dateExpirationPermis"
+        inputId="dateExpirationPermis"
+      />
+    </app-form-field>
+  </app-form-section>
+
+  <!-- ═══ Habilitations ═══ -->
+  <app-form-section
+    description="Déclarées ici, elles sont contrôlées à la date de chaque voyage (une habilitation expirée bloque l'affectation ; l'ADR est exigée pour les marchandises dangereuses)."
+    title="Habilitations"
+  >
+    @if (draft().habilitations.length === 0) {
+    <p class="text-sm text-muted">Aucune habilitation déclarée.</p>
+    } @else {
+    <ul class="flex flex-col gap-3">
+      @for (habilitation of draft().habilitations; track $index; let i = $index) {
+      <li class="rounded-lg border border-line/80 bg-canvas p-3">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-4">
+          <app-form-field [inputId]="'hab-type-' + i" label="Type">
+            <app-field-select
+              (selectValueChange)="onTypeHabilitation(i, $event)"
+              [inputId]="'hab-type-' + i"
+              [options]="habilitationOptions"
+              [selectValue]="habilitation.type"
+            />
+          </app-form-field>
+          <app-form-field [inputId]="'hab-ref-' + i" label="Référence">
+            <input
+              (input)="onReferenceHabilitation(i, $event)"
+              [id]="'hab-ref-' + i"
+              [value]="habilitation.reference"
+              class="field"
+              type="text"
+            >
+          </app-form-field>
+          <app-form-field [inputId]="'hab-obt-' + i" label="Obtention">
+            <app-iso-date-input
+              (isoDateChange)="modifierHabilitation(i, { dateObtention: $event })"
+              [inputId]="'hab-obt-' + i"
+              [isoDate]="habilitation.dateObtention"
+            />
+          </app-form-field>
+          <app-form-field [inputId]="'hab-exp-' + i" label="Expiration">
+            <app-iso-date-input
+              (isoDateChange)="modifierHabilitation(i, { dateExpiration: $event })"
+              [inputId]="'hab-exp-' + i"
+              [isoDate]="habilitation.dateExpiration"
+            />
+          </app-form-field>
+        </div>
+        <div class="mt-2 flex items-center justify-between gap-3">
+          @if (erreurHabilitation(habilitation); as erreur) {
+          <p class="text-xs text-brake">{{ erreur }}</p>
+          } @else {
+          <span></span>
+          }
+          <button
+            (click)="retirerHabilitation(i)"
+            [attr.aria-label]="'Retirer ' + habilitationLabel(habilitation.type)"
+            class="btn-danger-outline pressable h-9 px-3 text-xs"
+            type="button"
+          >
+            Retirer
+          </button>
+        </div>
+      </li>
+      }
+    </ul>
+    }
+    <div>
+      <button
+        (click)="ajouterHabilitation()"
+        class="btn-outline pressable min-h-11 px-4 text-sm"
+        type="button"
+      >
+        + Ajouter une habilitation
+      </button>
+    </div>
+  </app-form-section>
+
+  <!-- ═══ Passeport & visa ═══ -->
+  <app-form-section
+    description="Requis pour les voyages internationaux."
+    title="Passeport et visa"
+  >
+    <details
+      (toggle)="passeportOuvert.set($any($event.target).open)"
+      [open]="passeportOuvert()"
+      class="fiche-disclosure"
+    >
+      <summary class="text-sm font-medium text-ink">
+        Renseigner passeport et visa
+      </summary>
+      <div class="mt-4 flex flex-col gap-4">
+        <div class="form-page__coords">
+          <app-form-field inputId="numeroPasseport" label="N° de passeport">
+            <input
+              [class]="fieldClasses(chauffeurForm.numeroPasseport())"
+              [formField]="chauffeurForm.numeroPasseport"
+              autocomplete="off"
+              id="numeroPasseport"
+              type="text"
+            >
+          </app-form-field>
+          <app-form-field inputId="paysDelivrancePasseport" label="Pays de délivrance">
+            <input
+              [class]="fieldClasses(chauffeurForm.paysDelivrancePasseport())"
+              [formField]="chauffeurForm.paysDelivrancePasseport"
+              id="paysDelivrancePasseport"
+              type="text"
+            >
+          </app-form-field>
+        </div>
+        <div class="form-page__coords">
+          <app-form-field inputId="dateDelivrancePasseport" label="Délivrance">
+            <app-iso-date-input
+              [formField]="chauffeurForm.dateDelivrancePasseport"
+              inputId="dateDelivrancePasseport"
+            />
+          </app-form-field>
+          <app-form-field
+            [error]="
+              showFieldError(chauffeurForm.dateExpirationPasseport())
+                ? firstFieldError(chauffeurForm.dateExpirationPasseport().errors())
+                : null
+            "
+            inputId="dateExpirationPasseport"
+            label="Expiration"
+          >
+            <app-iso-date-input
+              [formField]="chauffeurForm.dateExpirationPasseport"
+              inputId="dateExpirationPasseport"
+            />
+          </app-form-field>
+        </div>
+        <div class="form-page__coords">
+          <app-form-field inputId="numeroVisa" label="N° de visa">
+            <input
+              [class]="fieldClasses(chauffeurForm.numeroVisa())"
+              [formField]="chauffeurForm.numeroVisa"
+              autocomplete="off"
+              id="numeroVisa"
+              type="text"
+            >
+          </app-form-field>
+          <app-form-field inputId="typeVisa" label="Type de visa">
+            <input
+              [class]="fieldClasses(chauffeurForm.typeVisa())"
+              [formField]="chauffeurForm.typeVisa"
+              id="typeVisa"
+              placeholder="Schengen C…"
+              type="text"
+            >
+          </app-form-field>
+        </div>
+        <div class="form-page__coords">
+          <app-form-field inputId="paysVisa" label="Pays du visa">
+            <input
+              [class]="fieldClasses(chauffeurForm.paysVisa())"
+              [formField]="chauffeurForm.paysVisa"
+              id="paysVisa"
+              type="text"
+            >
+          </app-form-field>
+          <app-form-field inputId="dateDelivranceVisa" label="Délivrance du visa">
+            <app-iso-date-input
+              [formField]="chauffeurForm.dateDelivranceVisa"
+              inputId="dateDelivranceVisa"
+            />
+          </app-form-field>
+        </div>
+        <app-form-field
+          [error]="
+            showFieldError(chauffeurForm.dateExpirationVisa())
+              ? firstFieldError(chauffeurForm.dateExpirationVisa().errors())
+              : null
+          "
+          inputId="dateExpirationVisa"
+          label="Expiration du visa"
+        >
+          <app-iso-date-input
+            [formField]="chauffeurForm.dateExpirationVisa"
+            inputId="dateExpirationVisa"
+          />
+        </app-form-field>
+      </div>
+    </details>
+  </app-form-section>
+
+  <!-- ═══ Emploi ═══ -->
+  <app-form-section
+    description="Le site de rattachement permet de proposer le chauffeur le plus proche du chargement."
+    title="Emploi"
+  >
+    <div class="form-page__coords">
+      <app-form-field inputId="typeContrat" label="Contrat">
+        <app-field-select
+          [formField]="chauffeurForm.typeContrat"
+          [options]="contratOptions"
+          inputId="typeContrat"
+          placeholder="Non renseigné"
+        />
+      </app-form-field>
+      <app-form-field inputId="dateEmbauche" label="Date d'embauche">
+        <app-iso-date-input
+          [formField]="chauffeurForm.dateEmbauche"
+          inputId="dateEmbauche"
+        />
+      </app-form-field>
+    </div>
+    <div class="form-page__coords">
+      <app-form-field inputId="siteRattachementId" label="Site de rattachement">
+        <app-field-select
+          [formField]="chauffeurForm.siteRattachementId"
+          [options]="siteOptions()"
+          inputId="siteRattachementId"
+          placeholder="Aucun"
+        />
+      </app-form-field>
+      <app-form-field
+        [error]="
+          showFieldError(chauffeurForm.experienceAnnees())
+            ? firstFieldError(chauffeurForm.experienceAnnees().errors())
+            : null
+        "
+        inputId="experienceAnnees"
+        label="Expérience (années)"
+      >
+        <input
+          [class]="fieldClasses(chauffeurForm.experienceAnnees())"
+          [formField]="chauffeurForm.experienceAnnees"
+          id="experienceAnnees"
+          step="1"
+          type="number"
+        >
+      </app-form-field>
+    </div>
+    <app-form-field inputId="specialisation" label="Spécialisation">
+      <input
+        [class]="fieldClasses(chauffeurForm.specialisation())"
+        [formField]="chauffeurForm.specialisation"
+        id="specialisation"
+        placeholder="Frigorifique, ADR, messagerie…"
+        type="text"
+      >
+    </app-form-field>
+  </app-form-section>
+
+  @if (!edition()) {
+  <app-form-section
+    description="Solde initial de conduite disponible (réinitialisé par le suivi d'activité)."
+    title="Temps de conduite"
+  >
+    <app-form-field
+      [error]="
+        showFieldError(chauffeurForm.soldeTempsConduiteHeures())
+          ? firstFieldError(chauffeurForm.soldeTempsConduiteHeures().errors())
+          : null
+      "
+      inputId="soldeTempsConduiteHeures"
+      label="Solde (heures)"
+    >
+      <input
+        [class]="fieldClasses(chauffeurForm.soldeTempsConduiteHeures())"
+        [formField]="chauffeurForm.soldeTempsConduiteHeures"
+        id="soldeTempsConduiteHeures"
+        step="0.5"
+        type="number"
+      >
+    </app-form-field>
+  </app-form-section>
+  }
+
+  @if (formError()) {
+  <div class="alert-panel" role="alert">{{ formError() }}</div>
+  }
+
+  <app-form-actions>
+    <button class="btn-primary pressable min-h-11 px-5" type="submit">
+      Enregistrer
+    </button>
+    <a
+      [routerLink]="edition() ? ['/chauffeurs', id()] : ['/chauffeurs']"
+      class="btn-outline pressable min-h-11 px-5"
+    >
+      Annuler
+    </a>
+  </app-form-actions>
+</form>
+}

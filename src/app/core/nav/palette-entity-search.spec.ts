@@ -5,13 +5,13 @@ import {
 } from "@angular/common/http/testing";
 import { TestBed } from "@angular/core/testing";
 import { DemoSessionService } from "../auth/demo-session";
-import { PaletteEntitySearchStore } from "./palette-entity-search-store";
 import {
   paletteEntityQueryReady,
   paletteEntitySourcesForRoles,
   paletteItemsFromPage,
   siteToPaletteItem,
 } from "./palette-entity-search";
+import { PaletteEntitySearchStore } from "./palette-entity-search-store";
 
 describe("paletteEntityQueryReady", () => {
   it("requires at least two characters", () => {
@@ -66,9 +66,7 @@ describe("paletteItemsFromPage", () => {
     );
 
     expect(items).toHaveLength(1);
-    expect(items[0]?.path).toBe(
-      "/sites/11111111-1111-1111-1111-111111111111"
-    );
+    expect(items[0]?.path).toBe("/sites/11111111-1111-1111-1111-111111111111");
     expect(items[0]?.section).toBe("Références");
   });
 
@@ -162,8 +160,7 @@ describe("PaletteEntitySearchStore", () => {
     });
 
     const siteRequest = http.expectOne(
-      (req) =>
-        req.url === "/api/v1/sites" && req.params.get("q") === "lyon"
+      (req) => req.url === "/api/v1/sites" && req.params.get("q") === "lyon"
     );
     siteRequest.flush({
       content: [
@@ -189,6 +186,7 @@ describe("PaletteEntitySearchStore", () => {
       "marchandises",
       "vehicules",
       "remorques",
+      "chauffeurs",
       "commandes",
       "dossiers",
       "voyages",

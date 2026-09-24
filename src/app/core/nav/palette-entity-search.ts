@@ -1,18 +1,20 @@
-import type { Role } from "../auth/role";
-import type { Marchandise } from "../../marchandises/marchandise";
-import { formatMarchandiseLabel } from "../../marchandises/marchandise";
-import type { Remorque } from "../../remorques/remorque";
-import { formatRemorqueLabel } from "../../remorques/remorque";
+import type { Chauffeur } from "../../chauffeurs/chauffeur";
+import { formatChauffeurLabel } from "../../chauffeurs/chauffeur";
 import type { Client } from "../../clients/client";
 import { formatClientLabel } from "../../clients/client";
 import type { Commande } from "../../commandes/commande";
 import { formatCommandeLabel } from "../../commandes/commande";
-import type { PageResponse } from "../api/page-response";
 import type { Dossier } from "../../dossiers/dossier";
+import type { Marchandise } from "../../marchandises/marchandise";
+import { formatMarchandiseLabel } from "../../marchandises/marchandise";
+import type { Remorque } from "../../remorques/remorque";
+import { formatRemorqueLabel } from "../../remorques/remorque";
 import type { Site } from "../../sites/site";
 import type { Utilisateur } from "../../utilisateurs/utilisateur";
 import type { Vehicule } from "../../vehicules/vehicule";
 import type { Voyage } from "../../voyages/voyage";
+import type { PageResponse } from "../api/page-response";
+import type { Role } from "../auth/role";
 import { DESTINATION_NAV_ICON } from "./nav-icon";
 import type { PaletteItem } from "./palette-items";
 import {
@@ -40,6 +42,7 @@ const PALETTE_ENTITY_SOURCES: readonly PaletteEntitySource[] = [
   { badge: "Marchandise", id: "marchandises", serverSearch: true },
   { badge: "Véhicule", id: "vehicules", serverSearch: true },
   { badge: "Remorque", id: "remorques", serverSearch: true },
+  { badge: "Chauffeur", id: "chauffeurs", serverSearch: true },
   { badge: "Client", id: "clients", serverSearch: true },
   { badge: "Commande", id: "commandes", serverSearch: true },
   { badge: "Dossier", id: "dossiers", serverSearch: true },
@@ -133,6 +136,18 @@ export function remorqueToPaletteItem(
   );
 }
 
+export function chauffeurToPaletteItem(
+  source: PaletteEntitySource,
+  chauffeur: Chauffeur
+): PaletteItem {
+  return entityItem(
+    source,
+    formatChauffeurLabel(chauffeur),
+    `/chauffeurs/${chauffeur.id}`,
+    [chauffeur.matricule, chauffeur.nom, chauffeur.prenom]
+  );
+}
+
 export function clientToPaletteItem(
   source: PaletteEntitySource,
   client: Client
@@ -161,24 +176,20 @@ export function dossierToPaletteItem(
   source: PaletteEntitySource,
   dossier: Dossier
 ): PaletteItem {
-  return entityItem(
-    source,
+  return entityItem(source, dossier.reference, `/dossiers/${dossier.id}`, [
     dossier.reference,
-    `/dossiers/${dossier.id}`,
-    [dossier.reference, dossier.statut]
-  );
+    dossier.statut,
+  ]);
 }
 
 export function voyageToPaletteItem(
   source: PaletteEntitySource,
   voyage: Voyage
 ): PaletteItem {
-  return entityItem(
-    source,
+  return entityItem(source, voyage.reference, `/voyages/${voyage.id}`, [
     voyage.reference,
-    `/voyages/${voyage.id}`,
-    [voyage.reference, voyage.statut]
-  );
+    voyage.statut,
+  ]);
 }
 
 export function utilisateurToPaletteItem(
@@ -202,7 +213,9 @@ export function paletteItemsFromPage(
   switch (source.id) {
     case "sites":
       return content
-        .filter((item): item is Site => typeof item === "object" && item !== null)
+        .filter(
+          (item): item is Site => typeof item === "object" && item !== null
+        )
         .map((site) => siteToPaletteItem(source, site));
     case "marchandises":
       return content
@@ -223,6 +236,12 @@ export function paletteItemsFromPage(
           (item): item is Remorque => typeof item === "object" && item !== null
         )
         .map((remorque) => remorqueToPaletteItem(source, remorque));
+    case "chauffeurs":
+      return content
+        .filter(
+          (item): item is Chauffeur => typeof item === "object" && item !== null
+        )
+        .map((chauffeur) => chauffeurToPaletteItem(source, chauffeur));
     case "clients":
       return content
         .filter(

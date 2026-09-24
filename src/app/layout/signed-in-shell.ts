@@ -23,6 +23,7 @@ import {
   lucideContainer,
   lucideFolderOpen,
   lucideFuel,
+  lucideIdCard,
   lucideInbox,
   lucideLayoutDashboard,
   lucideMapPin,
@@ -39,19 +40,20 @@ import { filter } from "rxjs";
 import { DemoSessionService } from "../core/auth/demo-session";
 import { roleLabel } from "../core/auth/role";
 import { DESTINATION_NAV_ICON, TABLEAU_NAV_ICON } from "../core/nav/nav-icon";
-import type { ApercuTone } from "../tableau/apercu";
-import {
-  FILE_DU_JOUR_SECTION_ID,
-  fileDuJourBadgeLabel,
-} from "../tableau/file-du-jour";
-import { FileDuJourStore } from "../tableau/file-du-jour-store";
 import {
   destinationNavGroupsForRoles,
   type WorkDestinationId,
 } from "../core/nav/work-destination";
 import { StatutChip, type StatutTone } from "../shared/ui/statut-chip";
 import { ToastHost } from "../shared/ui/toast";
+import type { ApercuTone } from "../tableau/apercu";
+import {
+  FILE_DU_JOUR_SECTION_ID,
+  fileDuJourBadgeLabel,
+} from "../tableau/file-du-jour";
+import { FileDuJourStore } from "../tableau/file-du-jour-store";
 import { CommandPaletteService } from "./command-palette.service";
+import { CopiloteBouton } from "./copilote-bouton";
 import { CopilotePanel } from "./copilote-panel";
 import { ShellBreadcrumbComponent } from "./shell-breadcrumb";
 
@@ -64,6 +66,7 @@ import { ShellBreadcrumbComponent } from "./shell-breadcrumb";
     RouterOutlet,
     ShellBreadcrumbComponent,
     ToastHost,
+    CopiloteBouton,
     CopilotePanel,
     StatutChip,
   ],
@@ -74,6 +77,7 @@ import { ShellBreadcrumbComponent } from "./shell-breadcrumb";
       lucideContainer,
       lucideFolderOpen,
       lucideFuel,
+      lucideIdCard,
       lucideInbox,
       lucideLayoutDashboard,
       lucideMapPin,
