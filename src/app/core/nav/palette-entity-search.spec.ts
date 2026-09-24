@@ -112,16 +112,16 @@ describe("siteToPaletteItem", () => {
       actif: true,
       adresse: null,
       clientId: null,
-      code: "SITE-DEMO-PARIS",
+      code: "SITE-DEMO-CASA",
       contraintesAcces: null,
       id: "44444444-4444-4444-4444-444444444444",
-      libelle: "Paris",
-      localisation: { latitude: 48.85, longitude: 2.35 },
+      libelle: "Casablanca",
+      localisation: { latitude: 33.57, longitude: -7.59 },
     });
 
     expect(item.kind).toBe("entity");
     expect(item.badge).toBe("Site");
-    expect(item.label).toBe("SITE-DEMO-PARIS — Paris");
+    expect(item.label).toBe("SITE-DEMO-CASA — Casablanca");
   });
 });
 

@@ -100,6 +100,7 @@
 @media (min-width: 1280px) {
   .voyages-layout {
     grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr);
+    align-items: start;
   }
 }
 
@@ -316,14 +317,18 @@
 .voyages-map-card {
   display: flex;
   min-height: 20rem;
+  max-height: min(70vh, 36rem);
   flex-direction: column;
   overflow: hidden;
+  position: sticky;
+  top: 1rem;
 }
 
 .voyages-map-card__header {
   display: flex;
   align-items: flex-start;
   gap: 0.625rem;
+  flex-shrink: 0;
 }
 
 .voyages-map-card__icon {

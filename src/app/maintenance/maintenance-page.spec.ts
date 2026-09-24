@@ -8,13 +8,13 @@ import { provideRouter } from "@angular/router";
 import { MaintenancePage } from "./maintenance-page";
 
 const STATS = {
-  coutTotal: { devise: "EUR", montant: 250 },
+  coutTotal: { devise: "MAD", montant: 250 },
   enCours: 0,
   nombre: 1,
 };
 
 const SAMPLE = {
-  cout: { devise: "EUR", montant: 250 },
+  cout: { devise: "MAD", montant: 250 },
   datePlanifiee: "2026-09-04T16:00:00",
   dureeReelleMin: 0,
   id: "88888888-8888-8888-8888-888888888888",
@@ -85,7 +85,7 @@ describe("MaintenancePage", () => {
     const http = TestBed.inject(HttpTestingController);
     http
       .expectOne((req) => req.url === "/api/v1/ordres-travail/stats")
-      .flush({ ...STATS, nombre: 0, coutTotal: { devise: "EUR", montant: 0 } });
+      .flush({ ...STATS, nombre: 0, coutTotal: { devise: "MAD", montant: 0 } });
     http
       .expectOne((req) => req.url === "/api/v1/ordres-travail")
       .flush({

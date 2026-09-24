@@ -156,7 +156,7 @@ export class GeoMarkersMap implements AfterViewInit {
     this.markersById.clear();
     const boundsPoints: L.LatLngExpression[] = [];
 
-    const routePoints = this.resolvePathPoints(path, markers);
+    const routePoints = this.resolvePathPoints(path);
     if (routePoints.length >= 2) {
       L.polyline(routePoints, {
         color: ROUTE_POLYLINE_COLOR,
@@ -201,19 +201,14 @@ export class GeoMarkersMap implements AfterViewInit {
   }
 
   private resolvePathPoints(
-    path: readonly GeoMapPathPoint[],
-    markers: readonly GeoMapMarker[]
+    path: readonly GeoMapPathPoint[]
   ): L.LatLngExpression[] {
-    const source =
-      path.length >= 2
-        ? path
-        : markers.map((marker) => ({
-            latitude: marker.latitude,
-            longitude: marker.longitude,
-          }));
+    if (path.length < 2) {
+      return [];
+    }
 
     const points: L.LatLngExpression[] = [];
-    for (const point of source) {
+    for (const point of path) {
       if (!isValidLocalisation(point.latitude, point.longitude)) {
         continue;
       }

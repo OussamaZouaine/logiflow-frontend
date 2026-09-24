@@ -33,6 +33,7 @@ export interface ItineraireCalcule {
 
 const SEGMENT_KIND_LABEL: Record<string, string> = {
   CHARGEMENT: "Chargement",
+  ESCALE: "Escale",
   DECHARGEMENT: "Déchargement",
 };
 
