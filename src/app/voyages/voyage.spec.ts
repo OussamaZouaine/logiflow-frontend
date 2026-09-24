@@ -1,4 +1,5 @@
 import {
+  affectationsDepuisDraft,
   draftToWrite,
   emptyVoyageDraft,
   totalChargeKgFromDossiers,
@@ -13,8 +14,14 @@ describe("voyage domain helpers", () => {
 
   it("sums charge from selected dossiers", () => {
     const dossiers = new Map([
-      ["d1", { poidsBrutKg: 500, reference: "D1", statut: "CREE", volumeM3: 2 }],
-      ["d2", { poidsBrutKg: 300, reference: "D2", statut: "CREE", volumeM3: 1 }],
+      [
+        "d1",
+        { poidsBrutKg: 500, reference: "D1", statut: "CREE", volumeM3: 2 },
+      ],
+      [
+        "d2",
+        { poidsBrutKg: 300, reference: "D2", statut: "CREE", volumeM3: 1 },
+      ],
     ]);
     expect(totalChargeKgFromDossiers(["d1", "d2"], dossiers)).toBe(800);
   });
@@ -52,5 +59,22 @@ describe("draftToWrite", () => {
     ]);
     const body = draftToWrite(draft, ["dossier-1"], dossiers);
     expect(body.trajet.etapes[0]?.chargeApresKg).toBe(750);
+  });
+});
+
+describe("affectationsDepuisDraft", () => {
+  const roles = (chauffeurId: string, chauffeurRenfortId: string) =>
+    affectationsDepuisDraft({ chauffeurId, chauffeurRenfortId }).map(
+      (a) => `${a.role}:${a.chauffeurId}`
+    );
+
+  it("adds a RENFORT driver when one is selected", () => {
+    expect(roles("c1", "c2")).toEqual(["TITULAIRE:c1", "RENFORT:c2"]);
+  });
+
+  it("ignores an empty, none or duplicate renfort", () => {
+    expect(roles("c1", "")).toEqual(["TITULAIRE:c1"]);
+    expect(roles("c1", "__none__")).toEqual(["TITULAIRE:c1"]);
+    expect(roles("c1", "c1")).toEqual(["TITULAIRE:c1"]);
   });
 });

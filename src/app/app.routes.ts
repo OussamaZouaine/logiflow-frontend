@@ -105,6 +105,42 @@ export const routes: Routes = [
       },
       {
         canActivate: [roleGuard],
+        data: { roles: workDestination("chauffeurs").roles },
+        loadComponent: () =>
+          import("./chauffeurs/chauffeurs-page").then(
+            (module) => module.ChauffeursPage
+          ),
+        path: "chauffeurs",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("chauffeurs").roles },
+        loadComponent: () =>
+          import("./chauffeurs/chauffeur-form-page").then(
+            (module) => module.ChauffeurFormPage
+          ),
+        path: "chauffeurs/nouveau",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("chauffeurs").roles },
+        loadComponent: () =>
+          import("./chauffeurs/chauffeur-form-page").then(
+            (module) => module.ChauffeurFormPage
+          ),
+        path: "chauffeurs/:id/modifier",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("chauffeurs").roles },
+        loadComponent: () =>
+          import("./chauffeurs/chauffeur-detail-page").then(
+            (module) => module.ChauffeurDetailPage
+          ),
+        path: "chauffeurs/:id",
+      },
+      {
+        canActivate: [roleGuard],
         data: { roles: workDestination("remorques").roles },
         loadComponent: () =>
           import("./remorques/remorques-page").then(

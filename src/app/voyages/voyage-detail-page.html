@@ -181,9 +181,12 @@
                 <div class="voyage-resource-grid">
                   @for (affectation of voyage.value().affectations; track $index) {
                   <z-card class="voyage-crew-card" zSize="sm">
-                    <p class="voyage-crew-card__name">
+                    <a
+                      [routerLink]="['/chauffeurs', affectation.chauffeurId]"
+                      class="voyage-crew-card__name text-pine underline-offset-2 hover:underline"
+                    >
                       {{ chauffeurLabel(affectation.chauffeurId) }}
-                    </p>
+                    </a>
                     <p class="voyage-crew-card__meta">
                       <z-badge zType="outline">
                         {{ affectationRoleLabel(affectation.role) }}

@@ -1,0 +1,176 @@
+<div class="flex flex-col gap-6">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <h1 class="module-page-title">Chauffeurs</h1>
+      <p class="mt-1 text-sm text-muted">
+        Disponibilité, permis, habilitations et temps de conduite — utilisés pour
+        proposer les chauffeurs des voyages.
+      </p>
+    </div>
+    <a class="btn-primary pressable" routerLink="/chauffeurs/nouveau">
+      Nouveau chauffeur
+    </a>
+  </div>
+
+  <div class="flex flex-col gap-3">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+      <div class="min-w-0 flex-1">
+        <app-list-search-bar
+          [(draft)]="searchDraft"
+          [(query)]="search"
+          inputId="chauffeur-search"
+          placeholder="Nom, prénom ou matricule…"
+        />
+      </div>
+      <div class="sm:w-56">
+        <label class="sr-only" for="chauffeur-statut">Statut administratif</label>
+        <app-field-select
+          (selectValueChange)="onStatut($event)"
+          [options]="statutOptions"
+          [selectValue]="statutFilter() || '__none__'"
+          inputId="chauffeur-statut"
+          placeholder="Tous les statuts"
+        />
+      </div>
+    </div>
+    <app-list-statut-filter
+      [(selected)]="disponibiliteFilter"
+      [options]="disponibiliteOptions"
+      ariaLabel="Filtrer par disponibilité"
+    />
+  </div>
+
+  @if (chauffeurs.isLoading()) {
+  <app-list-table-skeleton label="Chargement des chauffeurs" />
+  } @else if (chauffeurs.error()) {
+  <div class="alert-panel" role="alert">
+    <p>{{ errorMessage() }}</p>
+    <button
+      (click)="chauffeurs.reload()"
+      class="pressable mt-2 font-medium text-ink underline underline-offset-2"
+      type="button"
+    >
+      Réessayer
+    </button>
+  </div>
+  } @else if (chauffeurs.hasValue() && lignes().length === 0) {
+  @if (filtresActifs()) {
+  <app-list-empty-state
+    (action)="clearFilters()"
+    actionLabel="Réinitialiser les filtres"
+    description="Aucun chauffeur ne correspond à ces critères."
+    title="Aucun résultat"
+  />
+  } @else {
+  <app-list-empty-state
+    actionLabel="Nouveau chauffeur"
+    actionLink="/chauffeurs/nouveau"
+    description="Créez la fiche du premier chauffeur."
+    title="Aucun chauffeur en base"
+  />
+  }
+  } @else if (chauffeurs.hasValue()) {
+  <div
+    appListRowKeyboard
+    [(activeId)]="activeRowId"
+    [rows]="keyboardRows()"
+    aria-label="Liste des chauffeurs — flèches pour naviguer, Entrée pour ouvrir"
+    class="list-table-panel"
+  >
+    <table class="w-full min-w-2xl text-left text-sm">
+      <thead class="list-table-head">
+        <tr>
+          <th class="px-4 py-3 font-medium" scope="col">Chauffeur</th>
+          <th class="px-4 py-3 font-medium" scope="col">Disponibilité</th>
+          <th class="px-4 py-3 font-medium" scope="col">Permis</th>
+          <th class="px-4 py-3 font-medium" scope="col">Habilitations</th>
+          <th class="px-4 py-3 font-medium" scope="col">Conduite restante</th>
+          <th class="px-4 py-3 font-medium" scope="col">
+            <span class="sr-only">Actions</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (ligne of lignes(); track ligne.chauffeur.id) {
+        <tr
+          [attr.aria-selected]="activeRowId() === ligne.chauffeur.id"
+          [class.bg-pine/5]="activeRowId() === ligne.chauffeur.id"
+          class="list-row border-b border-line last:border-0 hover:bg-canvas"
+        >
+          <td class="px-4 py-3">
+            <a
+              [routerLink]="['/chauffeurs', ligne.chauffeur.id]"
+              class="font-medium text-ink underline-offset-2 hover:underline"
+            >
+              {{ ligne.chauffeur.prenom }} {{ ligne.chauffeur.nom }}
+            </a>
+            <p class="font-mono text-xs text-muted">{{ ligne.chauffeur.matricule }}</p>
+          </td>
+          <td class="px-4 py-3">
+            <div class="flex flex-wrap gap-1">
+              <app-statut-chip
+                [label]="chauffeurDisponibiliteLabel(ligne.chauffeur.disponibilite)"
+                [tone]="chauffeurDisponibiliteTone(ligne.chauffeur.disponibilite)"
+              />
+              @if (ligne.chauffeur.statut !== "ACTIF") {
+              <app-statut-chip
+                [label]="chauffeurStatutLabel(ligne.chauffeur.statut)"
+                [tone]="chauffeurStatutTone(ligne.chauffeur.statut)"
+              />
+              }
+            </div>
+          </td>
+          <td class="px-4 py-3 font-mono text-xs text-ink">
+            {{ ligne.chauffeur.categoriesPermis.join(" · ") || "—" }}
+          </td>
+          <td class="px-4 py-3">
+            <div class="flex flex-wrap items-center gap-1">
+              @for (type of ligne.habilitationsCles; track type) {
+              <span class="rounded bg-amber/10 px-1.5 py-0.5 font-mono text-[0.65rem] text-amber">
+                {{ type === "ADR_BASE" ? "ADR" : "ADR citerne" }}
+              </span>
+              }
+              @if (ligne.alertes.length > 0) {
+              <span
+                [class]="
+                  ligne.alertes.some((a) => a.niveau === 'expire')
+                    ? 'text-xs text-brake'
+                    : 'text-xs text-amber'
+                "
+                [title]="ligne.alertes.map((a) => a.libelle).join(', ')"
+              >
+                ⚠ {{ ligne.alertes.length }} à renouveler
+              </span>
+              } @else if (ligne.habilitationsCles.length === 0) {
+              <span class="text-xs text-muted">—</span>
+              }
+            </div>
+          </td>
+          <td class="px-4 py-3 font-mono text-xs tabular-nums text-muted">
+            {{ formatSoldeConduite(ligne.chauffeur.soldeTempsConduiteMinutes) }}
+          </td>
+          <td class="px-4 py-3 text-right">
+            <a
+              [routerLink]="['/chauffeurs', ligne.chauffeur.id]"
+              class="list-row-action text-sm font-medium text-pine underline-offset-2 hover:underline"
+            >
+              Ouvrir
+            </a>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <app-list-pagination
+    [(page)]="page"
+    [pageSize]="pageSize()"
+    (pageSizeChange)="pageSize.set($event); page.set(0)"
+    [pageSizeOptions]="pageSizeOptions"
+    [totalElements]="chauffeurs.value().totalElements"
+    [totalPages]="chauffeurs.value().totalPages"
+    [visibleCount]="lignes().length"
+    itemLabel="chauffeur"
+  />
+  }
+</div>

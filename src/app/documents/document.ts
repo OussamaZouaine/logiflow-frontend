@@ -14,9 +14,52 @@ export const DOCUMENT_TYPES = [
   "ADR",
   "PHOTO",
   "JUSTIFICATIF_CARBURANT",
+  "PERMIS_CONDUIRE",
+  "CARTE_CONDUCTEUR",
+  "FIMO_FCO",
+  "VISITE_MEDICALE",
+  "PIECE_IDENTITE",
+  "PASSEPORT",
+  "VISA",
   "AUTRE",
 ] as const;
 export type DocumentType = (typeof DOCUMENT_TYPES)[number];
+
+/** Types proposés au téléversement selon l'entité (tous restent acceptés par l'API). */
+export const DOCUMENT_TYPES_PAR_ENTITE: Record<
+  TypeEntiteDocumentable,
+  readonly DocumentType[]
+> = {
+  CHAUFFEUR: [
+    "PERMIS_CONDUIRE",
+    "CARTE_CONDUCTEUR",
+    "FIMO_FCO",
+    "VISITE_MEDICALE",
+    "ADR",
+    "PIECE_IDENTITE",
+    "PASSEPORT",
+    "VISA",
+    "PHOTO",
+    "AUTRE",
+  ],
+  PRISE_CARBURANT: ["JUSTIFICATIF_CARBURANT", "PHOTO", "AUTRE"],
+  REMORQUE: [
+    "CARTE_GRISE",
+    "ASSURANCE",
+    "CONTROLE_TECHNIQUE",
+    "ADR",
+    "PHOTO",
+    "AUTRE",
+  ],
+  VEHICULE: [
+    "CARTE_GRISE",
+    "ASSURANCE",
+    "CONTROLE_TECHNIQUE",
+    "ADR",
+    "PHOTO",
+    "AUTRE",
+  ],
+};
 
 export interface Document {
   dateExpiration: string | null;
@@ -60,6 +103,20 @@ export function documentTypeLabel(type: DocumentType): string {
       return "Photo";
     case "JUSTIFICATIF_CARBURANT":
       return "Justificatif carburant";
+    case "PERMIS_CONDUIRE":
+      return "Permis de conduire";
+    case "CARTE_CONDUCTEUR":
+      return "Carte conducteur";
+    case "FIMO_FCO":
+      return "FIMO / FCO";
+    case "VISITE_MEDICALE":
+      return "Visite médicale";
+    case "PIECE_IDENTITE":
+      return "Pièce d'identité";
+    case "PASSEPORT":
+      return "Passeport";
+    case "VISA":
+      return "Visa";
     case "AUTRE":
       return "Autre";
     default: {

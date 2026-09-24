@@ -1,5 +1,6 @@
 import {
   CARBURANT_PRISES_ALLOWED_ROLES,
+  CHAUFFEURS_ALLOWED_ROLES,
   CLIENTS_ALLOWED_ROLES,
   DOSSIERS_ALLOWED_ROLES,
   MARCHANDISES_ALLOWED_ROLES,
@@ -14,6 +15,7 @@ export const WORK_DESTINATION_IDS = [
   "marchandises",
   "vehicules",
   "remorques",
+  "chauffeurs",
   "commandes",
   "dossiers",
   "voyages",
@@ -36,6 +38,26 @@ export interface WorkDestination {
 }
 
 export const WORK_DESTINATIONS: Record<WorkDestinationId, WorkDestination> = {
+  carburant: {
+    apiHint: "/api/v1/prises-carburant",
+    blurb: "Prises de carburant et stations.",
+    id: "carburant",
+    label: "Carburant",
+    live: true,
+    path: "carburant",
+    roles: CARBURANT_PRISES_ALLOWED_ROLES,
+    section: "Exploitation",
+  },
+  chauffeurs: {
+    apiHint: "/api/v1/chauffeurs",
+    blurb: "Chauffeurs, permis, habilitations, disponibilité.",
+    id: "chauffeurs",
+    label: "Chauffeurs",
+    live: true,
+    path: "chauffeurs",
+    roles: CHAUFFEURS_ALLOWED_ROLES,
+    section: "Flotte",
+  },
   clients: {
     apiHint: "/api/v1/clients",
     blurb: "Tiers donneurs d'ordre pour les commandes.",
@@ -86,6 +108,16 @@ export const WORK_DESTINATIONS: Record<WorkDestinationId, WorkDestination> = {
     roles: MARCHANDISES_ALLOWED_ROLES,
     section: "Référentiel",
   },
+  remorques: {
+    apiHint: "/api/v1/remorques",
+    blurb: "Semi-remorques, capacité, compteurs.",
+    id: "remorques",
+    label: "Remorques",
+    live: true,
+    path: "remorques",
+    roles: REMORQUES_ALLOWED_ROLES,
+    section: "Flotte",
+  },
   sites: {
     apiHint: "/api/v1/sites",
     blurb: "Quais de chargement et de déchargement.",
@@ -121,16 +153,6 @@ export const WORK_DESTINATIONS: Record<WorkDestinationId, WorkDestination> = {
     ],
     section: "Flotte",
   },
-  remorques: {
-    apiHint: "/api/v1/remorques",
-    blurb: "Semi-remorques, capacité, compteurs.",
-    id: "remorques",
-    label: "Remorques",
-    live: true,
-    path: "remorques",
-    roles: REMORQUES_ALLOWED_ROLES,
-    section: "Flotte",
-  },
   voyages: {
     apiHint: "/api/v1/voyages",
     blurb: "Exécution physique des dossiers.",
@@ -146,16 +168,6 @@ export const WORK_DESTINATIONS: Record<WorkDestinationId, WorkDestination> = {
     ],
     section: "Planning",
   },
-  carburant: {
-    apiHint: "/api/v1/prises-carburant",
-    blurb: "Prises de carburant et stations.",
-    id: "carburant",
-    label: "Carburant",
-    live: true,
-    path: "carburant",
-    roles: CARBURANT_PRISES_ALLOWED_ROLES,
-    section: "Exploitation",
-  },
 };
 
 export function workDestination(id: WorkDestinationId): WorkDestination {
@@ -169,4 +181,3 @@ export function destinationsForRoles(
     (destination) => roles.some((role) => destination.roles.includes(role))
   );
 }
-

@@ -30,8 +30,6 @@ export interface ApiEntityRelation {
   entity: ApiEntityId;
   /** Human label for UI sections */
   label: string;
-  /** Primary list/detail routes in the Angular app (when they exist) */
-  routes?: { list?: string; detail?: string; create?: string };
   /** Outgoing references declared on responses or create payloads */
   references: ReadonlyArray<{
     field: string;
@@ -39,6 +37,8 @@ export interface ApiEntityRelation {
     kind: "fk" | "via" | "derived";
     notes?: string;
   }>;
+  /** Primary list/detail routes in the Angular app (when they exist) */
+  routes?: { list?: string; detail?: string; create?: string };
 }
 
 /** Commercial → exploitation chain (Commande → Dossier → Voyage). */
@@ -51,85 +51,109 @@ export const API_ENTITY_GRAPH: readonly ApiEntityRelation[] = [
   {
     entity: "commande",
     label: "Commande",
-    routes: {
-      list: "/commandes",
-      detail: "/commandes/:id",
-      create: "/commandes/nouveau",
-    },
     references: [
-      { field: "clientId", target: "client", kind: "fk" },
-      { field: "lignes[].marchandiseId", target: "marchandise", kind: "fk" },
+      { field: "clientId", kind: "fk", target: "client" },
+      { field: "lignes[].marchandiseId", kind: "fk", target: "marchandise" },
     ],
+    routes: {
+      create: "/commandes/nouveau",
+      detail: "/commandes/:id",
+      list: "/commandes",
+    },
   },
   {
     entity: "dossier",
     label: "Dossier de transport",
-    routes: {
-      list: "/dossiers",
-      detail: "/dossiers/:id",
-      create: "/dossiers/nouveau",
-    },
     references: [
-      { field: "commandeId", target: "commande", kind: "fk" },
-      { field: "segments[].siteId", target: "site", kind: "fk" },
-      { field: "lignesMarchandise[].marchandiseId", target: "marchandise", kind: "fk" },
+      { field: "commandeId", kind: "fk", target: "commande" },
+      { field: "segments[].siteId", kind: "fk", target: "site" },
+      {
+        field: "lignesMarchandise[].marchandiseId",
+        kind: "fk",
+        target: "marchandise",
+      },
       {
         field: "statut PLANIFIE",
-        target: "voyage",
         kind: "derived",
         notes: "Set when attached to a voyage; revert on voyage ANNULE",
+        target: "voyage",
       },
     ],
+    routes: {
+      create: "/dossiers/nouveau",
+      detail: "/dossiers/:id",
+      list: "/dossiers",
+    },
   },
   {
     entity: "voyage",
     label: "Voyage",
-    routes: {
-      list: "/voyages",
-      detail: "/voyages/:id",
-      create: "/voyages/nouveau",
-    },
     references: [
-      { field: "dossierIds[]", target: "dossier", kind: "fk" },
-      { field: "vehiculeId", target: "vehicule", kind: "fk" },
-      { field: "remorqueId", target: "remorque", kind: "fk", notes: "optional" },
-      { field: "affectations[].chauffeurId", target: "chauffeur", kind: "fk" },
+      { field: "dossierIds[]", kind: "fk", target: "dossier" },
+      { field: "vehiculeId", kind: "fk", target: "vehicule" },
+      {
+        field: "remorqueId",
+        kind: "fk",
+        notes: "optional",
+        target: "remorque",
+      },
+      { field: "affectations[].chauffeurId", kind: "fk", target: "chauffeur" },
     ],
+    routes: {
+      create: "/voyages/nouveau",
+      detail: "/voyages/:id",
+      list: "/voyages",
+    },
   },
   {
     entity: "vehicule",
     label: "Véhicule",
-    routes: {
-      list: "/vehicules",
-      detail: "/vehicules/:id",
-    },
     references: [
       {
         field: "documents",
-        target: "document",
         kind: "via",
         notes: "GET /documents?typeEntite=VEHICULE&entiteId=",
+        target: "document",
       },
-      { field: "plans", target: "planEntretien", kind: "fk", notes: "vehiculeId" },
-      { field: "ordres", target: "ordreTravail", kind: "fk", notes: "vehiculeId" },
-      { field: "scores", target: "scoreSante", kind: "fk", notes: "vehiculeId" },
+      {
+        field: "plans",
+        kind: "fk",
+        notes: "vehiculeId",
+        target: "planEntretien",
+      },
+      {
+        field: "ordres",
+        kind: "fk",
+        notes: "vehiculeId",
+        target: "ordreTravail",
+      },
+      {
+        field: "scores",
+        kind: "fk",
+        notes: "vehiculeId",
+        target: "scoreSante",
+      },
     ],
+    routes: {
+      detail: "/vehicules/:id",
+      list: "/vehicules",
+    },
   },
   {
     entity: "remorque",
     label: "Remorque",
-    routes: {
-      list: "/remorques",
-      detail: "/remorques/:id",
-    },
     references: [
       {
         field: "documents",
-        target: "document",
         kind: "via",
         notes: "GET /documents?typeEntite=REMORQUE&entiteId=",
+        target: "document",
       },
     ],
+    routes: {
+      detail: "/remorques/:id",
+      list: "/remorques",
+    },
   },
   {
     entity: "chauffeur",
@@ -137,73 +161,78 @@ export const API_ENTITY_GRAPH: readonly ApiEntityRelation[] = [
     references: [
       {
         field: "documents",
-        target: "document",
         kind: "via",
         notes: "GET /documents?typeEntite=CHAUFFEUR&entiteId=",
+        target: "document",
       },
       {
         field: "affectations",
-        target: "voyage",
         kind: "fk",
-        notes: "Embedded on VoyageResponse; no /chauffeurs module in v1 UI",
+        notes: "Embedded on VoyageResponse (TITULAIRE + RENFORT)",
+        target: "voyage",
       },
     ],
+    routes: {
+      create: "/chauffeurs/nouveau",
+      detail: "/chauffeurs/:id",
+      list: "/chauffeurs",
+    },
   },
   {
     entity: "site",
     label: "Site",
-    routes: { list: "/sites", detail: "/sites/:id" },
     references: [
-      { field: "clientId", target: "client", kind: "fk", notes: "optional" },
+      { field: "clientId", kind: "fk", notes: "optional", target: "client" },
     ],
+    routes: { detail: "/sites/:id", list: "/sites" },
   },
   {
     entity: "marchandise",
     label: "Marchandise",
-    routes: {
-      list: "/marchandises",
-      detail: "/marchandises/:id",
-    },
     references: [],
+    routes: {
+      detail: "/marchandises/:id",
+      list: "/marchandises",
+    },
   },
   {
     entity: "planEntretien",
     label: "Plan d'entretien",
-    routes: {
-      list: "/maintenance/plans",
-      detail: "/maintenance/plans/:id",
-      create: "/maintenance/plans/nouveau",
-    },
     references: [
-      { field: "vehiculeId", target: "vehicule", kind: "fk" },
+      { field: "vehiculeId", kind: "fk", target: "vehicule" },
       {
         field: "ordreTravail",
-        target: "ordreTravail",
         kind: "derived",
         notes: "Not linked in API — schedule vs execution are separate",
+        target: "ordreTravail",
       },
     ],
+    routes: {
+      create: "/maintenance/plans/nouveau",
+      detail: "/maintenance/plans/:id",
+      list: "/maintenance/plans",
+    },
   },
   {
     entity: "ordreTravail",
     label: "Ordre de travail",
+    references: [{ field: "vehiculeId", kind: "fk", target: "vehicule" }],
     routes: {
-      list: "/maintenance",
-      detail: "/maintenance/:id",
       create: "/maintenance/nouveau",
+      detail: "/maintenance/:id",
+      list: "/maintenance",
     },
-    references: [{ field: "vehiculeId", target: "vehicule", kind: "fk" }],
   },
   {
     entity: "scoreSante",
     label: "Score de santé",
     references: [
-      { field: "vehiculeId", target: "vehicule", kind: "fk" },
+      { field: "vehiculeId", kind: "fk", target: "vehicule" },
       {
         field: "statut",
-        target: "vehicule",
         kind: "derived",
         notes: "StatutSante derived from score + kmAvantEcheance on POST",
+        target: "vehicule",
       },
     ],
   },
@@ -213,16 +242,14 @@ export const API_ENTITY_GRAPH: readonly ApiEntityRelation[] = [
     references: [
       {
         field: "typeEntite + entiteId",
-        target: "vehicule",
         kind: "via",
         notes: "Also REMORQUE, CHAUFFEUR",
+        target: "vehicule",
       },
     ],
   },
 ] as const;
 
-export function entityRelation(
-  id: ApiEntityId
-): ApiEntityRelation | undefined {
+export function entityRelation(id: ApiEntityId): ApiEntityRelation | undefined {
   return API_ENTITY_GRAPH.find((entry) => entry.entity === id);
 }
