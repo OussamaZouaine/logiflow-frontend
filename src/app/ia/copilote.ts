@@ -46,6 +46,8 @@ export type EvenementCopilote =
   | { nom: "sources"; donnees: { sources: SourceCopilote[] } }
   | { nom: "titre"; donnees: { titre: string } }
   | { nom: "fin"; donnees: { messageId: string } }
+  /** Battement pendant que le LLM réfléchit (garde la connexion ouverte). */
+  | { nom: "attente"; donnees: Record<string, never> }
   | { nom: "erreur"; donnees: { code: string; message: string } };
 
 export const COPILOTE_QUESTION_MAX_LENGTH = 2000;
