@@ -880,3 +880,171 @@
   font-weight: 600;
   background: var(--color-canvas);
 }
+
+/* Copilote — messages du fil (déplacés du composant : budget CSS par composant). */
+.copilote-ligne {
+  display: flex;
+  gap: 0.625rem;
+}
+
+.copilote-ligne--user {
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.copilote-avatar {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  font-size: 0.8125rem;
+  color: var(--color-pine);
+  background: color-mix(in oklch, var(--color-pine) 12%, transparent);
+  border-radius: 999px;
+}
+
+.copilote-bulle {
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid color-mix(in oklch, var(--color-line) 80%, transparent);
+  border-radius: 0.25rem var(--radius-lg) var(--radius-lg) var(--radius-lg);
+}
+
+.copilote-bulle--user {
+  max-width: 85%;
+  color: var(--color-surface);
+  background: var(--color-pine);
+  border-color: transparent;
+  border-radius: var(--radius-lg) 0.25rem var(--radius-lg) var(--radius-lg);
+}
+
+.copilote-meta {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding-inline: 0.25rem;
+  margin-top: 0.25rem;
+  font-size: 0.6875rem;
+  color: var(--color-muted);
+}
+
+.copilote-envoi-statut {
+  display: inline-flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.copilote-points {
+  display: inline-flex;
+  gap: 0.1875rem;
+}
+
+.copilote-points span {
+  width: 0.375rem;
+  height: 0.375rem;
+  background: var(--color-pine);
+  border-radius: 999px;
+  animation: copilote-rebond 1.2s ease-in-out infinite;
+}
+
+.copilote-points span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.copilote-points span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes copilote-rebond {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-0.1875rem);
+  }
+}
+
+.copilote-outil {
+  display: inline-flex;
+  gap: 0.25rem;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.6875rem;
+  color: var(--color-pine);
+  background: color-mix(in oklch, var(--color-pine) 8%, transparent);
+  border-radius: 999px;
+}
+
+.copilote-outil--erreur {
+  color: var(--color-amber);
+  background: color-mix(in oklch, var(--color-amber) 10%, transparent);
+}
+
+.copilote-erreur-message {
+  display: flex;
+  gap: 0.375rem;
+  align-items: flex-start;
+  margin-top: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--color-brake);
+}
+
+.copilote-source {
+  display: inline-flex;
+  padding: 0.125rem 0.5rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.6875rem;
+  color: var(--color-ink);
+  background: var(--color-canvas);
+  border: 1px solid color-mix(in oklch, var(--color-line) 90%, transparent);
+  border-radius: var(--radius-md);
+}
+
+a.copilote-source:hover,
+a.copilote-source:focus-visible {
+  color: var(--color-pine);
+  border-color: color-mix(in oklch, var(--color-pine) 40%, var(--color-line));
+}
+
+.copilote-avis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--color-muted);
+  border-radius: var(--radius-md);
+}
+
+.copilote-avis[aria-pressed="true"] {
+  color: var(--color-pine);
+  background: color-mix(in oklch, var(--color-pine) 12%, transparent);
+}
+
+.copilote-mini {
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 0.25rem;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+}
+
+.copilote-mini--danger {
+  color: var(--color-surface);
+  background: var(--color-brake);
+  border-color: transparent;
+}

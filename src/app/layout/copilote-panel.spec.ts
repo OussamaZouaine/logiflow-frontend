@@ -5,13 +5,39 @@ import {
 } from "@angular/common/http/testing";
 import { TestBed } from "@angular/core/testing";
 import { provideRouter } from "@angular/router";
-import { CopiloteStore } from "../ia/copilote-store";
+import type { EtatCopilote } from "../ia/copilote";
+import { CopiloteStore, type MessageVue } from "../ia/copilote-store";
+import { CopiloteBouton } from "./copilote-bouton";
 import { CopilotePanel } from "./copilote-panel";
+
+const ETAT_OK: EtatCopilote = {
+  base: "UP",
+  fournisseur: "api.groq.com",
+  llm: "UP",
+  modele: "llama-3.3-70b-versatile",
+  operationnel: true,
+  serviceIa: true,
+};
+
+function message(partiel: Partial<MessageVue>): MessageVue {
+  return {
+    contenu: "",
+    creeLe: "2026-09-23T10:00:00Z",
+    erreur: null,
+    id: "x",
+    note: null,
+    outils: [],
+    role: "assistant",
+    sources: [],
+    statut: "complet",
+    ...partiel,
+  };
+}
 
 describe("CopilotePanel", () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CopilotePanel],
+      imports: [CopilotePanel, CopiloteBouton],
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
@@ -20,12 +46,14 @@ describe("CopilotePanel", () => {
     }).compileComponents();
   });
 
-  function ouvrir() {
+  async function ouvrir(etat: EtatCopilote = ETAT_OK) {
+    const bouton = TestBed.createComponent(CopiloteBouton);
     const fixture = TestBed.createComponent(CopilotePanel);
+    bouton.detectChanges();
     fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    compiled.querySelector("button")?.click();
+    (bouton.nativeElement as HTMLElement).querySelector("button")?.click();
     fixture.detectChanges();
+
     const http = TestBed.inject(HttpTestingController);
     http.expectOne("/api/v1/ia/copilote/conversations").flush([
       {
@@ -35,42 +63,49 @@ describe("CopilotePanel", () => {
         titre: "Consommation carburant",
       },
     ]);
+    http.expectOne("/api/v1/ia/copilote/etat").flush(etat);
+    await fixture.whenStable();
     fixture.detectChanges();
-    return { compiled, fixture, http };
+    return { compiled: fixture.nativeElement as HTMLElement, fixture, http };
   }
 
-  it("opens the side panel with suggestions", () => {
-    const { compiled, http } = ouvrir();
+  it("opens as a right-side panel with history, suggestions and service status", async () => {
+    const { compiled, http } = await ouvrir();
 
-    expect(compiled.querySelector('[role="dialog"]')).not.toBeNull();
+    expect(compiled.querySelector("aside.copilote-panneau")).not.toBeNull();
+    expect(
+      compiled.querySelector(".copilote-historique")?.textContent
+    ).toContain("Consommation carburant");
     expect(compiled.textContent).toContain("Quels voyages sont en cours ?");
+    expect(compiled.querySelector(".copilote-etat--ok")?.textContent).toContain(
+      "En ligne"
+    );
+    expect(compiled.querySelector(".copilote-bandeau")).toBeNull();
     http.verify();
   });
 
-  it("lists past conversations in the history view", async () => {
-    const { compiled, fixture, http } = ouvrir();
-    await fixture.whenStable();
+  it("warns when the LLM API key is rejected", async () => {
+    const { compiled } = await ouvrir({
+      ...ETAT_OK,
+      llm: "CLE_INVALIDE",
+      operationnel: false,
+    });
 
-    (
-      compiled.querySelector(
-        'button[aria-label="Historique des conversations"]'
-      ) as HTMLButtonElement
-    ).click();
-    fixture.detectChanges();
-
-    expect(compiled.textContent).toContain("Consommation carburant");
-    http.verify();
+    expect(
+      compiled.querySelector(".copilote-etat--hors_ligne")?.textContent
+    ).toContain("Clé API invalide");
+    expect(compiled.querySelector(".copilote-bandeau")?.textContent).toContain(
+      "LLM_API_KEY"
+    );
   });
 
-  it("renders assistant markdown safely with source links", () => {
-    const { compiled, fixture } = ouvrir();
-    const store = TestBed.inject(CopiloteStore);
-    store.messages.set([
-      {
+  it("shows send status on user messages and renders answers safely", async () => {
+    const { compiled, fixture } = await ouvrir();
+    TestBed.inject(CopiloteStore).messages.set([
+      message({ contenu: "Question 1", id: "u1", role: "user" }),
+      message({
         contenu: "**VOY-1** <script>alert(1)</script>",
-        erreur: null,
         id: "m1",
-        note: null,
         outils: [
           {
             libelle: "Recherche des voyages",
@@ -78,30 +113,39 @@ describe("CopilotePanel", () => {
             statut: "fin",
           },
         ],
-        role: "assistant",
         sources: [{ id: "v1", reference: "VOY-1", type: "VOYAGE" }],
-        statut: "complet",
-      },
+      }),
+      message({
+        contenu: "Question 2",
+        id: "u2",
+        role: "user",
+        statut: "erreur",
+      }),
     ]);
     fixture.detectChanges();
 
+    const statuts = [
+      ...compiled.querySelectorAll(".copilote-envoi-statut"),
+    ].map((e) => e.textContent?.trim());
+    expect(statuts).toEqual(["Envoyé", "Non envoyé"]);
     const markdown = compiled.querySelector(".copilote-markdown");
     expect(markdown?.querySelector("strong")?.textContent).toBe("VOY-1");
     expect(markdown?.querySelector("script")).toBeNull();
-    expect(compiled.textContent).toContain("Recherche des voyages");
-    const lien = compiled.querySelector("a.copilote-source");
-    expect(lien?.getAttribute("href")).toBe("/voyages/v1");
+    expect(
+      compiled.querySelector("a.copilote-source")?.getAttribute("href")
+    ).toBe("/voyages/v1");
     expect(
       compiled.querySelector('button[aria-label="Réponse utile"]')
     ).not.toBeNull();
   });
 
-  it("closes on Escape", () => {
-    const { compiled, fixture } = ouvrir();
+  it("closes on Escape", async () => {
+    const { compiled, fixture } = await ouvrir();
 
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     fixture.detectChanges();
 
-    expect(compiled.querySelector('[role="dialog"]')).toBeNull();
+    expect(compiled.querySelector("aside")).toBeNull();
+    expect(TestBed.inject(CopiloteStore).ouvert()).toBe(false);
   });
 });

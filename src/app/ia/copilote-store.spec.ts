@@ -74,7 +74,10 @@ describe("CopiloteStore", () => {
       "Quels voyages sont en cours ?",
     ]);
     const [question, reponse] = store.messages();
-    expect(question?.contenu).toBe("Quels voyages sont en cours ?");
+    expect(question).toMatchObject({
+      contenu: "Quels voyages sont en cours ?",
+      statut: "complet",
+    });
     expect(reponse).toMatchObject({
       contenu: "VOY-1 est en cours.",
       id: "m1",
@@ -125,6 +128,22 @@ describe("CopiloteStore", () => {
       erreur: "Le copilote est momentanément indisponible.",
       statut: "erreur",
     });
+    // La question n'a jamais atteint le service IA : échec d'envoi.
+    expect(store.messages()[0]?.statut).toBe("erreur");
+  });
+
+  it("reports an unreachable backend as an offline service", async () => {
+    const { api, store } = configurer(() => Promise.resolve());
+    Object.assign(api, {
+      etat: vi.fn().mockRejectedValue(new Error("réseau")),
+    });
+
+    await store.verifierEtat();
+
+    expect(store.etat()).toMatchObject({
+      backendJoignable: false,
+      operationnel: false,
+    });
   });
 
   it("reverts a rating when the server rejects it", async () => {
@@ -132,6 +151,7 @@ describe("CopiloteStore", () => {
     store.messages.set([
       {
         contenu: "x",
+        creeLe: "2026-09-23T10:00:00Z",
         erreur: null,
         id: "m1",
         note: null,

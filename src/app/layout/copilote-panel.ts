@@ -8,15 +8,21 @@ import {
   inject,
   type OnDestroy,
   signal,
+  untracked,
   viewChild,
 } from "@angular/core";
 import { RouterLink } from "@angular/router";
 import { NgIcon, provideIcons } from "@ng-icons/core";
 import {
-  lucideHistory,
+  lucideCheck,
+  lucideCircleAlert,
+  lucideClock,
   lucideLoaderCircle,
+  lucideMessageSquare,
+  lucidePanelLeft,
   lucidePencil,
   lucidePlus,
+  lucideRefreshCw,
   lucideSend,
   lucideSparkles,
   lucideSquare,
@@ -27,10 +33,14 @@ import {
   lucideX,
 } from "@ng-icons/lucide";
 import {
+  afficherEtat,
   COPILOTE_QUESTION_MAX_LENGTH,
   COPILOTE_SUGGESTIONS,
   type ConversationCopilote,
   canSubmitCopiloteQuestion,
+  formatDateRelative,
+  formatDuree,
+  formatHeure,
   libelleTypeSource,
   routeSource,
 } from "../ia/copilote";
@@ -42,11 +52,14 @@ import {
   pushOverlay,
 } from "../shared/core/overlay/overlay-stack";
 
-type Vue = "chat" | "historique";
+/** Rafraîchissement de la pastille d'état tant que le panneau est ouvert. */
+const INTERVALLE_ETAT_MS = 30_000;
+const INTERVALLE_HORLOGE_MS = 1000;
 
 /**
- * Bouton « Copilote » du header + panneau latéral de chat. Non modal : on peut
- * naviguer dans l'application (liens des sources) en gardant la conversation ouverte.
+ * Panneau latéral droit du copilote, rendu à la racine du shell : historique des
+ * conversations à gauche, fil de messages à droite, état du moteur IA en tête.
+ * Non modal : on peut naviguer dans l'application (liens des sources) en le gardant ouvert.
  */
 @Component({
   host: {
@@ -55,10 +68,15 @@ type Vue = "chat" | "historique";
   imports: [NgIcon, RouterLink],
   providers: [
     provideIcons({
-      lucideHistory,
+      lucideCheck,
+      lucideCircleAlert,
+      lucideClock,
       lucideLoaderCircle,
+      lucideMessageSquare,
+      lucidePanelLeft,
       lucidePencil,
       lucidePlus,
+      lucideRefreshCw,
       lucideSend,
       lucideSparkles,
       lucideSquare,
@@ -79,8 +97,6 @@ export class CopilotePanel implements OnDestroy {
   /** Référence d'identité pour la pile d'overlays (Escape ferme le plus haut). */
   private readonly overlayRef = {};
 
-  private readonly declencheur =
-    viewChild<ElementRef<HTMLButtonElement>>("declencheur");
   private readonly saisie =
     viewChild<ElementRef<HTMLTextAreaElement>>("saisie");
   private readonly fil = viewChild<ElementRef<HTMLElement>>("fil");
@@ -89,24 +105,69 @@ export class CopilotePanel implements OnDestroy {
   protected readonly suggestions = COPILOTE_SUGGESTIONS;
   protected readonly routeSource = routeSource;
   protected readonly libelleTypeSource = libelleTypeSource;
+  protected readonly formatHeure = formatHeure;
 
-  protected readonly open = signal(false);
-  protected readonly vue = signal<Vue>("chat");
   protected readonly question = signal("");
+  /** Colonne historique visible sur petit écran (toujours visible en large). */
+  protected readonly historiqueMobile = signal(false);
   protected readonly renommageId = signal<string | null>(null);
   protected readonly suppressionId = signal<string | null>(null);
+  protected readonly maintenant = signal(Date.now());
 
+  protected readonly etat = computed(() => afficherEtat(this.store.etat()));
   protected readonly peutEnvoyer = computed(
     () => canSubmitCopiloteQuestion(this.question()) && !this.store.enCours()
   );
   protected readonly titre = computed(
     () => this.store.conversationActive()?.titre ?? "Nouvelle conversation"
   );
+  protected readonly dureeReponse = computed(() => {
+    const debut = this.store.debutReponse();
+    return debut === null ? "" : formatDuree(this.maintenant() - debut);
+  });
 
   /** Rendu Markdown mémoïsé par contenu (les tokens arrivent un à un). */
   private readonly cacheMarkdown = new Map<string, string>();
 
   constructor() {
+    // Ouverture / fermeture : pile d'Escape, historique, état, focus.
+    effect((onCleanup) => {
+      if (!this.store.ouvert()) {
+        return;
+      }
+      pushOverlay(this.overlayRef);
+      // untracked : seul `ouvert` doit relancer cet effet (sinon l'arrivée de
+      // l'historique redéclenche une vérification et un second minuteur).
+      untracked(() => {
+        if (!this.store.conversationsChargees()) {
+          this.store.chargerConversations();
+        }
+        this.store.verifierEtat();
+      });
+      const minuterie = setInterval(
+        () => this.store.verifierEtat(),
+        INTERVALLE_ETAT_MS
+      );
+      this.focaliserSaisie();
+      onCleanup(() => {
+        clearInterval(minuterie);
+        popOverlay(this.overlayRef);
+      });
+    });
+
+    // Chronomètre « Réflexion… 45 s » pendant une réponse.
+    effect((onCleanup) => {
+      if (!this.store.enCours()) {
+        return;
+      }
+      this.maintenant.set(Date.now());
+      const horloge = setInterval(
+        () => this.maintenant.set(Date.now()),
+        INTERVALLE_HORLOGE_MS
+      );
+      onCleanup(() => clearInterval(horloge));
+    });
+
     // Suit le flux : défile vers le bas à chaque nouveau token.
     effect(() => {
       this.store.messages();
@@ -127,6 +188,10 @@ export class CopilotePanel implements OnDestroy {
     this.store.arreter();
   }
 
+  protected dateRelative(conversation: ConversationCopilote): string {
+    return formatDateRelative(conversation.modifieLe, this.maintenant());
+  }
+
   protected html(contenu: string): string {
     let rendu = this.cacheMarkdown.get(contenu);
     if (rendu === undefined) {
@@ -139,36 +204,25 @@ export class CopilotePanel implements OnDestroy {
     return rendu;
   }
 
-  protected toggle(): void {
-    if (this.open()) {
-      this.fermer();
-    } else {
-      this.ouvrir();
-    }
-  }
-
-  protected ouvrir(): void {
-    this.open.set(true);
-    pushOverlay(this.overlayRef);
-    this.store.chargerConversations();
-    this.focaliserSaisie();
-  }
-
   protected fermer(): void {
-    this.open.set(false);
-    popOverlay(this.overlayRef);
+    this.store.fermer();
     this.renommageId.set(null);
     this.suppressionId.set(null);
-    this.declencheur()?.nativeElement.focus();
+    document.getElementById("app-copilote-bouton")?.focus();
   }
 
   protected onEscape(event: Event): void {
-    if (!(this.open() && isTopmostOverlay(this.overlayRef))) {
+    if (!(this.store.ouvert() && isTopmostOverlay(this.overlayRef))) {
       return;
     }
     event.preventDefault();
-    if (this.vue() === "historique") {
-      this.vue.set("chat");
+    if (this.renommageId() || this.suppressionId()) {
+      this.renommageId.set(null);
+      this.suppressionId.set(null);
+      return;
+    }
+    if (this.historiqueMobile()) {
+      this.historiqueMobile.set(false);
       return;
     }
     this.fermer();
@@ -211,22 +265,19 @@ export class CopilotePanel implements OnDestroy {
 
   protected nouvelle(): void {
     this.store.nouvelle();
-    this.vue.set("chat");
+    this.historiqueMobile.set(false);
     this.focaliserSaisie();
   }
 
   protected async ouvrirConversation(
     conversation: ConversationCopilote
   ): Promise<void> {
-    this.vue.set("chat");
+    this.historiqueMobile.set(false);
+    if (conversation.id === this.store.conversationActiveId()) {
+      return;
+    }
     await this.store.ouvrir(conversation.id);
     this.focaliserSaisie();
-  }
-
-  protected basculerHistorique(): void {
-    this.vue.update((vue) => (vue === "chat" ? "historique" : "chat"));
-    this.renommageId.set(null);
-    this.suppressionId.set(null);
   }
 
   protected async validerRenommage(id: string, event: Event): Promise<void> {

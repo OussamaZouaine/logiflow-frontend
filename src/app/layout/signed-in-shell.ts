@@ -38,12 +38,6 @@ import { filter } from "rxjs";
 import { DemoSessionService } from "../core/auth/demo-session";
 import { roleLabel } from "../core/auth/role";
 import { DESTINATION_NAV_ICON, TABLEAU_NAV_ICON } from "../core/nav/nav-icon";
-import { apercuToneClass, apercuToneOnFillClass } from "../tableau/apercu";
-import {
-  FILE_DU_JOUR_SECTION_ID,
-  fileDuJourBadgeLabel,
-} from "../tableau/file-du-jour";
-import { FileDuJourStore } from "../tableau/file-du-jour-store";
 import { PaletteEntitySearchStore } from "../core/nav/palette-entity-search-store";
 import {
   filterPaletteItems,
@@ -55,6 +49,13 @@ import {
   type WorkDestinationId,
 } from "../core/nav/work-destination";
 import { ToastHost } from "../shared/ui/toast";
+import { apercuToneClass, apercuToneOnFillClass } from "../tableau/apercu";
+import {
+  FILE_DU_JOUR_SECTION_ID,
+  fileDuJourBadgeLabel,
+} from "../tableau/file-du-jour";
+import { FileDuJourStore } from "../tableau/file-du-jour-store";
+import { CopiloteBouton } from "./copilote-bouton";
 import { CopilotePanel } from "./copilote-panel";
 
 @Component({
@@ -65,6 +66,7 @@ import { CopilotePanel } from "./copilote-panel";
     RouterLinkActive,
     RouterOutlet,
     ToastHost,
+    CopiloteBouton,
     CopilotePanel,
   ],
   providers: [

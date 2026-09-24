@@ -2,6 +2,7 @@ import { computed, inject, Service, signal } from "@angular/core";
 import { httpErrorMessage } from "../core/api/http-error";
 import type {
   ConversationCopilote,
+  EtatCopilote,
   EvenementCopilote,
   MessageCopilote,
   SourceCopilote,
@@ -16,9 +17,14 @@ export interface OutilVue {
   statut: StatutOutil;
 }
 
-/** Message tel qu'affiché : enrichi de l'état du flux (outils, erreur, avis). */
+/**
+ * Message tel qu'affiché : enrichi de l'état du flux (outils, erreur, avis).
+ * Pour un message utilisateur, `statut` est son statut d'envoi : `en_cours`
+ * (envoi…), `complet` (reçu par le copilote) ou `erreur` (échec d'envoi).
+ */
 export interface MessageVue {
   contenu: string;
+  creeLe: string;
   erreur: string | null;
   id: string;
   note: -1 | 1 | null;
@@ -37,6 +43,7 @@ function idTemporaire(prefixe: string): string {
 function versVue(message: MessageCopilote): MessageVue {
   return {
     contenu: message.contenu,
+    creeLe: message.creeLe,
     erreur: null,
     id: message.id,
     note: null,
@@ -48,19 +55,24 @@ function versVue(message: MessageCopilote): MessageVue {
 }
 
 /**
- * État du copilote (signals), partagé par le panneau : liste des conversations,
- * conversation ouverte, messages et flux de réponse en cours.
+ * État du copilote (signals), partagé par le bouton du header et le panneau :
+ * ouverture, disponibilité du service, conversations, messages et flux en cours.
  */
 @Service()
 export class CopiloteStore {
   private readonly api = inject(CopiloteApi);
   private controleur: AbortController | null = null;
 
+  readonly ouvert = signal(false);
+  readonly etat = signal<EtatCopilote | null>(null);
   readonly conversations = signal<ConversationCopilote[]>([]);
+  readonly conversationsChargees = signal(false);
   readonly conversationActiveId = signal<string | null>(null);
   readonly messages = signal<MessageVue[]>([]);
   readonly chargement = signal(false);
   readonly enCours = signal(false);
+  /** Horodatage (ms) du début de la réponse en cours, pour le chronomètre. */
+  readonly debutReponse = signal<number | null>(null);
   readonly erreur = signal<string | null>(null);
 
   readonly conversationActive = computed(
@@ -69,11 +81,37 @@ export class CopiloteStore {
       null
   );
 
+  basculer(): void {
+    this.ouvert.update((ouvert) => !ouvert);
+  }
+
+  fermer(): void {
+    this.ouvert.set(false);
+  }
+
+  async verifierEtat(): Promise<void> {
+    try {
+      this.etat.set(await this.api.etat());
+    } catch {
+      // L'appel à Spring lui-même a échoué : distinct d'un service IA hors ligne.
+      this.etat.set({
+        backendJoignable: false,
+        base: "INCONNU",
+        llm: "INCONNU",
+        modele: null,
+        operationnel: false,
+        serviceIa: false,
+      });
+    }
+  }
+
   async chargerConversations(): Promise<void> {
     try {
       this.conversations.set(await this.api.listerConversations());
     } catch (error) {
       this.erreur.set(httpErrorMessage(error));
+    } finally {
+      this.conversationsChargees.set(true);
     }
   }
 
@@ -110,22 +148,27 @@ export class CopiloteStore {
     }
     this.erreur.set(null);
     this.enCours.set(true);
+    const maintenant = new Date();
+    this.debutReponse.set(maintenant.getTime());
 
+    const questionId = idTemporaire("user");
     const reponseId = idTemporaire("assistant");
     this.messages.update((messages) => [
       ...messages,
       {
         contenu: texte,
+        creeLe: maintenant.toISOString(),
         erreur: null,
-        id: idTemporaire("user"),
+        id: questionId,
         note: null,
         outils: [],
         role: "user",
         sources: [],
-        statut: "complet",
+        statut: "en_cours",
       },
       {
         contenu: "",
+        creeLe: maintenant.toISOString(),
         erreur: null,
         id: reponseId,
         note: null,
@@ -145,6 +188,10 @@ export class CopiloteStore {
         conversationId,
         texte,
         (evenement) => {
+          if (evenement.nom === "meta") {
+            // Le service IA a enregistré la question : elle est « envoyée ».
+            this.modifier(questionId, (m) => ({ ...m, statut: "complet" }));
+          }
           idCourant = this.appliquer(idCourant, evenement);
         },
         controleur.signal
@@ -163,9 +210,15 @@ export class CopiloteStore {
           statut: "erreur",
         }));
       }
+      // Question jamais parvenue au service IA : échec d'envoi.
+      this.modifier(questionId, (m) =>
+        m.statut === "en_cours" ? { ...m, statut: "erreur" } : m
+      );
     } finally {
       this.controleur = null;
       this.enCours.set(false);
+      this.debutReponse.set(null);
+      this.toucherConversationActive();
     }
   }
 
@@ -221,6 +274,25 @@ export class CopiloteStore {
     this.conversations.update((liste) => [conversation, ...liste]);
     this.conversationActiveId.set(conversation.id);
     return conversation.id;
+  }
+
+  /** Remonte la conversation active en tête de l'historique (dernière activité). */
+  private toucherConversationActive(): void {
+    const id = this.conversationActiveId();
+    if (!id) {
+      return;
+    }
+    const maintenant = new Date().toISOString();
+    this.conversations.update((liste) => {
+      const active = liste.find((c) => c.id === id);
+      if (!active) {
+        return liste;
+      }
+      return [
+        { ...active, modifieLe: maintenant },
+        ...liste.filter((c) => c.id !== id),
+      ];
+    });
   }
 
   /** Applique un événement du flux ; renvoie l'identifiant (définitif) du message. */

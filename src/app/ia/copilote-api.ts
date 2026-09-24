@@ -5,6 +5,7 @@ import { environment } from "../../environments/environment";
 import type {
   ConversationCopilote,
   ConversationCopiloteDetail,
+  EtatCopilote,
   EvenementCopilote,
 } from "./copilote";
 import { decoderEvenement, ParseurSse } from "./copilote-sse";
@@ -32,6 +33,10 @@ const MESSAGE_INDISPONIBLE =
 export class CopiloteApi {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiBaseUrl}/ia/copilote`;
+
+  etat(): Promise<EtatCopilote> {
+    return firstValueFrom(this.http.get<EtatCopilote>(`${this.baseUrl}/etat`));
+  }
 
   listerConversations(): Promise<ConversationCopilote[]> {
     return firstValueFrom(
