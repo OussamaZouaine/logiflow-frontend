@@ -3,127 +3,27 @@
     [description]="pageDescription()"
     icon="lucideLayoutDashboard"
     title="Tableau de bord"
-  />
-
-  @if (showFileDuJourJump()) {
-  <div class="flex -mt-2 sm:justify-end">
-    <a class="btn-toolbar pressable max-sm:w-full" href="#file-du-jour">
+  >
+    @if (showFileDuJourJump()) {
+    <a
+      class="btn-toolbar pressable shrink-0"
+      href="#file-du-jour"
+      innerPageHeaderActions
+    >
       <ng-icon aria-hidden="true" class="btn-toolbar__icon" name="lucideInbox" />
       <span>File du jour</span>
       <span class="tabular-nums text-muted"
         >({{ fileDuJourSummary().totalCount }})</span
       >
     </a>
-  </div>
-  }
-
-  <section
-    aria-label="File du jour"
-    class="scroll-mt-24"
-    id="file-du-jour"
-  >
-    <div class="file-inbox surface-panel">
-      <header class="file-inbox__head">
-        <div class="file-inbox__intro">
-          <h2 class="text-sm font-semibold tracking-tight text-ink">
-            File du jour
-          </h2>
-          <p class="mt-1 text-sm text-muted">
-            Exceptions et prochaines actions pour ce rôle.
-          </p>
-        </div>
-
-        @if (!fileDuJourLoading() && fileDuJour().length > 0) {
-        <p
-          [attr.aria-label]="fileDuJourSummaryAriaLabel()"
-          class="file-inbox__summary"
-        >
-          <span class="file-inbox__total tabular-nums">
-            {{ fileDuJourSummary().totalCount }}
-            {{ fileDuJourSummary().totalCount === 1 ? "élément" : "éléments" }}
-          </span>
-          @for (toneCount of fileDuJourToneCounts(); track toneCount.tone) {
-          <app-statut-chip
-            [label]="fileDuJourToneChipLabel(toneCount.count, toneCount.label)"
-            [tone]="toneCount.tone"
-            class="tabular-nums"
-          />
-          }
-        </p>
-        }
-      </header>
-
-      <div class="file-inbox__body">
-        @if (fileDuJourLoading()) {
-        <ul
-          aria-label="Chargement de la file du jour"
-          class="file-inbox-skeleton"
-          role="status"
-        >
-          @for (row of fileInboxSkeletonRows; track row) {
-          <li class="file-inbox-skeleton__row">
-            <span class="file-inbox-skeleton__block file-inbox-skeleton__icon"></span>
-            <span class="file-inbox-skeleton__block file-inbox-skeleton__count"></span>
-            <span class="file-inbox-skeleton__lines">
-              <span class="file-inbox-skeleton__block file-inbox-skeleton__title"></span>
-              <span class="file-inbox-skeleton__block file-inbox-skeleton__detail"></span>
-            </span>
-          </li>
-          }
-        </ul>
-        } @else if (fileDuJour().length === 0) {
-        <p class="tableau-empty" role="status">
-          Rien à traiter pour le moment. L’Aperçu ci-dessous reste disponible.
-        </p>
-        } @else {
-        @for (tier of fileDuJourTiers(); track tier.tone) {
-        <div class="file-tier">
-          <app-statut-chip
-            [label]="tier.label"
-            [tone]="tier.tone"
-            class="mb-2 block w-fit"
-          />
-          <ul
-            [class.file-tier__list--compact]="tier.compact"
-            class="file-tier__list"
-          >
-            @for (item of tier.items; track item.id) {
-            <li>
-              <a
-                [class]="
-                  'file-item pressable border-l-4 ' +
-                  apercuToneBorderClass(item.tone)
-                "
-                [routerLink]="item.path"
-              >
-                <ng-icon
-                  [name]="fileDuJourIcon(item.path)"
-                  class="file-item__icon"
-                />
-                <span class="file-item__count tabular-nums">
-                  {{ item.count }}
-                </span>
-                <span class="file-item__body">
-                  <span class="file-item__title">{{ item.title }}</span>
-                  <span class="file-item__detail">{{ item.detail }}</span>
-                </span>
-                <ng-icon class="file-item__chevron" name="lucideChevronRight" />
-              </a>
-            </li>
-            }
-          </ul>
-        </div>
-        }
-        }
-      </div>
-    </div>
-  </section>
+    }
+  </app-inner-page-header>
 
   @if (tiles().length > 0) {
-  <section aria-label="Aperçu" class="tableau-board flex flex-col gap-4">
+  <section aria-label="Aperçu" class="tableau-apercu">
     <h2 class="text-sm font-semibold tracking-tight text-ink">Aperçu</h2>
 
-    <ul class="metric-grid">
+    <ul class="apercu-kpi-grid">
       @for (tile of tiles(); track tile.path) {
       <li class="min-h-0">
         <a
@@ -132,89 +32,236 @@
           [class.pointer-events-none]="tile.loading"
           [routerLink]="tile.loading ? null : '/' + tile.path"
           [tabIndex]="tile.loading ? -1 : 0"
-          class="metric-card pressable"
+          class="apercu-kpi-link pressable"
         >
-          @if (tile.loading) {
-          <div class="flex flex-1 flex-col gap-3" role="presentation">
-            <span
-              class="file-inbox-skeleton__block file-inbox-skeleton__icon"
-            ></span>
-            <span class="file-inbox-skeleton__lines">
-              <span
-                class="file-inbox-skeleton__block file-inbox-skeleton__title"
-              ></span>
-              <span
-                class="file-inbox-skeleton__block file-inbox-skeleton__detail"
-              ></span>
-            </span>
-            <span
-              class="file-inbox-skeleton__block mt-1 h-7 w-10"
-            ></span>
-          </div>
-          } @else {
-          <div class="metric-card-body">
-            <span class="list-cell-with-icon">
-              <ng-icon
-                [name]="tile.icon"
-                aria-hidden="true"
-                class="list-cell-with-icon__icon"
-              />
-              <span class="min-w-0">
-                <span class="block text-sm font-medium text-ink">{{
-                  tile.label
-                }}</span>
-                <span class="block text-xs text-muted">{{ tile.section }}</span>
-              </span>
-            </span>
-            <p
-              class="mt-3 text-2xl leading-none font-medium tracking-tight text-ink tabular-nums sm:text-3xl"
-            >
-              @if (tile.count === null) {
-              <span class="text-muted">—</span>
-              } @else {
-              {{ tile.count }}
-              }
-            </p>
-          </div>
-
-          @if (tile.slices; as slices) {
-          <div class="metric-card-foot">
-            <div aria-hidden="true" class="metric-bar">
-              @for (slice of slices; track slice.key) {
-              <span
-                [class]="apercuToneClass(slice.tone)"
-                [style.flex-grow]="slice.count"
-                class="metric-bar__segment"
-              ></span>
-              }
-            </div>
-            <ul class="metric-card-foot__legend">
-              @for (slice of slices; track slice.key) {
-              <li class="metric-card-foot__legend-item">
-                @if (sliceStatutIcon(tile.destinationId, slice.key); as sliceIcon) {
+          <z-card class="apercu-kpi-card h-full bg-surface text-ink">
+            @if (tile.loading) {
+            <z-card-content class="apercu-kpi-card__content">
+              <div class="flex flex-col gap-3" role="presentation">
+                <span
+                  class="file-inbox-skeleton__block file-inbox-skeleton__icon"
+                ></span>
+                <span class="file-inbox-skeleton__lines">
+                  <span
+                    class="file-inbox-skeleton__block file-inbox-skeleton__title"
+                  ></span>
+                  <span
+                    class="file-inbox-skeleton__block file-inbox-skeleton__detail"
+                  ></span>
+                </span>
+                <span
+                  class="file-inbox-skeleton__block mt-1 h-7 w-10"
+                ></span>
+              </div>
+            </z-card-content>
+            } @else {
+            <z-card-header class="apercu-kpi-card__header">
+              <span class="list-cell-with-icon min-w-0">
                 <ng-icon
-                  [name]="sliceIcon"
+                  [name]="tile.icon"
                   aria-hidden="true"
-                  class="shrink-0 text-xs text-muted"
+                  class="list-cell-with-icon__icon"
                 />
+                <span class="min-w-0">
+                  <z-card-title [zTitle]="tile.label" />
+                  <z-card-description [zDescription]="tile.section" />
+                </span>
+              </span>
+              <p
+                class="apercu-kpi-card__count tabular-nums text-ink"
+              >
+                @if (tile.count === null) {
+                <span class="text-muted">—</span>
+                } @else {
+                {{ tile.count }}
                 }
-                <span class="tabular-nums text-ink">{{ slice.count }}</span>
-                <span>{{ slice.label }}</span>
-              </li>
-              }
-            </ul>
-          </div>
-          } @else {
-          <div
-            aria-hidden="true"
-            class="metric-card-foot metric-card-foot--empty"
-          ></div>
-          }
-          }
+              </p>
+            </z-card-header>
+            @if (tile.slices; as slices) {
+            <z-card-content class="apercu-kpi-card__chart">
+              <z-chart
+                [zAnimation]="false"
+                [zConfig]="chartConfigForSlices(slices)"
+                [zData]="barDataForSlices(slices)"
+                [zGrid]="false"
+                [zHorizontal]="true"
+                [zSeries]="barSeriesKeys"
+                [zXAxis]="false"
+                [zYAxis]="true"
+                zType="bar"
+                [zXAxisKey]="barLabelKey"
+                class="apercu-kpi-chart"
+              >
+                <z-chart-tooltip zIndicator="dot" />
+              </z-chart>
+            </z-card-content>
+            }
+            }
+          </z-card>
         </a>
       </li>
       }
     </ul>
   </section>
   }
+
+  <div class="tableau-body">
+    <section
+      aria-label="File du jour"
+      class="tableau-body__main scroll-mt-24"
+      id="file-du-jour"
+    >
+      <div class="file-inbox surface-panel">
+        <header class="file-inbox__head">
+          <div class="file-inbox__intro">
+            <h2 class="text-sm font-semibold tracking-tight text-ink">
+              File du jour
+            </h2>
+            <p class="mt-1 text-sm text-muted">
+              Exceptions et prochaines actions pour ce rôle.
+            </p>
+          </div>
+        </header>
+
+        <div class="file-inbox__body">
+          @if (fileDuJourLoading()) {
+          <ul
+            aria-label="Chargement de la file du jour"
+            class="file-inbox-skeleton"
+            role="status"
+          >
+            @for (row of fileInboxSkeletonRows; track row) {
+            <li class="file-inbox-skeleton__row">
+              <span
+                class="file-inbox-skeleton__block file-inbox-skeleton__icon"
+              ></span>
+              <span
+                class="file-inbox-skeleton__block file-inbox-skeleton__count"
+              ></span>
+              <span class="file-inbox-skeleton__lines">
+                <span
+                  class="file-inbox-skeleton__block file-inbox-skeleton__title"
+                ></span>
+                <span
+                  class="file-inbox-skeleton__block file-inbox-skeleton__detail"
+                ></span>
+              </span>
+            </li>
+            }
+          </ul>
+          } @else if (fileDuJour().length === 0) {
+          <p class="tableau-empty" role="status">
+            Rien à traiter pour le moment. L’Aperçu ci-dessus reste disponible.
+          </p>
+          } @else {
+          @for (tier of fileDuJourTiers(); track tier.tone) {
+          <div class="file-tier">
+            <app-statut-chip
+              [label]="tier.label"
+              [tone]="tier.tone"
+              class="mb-2 block w-fit"
+            />
+            <ul
+              [class.file-tier__list--compact]="tier.compact"
+              class="file-tier__list"
+            >
+              @for (item of tier.items; track item.id) {
+              <li>
+                <a
+                  [class]="
+                    'file-item pressable border-l-4 ' +
+                    apercuToneBorderClass(item.tone)
+                  "
+                  [routerLink]="item.path"
+                >
+                  <ng-icon
+                    [name]="fileDuJourIcon(item.path)"
+                    class="file-item__icon"
+                  />
+                  <span class="file-item__count tabular-nums">
+                    {{ item.count }}
+                  </span>
+                  <span class="file-item__body">
+                    <span class="file-item__title">{{ item.title }}</span>
+                    <span class="file-item__detail">{{ item.detail }}</span>
+                  </span>
+                  <ng-icon
+                    class="file-item__chevron"
+                    name="lucideChevronRight"
+                  />
+                </a>
+              </li>
+              }
+            </ul>
+          </div>
+          }
+          }
+        </div>
+      </div>
+    </section>
+
+    <aside aria-label="Synthèse file du jour" class="tableau-body__aside">
+      <div class="tableau-aside-panel surface-panel">
+        <header class="tableau-aside-panel__head">
+          <h2 class="text-sm font-semibold tracking-tight text-ink">
+            Synthèse
+          </h2>
+          @if (!fileDuJourLoading() && fileDuJourSummary().totalCount > 0) {
+          <p
+            [attr.aria-label]="fileDuJourSummaryAriaLabel()"
+            class="tableau-aside-panel__summary"
+          >
+            <span class="tableau-aside-panel__total tabular-nums">
+              {{ fileDuJourSummary().totalCount }}
+              {{
+                fileDuJourSummary().totalCount === 1 ? "élément" : "éléments"
+              }}
+            </span>
+            @for (toneCount of fileDuJourToneCounts(); track toneCount.tone) {
+            <app-statut-chip
+              [label]="
+                fileDuJourToneChipLabel(toneCount.count, toneCount.label)
+              "
+              [tone]="toneCount.tone"
+              class="tabular-nums"
+            />
+            }
+          </p>
+          } @else if (!fileDuJourLoading()) {
+          <p class="text-sm text-muted">Aucune action en attente.</p>
+          }
+        </header>
+
+        @if (sidePanelChartTile(); as chartTile) {
+        @if (chartTile.slices; as sideSlices) {
+        <div class="tableau-aside-panel__chart">
+          <p class="text-xs font-medium text-muted">
+            Répartition · {{ chartTile.label }}
+          </p>
+          <z-card class="mt-2 border-0 bg-surface text-ink shadow-none">
+            <z-card-content class="px-0 pt-2 pb-0">
+              <z-chart
+                [zAnimation]="false"
+                [zConfig]="chartConfigForSlices(sideSlices)"
+                [zData]="pieDataForSlices(sideSlices)"
+                [zGrid]="false"
+                [zLabel]="false"
+                [zSeries]="pieSeriesKeys"
+                [zXAxis]="false"
+                [zYAxis]="false"
+                zType="pie"
+                [zNameKey]="pieNameKey"
+                class="tableau-aside-pie"
+              >
+                <z-chart-tooltip zHideLabel zIndicator="dot" zTrigger="item" />
+                <z-chart-legend />
+              </z-chart>
+            </z-card-content>
+          </z-card>
+        </div>
+        }
+        }
+      </div>
+    </aside>
+  </div>
 </div>

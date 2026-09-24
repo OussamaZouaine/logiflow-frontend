@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   DestroyRef,
+  effect,
   HostListener,
   inject,
   signal,
@@ -45,7 +46,7 @@ import {
 } from "../tableau/file-du-jour";
 import { FileDuJourStore } from "../tableau/file-du-jour-store";
 import {
-  destinationsForRoles,
+  destinationNavGroupsForRoles,
   type WorkDestinationId,
 } from "../core/nav/work-destination";
 import { StatutChip, type StatutTone } from "../shared/ui/statut-chip";
@@ -98,7 +99,12 @@ export class SignedInShell {
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly mobileNavOpen = signal(false);
+  protected readonly mobileNavInert = computed(
+    () => !this.mobileNavOpen() && this.isMobileViewport()
+  );
   protected readonly tableauIcon = TABLEAU_NAV_ICON;
+
+  private readonly mobileViewport = signal(this.readMobileViewport());
 
   protected readonly login = computed(
     () => this.session.session()?.login ?? ""
@@ -109,8 +115,8 @@ export class SignedInShell {
     return role ? roleLabel(role) : "";
   });
 
-  protected readonly navItems = computed(() =>
-    destinationsForRoles(this.session.session()?.roles ?? [])
+  protected readonly navGroups = computed(() =>
+    destinationNavGroupsForRoles(this.session.session()?.roles ?? []),
   );
 
   protected readonly fileDuJourSectionId = FILE_DU_JOUR_SECTION_ID;
@@ -135,6 +141,20 @@ export class SignedInShell {
   );
 
   constructor() {
+    effect((onCleanup) => {
+      const open = this.mobileNavOpen();
+      const mobile = this.isMobileViewport();
+      if (!mobile) {
+        document.body.style.overflow = "";
+        return;
+      }
+      const previousOverflow = document.body.style.overflow;
+      document.body.style.overflow = open ? "hidden" : "";
+      onCleanup(() => {
+        document.body.style.overflow = previousOverflow;
+      });
+    });
+
     this.router.events
       .pipe(
         filter(
@@ -145,6 +165,14 @@ export class SignedInShell {
       .subscribe(() => {
         this.mobileNavOpen.set(false);
       });
+  }
+
+  private readMobileViewport(): boolean {
+    return globalThis.matchMedia("(max-width: 767px)").matches;
+  }
+
+  private isMobileViewport(): boolean {
+    return this.mobileViewport();
   }
 
   protected iconFor(id: WorkDestinationId): string {
@@ -168,8 +196,23 @@ export class SignedInShell {
     await this.router.navigateByUrl("/connexion");
   }
 
+  @HostListener("window:resize")
+  protected onWindowResize(): void {
+    const mobile = this.readMobileViewport();
+    this.mobileViewport.set(mobile);
+    if (!mobile) {
+      this.mobileNavOpen.set(false);
+    }
+  }
+
   @HostListener("document:keydown", ["$event"])
   protected onDocumentKeydown(event: KeyboardEvent): void {
+    if (event.key === "Escape" && this.mobileNavOpen()) {
+      event.preventDefault();
+      this.closeMobileNav();
+      return;
+    }
+
     if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== "k") {
       return;
     }

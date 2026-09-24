@@ -3,25 +3,34 @@ import { Component, computed, inject } from "@angular/core";
 import { RouterLink } from "@angular/router";
 import { NgIcon, provideIcons } from "@ng-icons/core";
 import { lucideChevronRight, lucideInbox } from "@ng-icons/lucide";
-import type { StatutPrise } from "../carburant/prise-carburant";
-import type { StatutCommande } from "../commandes/commande";
 import { DESTINATION_NAV_ICON } from "../core/nav/nav-icon";
-import type { StatutDossier } from "../dossiers/dossier";
+import {
+	ZardCardComponent,
+	ZardCardContentComponent,
+	ZardCardDescriptionComponent,
+	ZardCardHeaderComponent,
+	ZardCardTitleComponent,
+} from "@/shared/components/card/card.component";
+import { ZardChartLegendComponent } from "@/shared/components/chart/chart-legend.component";
+import { ZardChartTooltipComponent } from "@/shared/components/chart/chart-tooltip.component";
+import { ZardChartComponent } from "@/shared/components/chart/chart.component";
+import type { ZardChartConfig, ZardChartDatum } from "@/shared/components/chart/chart.types";
 import { InnerPageHeader } from "../shared/ui/inner-page-header";
 import { StatutChip } from "../shared/ui/statut-chip";
 import {
-	LIST_STATUT_FILTER_ICON_PROVIDERS,
-	commandeStatutIcon,
-	dossierStatutIcon,
-	priseCarburantStatutIcon,
-	vehiculeStatutIcon,
-	voyageStatutIcon,
-} from "../shared/ui/list-statut-icons";
+	APERCU_BAR_LABEL_KEY,
+	APERCU_PIE_NAME_KEY,
+	APERCU_PIE_VALUE_KEY,
+	apercuBarSeriesKeys,
+	pickSidePanelChartTile,
+	statutSlicesToBarData,
+	statutSlicesToPieData,
+	zardConfigFromSlices,
+} from "./apercu-charts";
+import { LIST_STATUT_FILTER_ICON_PROVIDERS } from "../shared/ui/list-statut-icons";
 import {
 	LIST_TABLE_ROW_ICON_PROVIDERS,
 } from "../shared/ui/list-table-row-icons";
-import type { VehiculeStatut } from "../vehicules/vehicule";
-import type { StatutVoyage } from "../voyages/voyage";
 import { environment } from "../../environments/environment";
 import type { PageResponse } from "../core/api/page-response";
 import { DemoSessionService } from "../core/auth/demo-session";
@@ -37,7 +46,6 @@ import {
 	apercuApiPath,
 	apercuDestinations,
 	apercuToneBorderClass,
-	apercuToneClass,
 	commandeStatutSlices,
 	dossierStatutSlices,
 	priseStatutSlices,
@@ -66,7 +74,20 @@ export interface ApercuTile {
 }
 
 @Component({
-	imports: [InnerPageHeader, NgIcon, RouterLink, StatutChip],
+	imports: [
+		InnerPageHeader,
+		NgIcon,
+		RouterLink,
+		StatutChip,
+		ZardCardComponent,
+		ZardCardContentComponent,
+		ZardCardDescriptionComponent,
+		ZardCardHeaderComponent,
+		ZardCardTitleComponent,
+		ZardChartComponent,
+		ZardChartTooltipComponent,
+		ZardChartLegendComponent,
+	],
 	viewProviders: [
 		provideIcons({
 			lucideChevronRight,
@@ -84,8 +105,11 @@ export class TableauDeBordPage {
 	private readonly fileDuJourStore = inject(FileDuJourStore);
 
 	protected readonly apercuToneBorderClass = apercuToneBorderClass;
-	protected readonly apercuToneClass = apercuToneClass;
 	protected readonly fileDuJourIcon = fileDuJourIcon;
+	protected readonly barLabelKey = APERCU_BAR_LABEL_KEY;
+	protected readonly pieNameKey = APERCU_PIE_NAME_KEY;
+	protected readonly barSeriesKeys = apercuBarSeriesKeys();
+	protected readonly pieSeriesKeys = [APERCU_PIE_VALUE_KEY] as const;
 
 	protected readonly login = computed(
 		() => this.session.session()?.login ?? "",
@@ -100,12 +124,12 @@ export class TableauDeBordPage {
 		const login = this.login();
 		const role = this.roleName();
 		if (login && role) {
-			return `${login} · ${role} — File du jour, puis totaux des modules accessibles.`;
+			return `${login} · ${role} — Aperçu des modules accessibles, puis file du jour.`;
 		}
 		if (login) {
-			return `${login} — File du jour, puis totaux des modules accessibles.`;
+			return `${login} — Aperçu des modules accessibles, puis file du jour.`;
 		}
-		return "File du jour, puis totaux des modules accessibles.";
+		return "Aperçu des modules accessibles, puis file du jour.";
 	});
 
 	protected readonly fileInboxSkeletonRows = [0, 1, 2] as const;
@@ -158,6 +182,10 @@ export class TableauDeBordPage {
 
 	protected readonly showFileDuJourJump = computed(
 		() => !this.fileDuJourLoading() && this.fileDuJour().length > 0,
+	);
+
+	protected readonly sidePanelChartTile = computed(() =>
+		pickSidePanelChartTile(this.tiles()),
 	);
 
 	protected readonly tiles = computed((): ApercuTile[] =>
@@ -216,30 +244,18 @@ export class TableauDeBordPage {
 		return `${summary.totalCount} élément${plural} à traiter`;
 	}
 
-	protected sliceStatutIcon(
-		destinationId: ApercuCountableId,
-		statutKey: string,
-	): string | null {
-		switch (destinationId) {
-			case "commandes":
-				return commandeStatutIcon(statutKey as StatutCommande);
-			case "dossiers":
-				return dossierStatutIcon(statutKey as StatutDossier);
-			case "voyages":
-				return voyageStatutIcon(statutKey as StatutVoyage);
-			case "vehicules":
-				return vehiculeStatutIcon(statutKey as VehiculeStatut);
-			case "carburant":
-				return priseCarburantStatutIcon(statutKey as StatutPrise);
-			case "sites":
-			case "utilisateurs":
-			case "maintenance":
-				return null;
-			default: {
-				const _exhaustive: never = destinationId;
-				return _exhaustive;
-			}
-		}
+	protected chartConfigForSlices(
+		slices: readonly StatutSlice[],
+	): ZardChartConfig {
+		return zardConfigFromSlices(slices);
+	}
+
+	protected barDataForSlices(slices: readonly StatutSlice[]): ZardChartDatum[] {
+		return statutSlicesToBarData(slices);
+	}
+
+	protected pieDataForSlices(slices: readonly StatutSlice[]): ZardChartDatum[] {
+		return statutSlicesToPieData(slices);
 	}
 
 	protected tileAriaLabel(tile: ApercuTile): string {

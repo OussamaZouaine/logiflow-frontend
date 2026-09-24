@@ -46,6 +46,36 @@ describe("TableauDeBordPage", () => {
     }).compileComponents();
   });
 
+  it("renders Aperçu before File du jour in document order", async () => {
+    TestBed.inject(DemoSessionService).signIn("admin", DEMO_PASSWORD);
+    const fixture = TestBed.createComponent(TableauDeBordPage);
+    fixture.detectChanges();
+
+    const http = TestBed.inject(HttpTestingController);
+    flushUrl(http, "/api/v1/sites", pageOf([]));
+    flushUrl(http, "/api/v1/vehicules", pageOf([]));
+    flushUrl(http, "/api/v1/commandes", pageOf([]));
+    flushUrl(http, "/api/v1/dossiers", pageOf([]));
+    flushUrl(http, "/api/v1/voyages", pageOf([]));
+    flushUrl(http, "/api/v1/ordres-travail", pageOf([]));
+    flushUrl(http, "/api/v1/utilisateurs", pageOf([]));
+    flushUrl(http, "/api/v1/prises-carburant", pageOf([]));
+
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    const apercu = root.querySelector('[aria-label="Aperçu"]');
+    const fileDuJour = root.querySelector("#file-du-jour");
+    expect(apercu).not.toBeNull();
+    expect(fileDuJour).not.toBeNull();
+    expect(
+      apercu?.compareDocumentPosition(fileDuJour!) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    http.verify();
+  });
+
   it("shows Sites for an exploitant and omits Maintenance", async () => {
     TestBed.inject(DemoSessionService).signIn("exploitant", DEMO_PASSWORD);
     const fixture = TestBed.createComponent(TableauDeBordPage);

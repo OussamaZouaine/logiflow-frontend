@@ -282,31 +282,73 @@
 
 .inner-page-header {
   display: block;
+  width: 100%;
+  min-width: 0;
 }
 
 .inner-page-header__row {
   display: flex;
+  width: 100%;
+  min-width: 0;
   align-items: flex-start;
   gap: 0.625rem;
 }
 
+.inner-page-header__title-row {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  min-height: 2.25rem;
+}
+
 .inner-page-header__icon {
+  display: inline-flex;
   flex-shrink: 0;
-  width: 1.125rem;
-  height: 1.125rem;
-  margin-top: 0.1875rem;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  /* Optical align with title: title-row is ~2.25rem (button height). */
+  margin-top: calc((2.25rem - 1.25rem) / 2);
+  font-size: 1.25rem;
+  line-height: 1;
   color: var(--color-muted);
+}
+
+.inner-page-header__icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 .inner-page-header__copy {
   display: flex;
+  flex: 1 1 0%;
   flex-direction: column;
   gap: 0.375rem;
   min-width: 0;
 }
 
+.inner-page-header__actions {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.inner-page-header__actions:not(:has(*)) {
+  display: none;
+}
+
 .inner-page-header__title {
   margin: 0;
+  min-width: 0;
   font-size: 1.25rem;
   font-weight: 600;
   line-height: 1.25;
@@ -316,7 +358,8 @@
 
 .inner-page-header__description {
   margin: 0;
-  max-width: 42rem;
+  width: 100%;
+  max-width: none;
   font-size: 0.8125rem;
   line-height: 1.45;
   color: var(--color-muted);
@@ -606,6 +649,18 @@
 
 .inner-page.fiche-page--wide {
   max-width: 72rem;
+}
+
+/* Dashboard fills the main pane on large screens. */
+app-tableau-de-bord-page {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+app-tableau-de-bord-page .tableau.inner-page.fiche-page--wide {
+  width: 100%;
+  max-width: none;
 }
 
 .form-page__layout {

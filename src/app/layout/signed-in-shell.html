@@ -30,29 +30,34 @@
   }
 
   <aside
+    [attr.data-mobile-open]="mobileNavOpen()"
+    [attr.inert]="mobileNavInert() ? '' : null"
     [class.-translate-x-full]="!mobileNavOpen()"
     [class.translate-x-0]="mobileNavOpen()"
     aria-label="Navigation principale"
-    class="shell-sidebar fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-surface transition-transform duration-200 ease-out md:static md:z-auto md:translate-x-0"
+    class="shell-sidebar fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-surface md:static md:z-auto md:translate-x-0"
     id="app-shell-sidebar"
   >
     <div
       class="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-line/80 px-4 md:h-16 md:px-5"
     >
       <a
+        (click)="closeMobileNav()"
         class="font-display text-xl font-medium tracking-tight text-ink"
         routerLink="/"
       >
         LogiFlow
       </a>
+      @if (mobileNavOpen()) {
       <button
         (click)="closeMobileNav()"
         aria-label="Fermer le menu"
-        class="shell-icon-btn pressable size-8 md:hidden"
+        class="shell-icon-btn shell-sidebar-dismiss pressable size-8"
         type="button"
       >
-        <ng-icon class="text-sm" name="lucideX" />
+        <ng-icon aria-hidden="true" class="text-sm" name="lucideX" />
       </button>
+      }
     </div>
 
     <div class="shrink-0 px-3 pt-3 pb-1">
@@ -74,27 +79,41 @@
 
     <nav
       aria-label="Modules"
-      class="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto p-3"
+      class="shell-nav-modules min-h-0 flex-1 overflow-y-auto"
     >
-      <a
-        [routerLinkActiveOptions]="{ exact: true }"
-        class="shell-nav-link pressable"
-        routerLink="/"
-        routerLinkActive="is-active"
-      >
-        <ng-icon [name]="tableauIcon" class="shrink-0 text-base" />
-        <span>Tableau de bord</span>
-      </a>
+      <div class="shell-nav-home">
+        <a
+          (click)="closeMobileNav()"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="shell-nav-link pressable"
+          routerLink="/"
+          routerLinkActive="is-active"
+        >
+          <span aria-hidden="true" class="shell-nav-link__icon">
+            <ng-icon [name]="tableauIcon" class="shell-nav-link__glyph" />
+          </span>
+          <span class="shell-nav-link__label">Tableau de bord</span>
+        </a>
+      </div>
 
-      @for (item of navItems(); track item.id) {
-      <a
-        [routerLink]="'/' + item.path"
-        class="shell-nav-link pressable"
-        routerLinkActive="is-active"
-      >
-        <ng-icon [name]="iconFor(item.id)" class="shrink-0 text-base" />
-        <span>{{ item.label }}</span>
-      </a>
+      @for (group of navGroups(); track group.section) {
+      <ul class="shell-nav-group">
+        @for (item of group.items; track item.id) {
+        <li>
+          <a
+            (click)="closeMobileNav()"
+            [routerLink]="'/' + item.path"
+            class="shell-nav-link pressable"
+            routerLinkActive="is-active"
+          >
+            <span aria-hidden="true" class="shell-nav-link__icon">
+              <ng-icon [name]="iconFor(item.id)" class="shell-nav-link__glyph" />
+            </span>
+            <span class="shell-nav-link__label">{{ item.label }}</span>
+          </a>
+        </li>
+        }
+      </ul>
       }
     </nav>
 

@@ -25,7 +25,12 @@ import { LIST_TABLE_ROW_ICON_PROVIDERS } from "./list-table-row-icons";
       />
       }
       <div class="inner-page-header__copy">
-        <h1 class="inner-page-header__title">{{ title() }}</h1>
+        <div class="inner-page-header__title-row">
+          <h1 class="inner-page-header__title">{{ title() }}</h1>
+          <div class="inner-page-header__actions">
+            <ng-content select="[innerPageHeaderActions]" />
+          </div>
+        </div>
         @if (description()) {
         <p class="inner-page-header__description">{{ description() }}</p>
         }
