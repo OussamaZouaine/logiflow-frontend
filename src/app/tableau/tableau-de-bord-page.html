@@ -6,8 +6,8 @@
   />
 
   @if (showFileDuJourJump()) {
-  <div class="flex flex-wrap justify-end -mt-2">
-    <a class="btn-toolbar pressable" href="#file-du-jour">
+  <div class="flex -mt-2 sm:justify-end">
+    <a class="btn-toolbar pressable max-sm:w-full" href="#file-du-jour">
       <ng-icon aria-hidden="true" class="btn-toolbar__icon" name="lucideInbox" />
       <span>File du jour</span>
       <span class="tabular-nums text-muted"
@@ -167,7 +167,7 @@
               </span>
             </span>
             <p
-              class="mt-3 text-3xl leading-none font-medium tracking-tight text-ink tabular-nums"
+              class="mt-3 text-2xl leading-none font-medium tracking-tight text-ink tabular-nums sm:text-3xl"
             >
               @if (tile.count === null) {
               <span class="text-muted">—</span>
@@ -188,11 +188,9 @@
               ></span>
               }
             </div>
-            <ul
-              class="m-0 flex list-none flex-wrap gap-x-[0.65rem] gap-y-1 p-0 font-mono text-[0.65rem] tracking-wide text-muted"
-            >
+            <ul class="metric-card-foot__legend">
               @for (slice of slices; track slice.key) {
-              <li class="inline-flex min-w-0 items-center gap-0.5">
+              <li class="metric-card-foot__legend-item">
                 @if (sliceStatutIcon(tile.destinationId, slice.key); as sliceIcon) {
                 <ng-icon
                   [name]="sliceIcon"
