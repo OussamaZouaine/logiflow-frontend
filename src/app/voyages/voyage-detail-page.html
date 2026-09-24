@@ -269,6 +269,14 @@
               {{ voyage.value().trajet.etapes.length === 1 ? "étape" : "étapes" }}
             </p>
 
+            @if (arretsCarte().length > 1) {
+            <app-itineraire-carte
+              [arrets]="arretsCarte()"
+              ariaLabel="Carte des arrêts du voyage"
+              class="mb-4 block"
+            />
+            }
+
             <ol class="voyage-trajet-timeline">
               @for (etape of voyage.value().trajet.etapes; track etape.ordre) {
               <li class="voyage-trajet-step">
@@ -284,6 +292,9 @@
                     {{ typeEtapeLabel(etape.type) }}
                     <span class="voyage-trajet-step__order">#{{ etape.ordre }}</span>
                   </p>
+                  @if (arretLibelle(etape.ordre); as lieu) {
+                  <p class="voyage-trajet-step__stats">{{ lieu }}</p>
+                  }
                   <p class="voyage-trajet-step__times">
                     {{ etapeTimesLabel(etape) }}
                   </p>

@@ -44,6 +44,14 @@ import {
 import { ZardInputComponent } from "@/shared/components/input";
 import { environment } from "../../environments/environment";
 import {
+  formatLitres,
+  formatMontantTtc,
+  formatPriseShortId,
+  type PriseCarburant,
+  statutPriseLabel,
+  statutPriseTone,
+} from "../carburant/prise-carburant";
+import {
   type ChauffeurListItem,
   chauffeurLabelFromLookup,
 } from "../chauffeurs/chauffeur";
@@ -54,56 +62,50 @@ import {
   vehiculeLabel,
 } from "../maintenance/ordre-travail";
 import type { RemorqueListItem } from "../remorques/remorque";
-import { enumToSelectOptions } from "../shared/ui/field-select";
-import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
 import { apercuToneToBadgeType } from "../shared/ui/apercu-zard";
+import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
+import { enumToSelectOptions } from "../shared/ui/field-select";
 import { OpsTimeline } from "../shared/ui/ops-timeline";
 import { StatutChip } from "../shared/ui/statut-chip";
 import { ToastService } from "../shared/ui/toast";
 import { voyageStatutTone } from "../tableau/apercu";
+import { type ArretCarte, ItineraireCarte } from "./itineraire-carte";
+import { RemorqueCapacityView } from "./remorque-capacity-view";
 import {
   affectationRoleLabel,
+  compareDatetimeLocal,
+  datetimeLocalToIso,
   type Etape,
   type EvenementVoyage,
+  formatDatetimeLocalForDisplay,
   formatDureeMin,
   formatInstant,
   type GeoPoint,
   isTypeEvenement,
+  maxDatetimeLocal,
+  minEvenementHorodatageLocal,
   nextStatuts,
   porteeLabel,
   remplissageLabel,
   type StatutVoyage,
   statutVoyageLabel,
+  suggestedEvenementHorodatageLocal,
   TYPE_EVENEMENTS,
   type TypeEtape,
   type TypeEvenement,
+  toDatetimeLocal,
   typeEtapeLabel,
   typeEvenementLabel,
   typeVoyageLabel,
   type Voyage,
-  compareDatetimeLocal,
-  datetimeLocalToIso,
-  formatDatetimeLocalForDisplay,
-  maxDatetimeLocal,
-  minEvenementHorodatageLocal,
-  suggestedEvenementHorodatageLocal,
-  toDatetimeLocal,
 } from "./voyage";
-import { RemorqueCapacityView } from "./remorque-capacity-view";
+import { VoyageAjouterDossierForm } from "./voyage-ajouter-dossier-form";
+import { VoyageApi } from "./voyage-api";
 import {
   capaciteTronconTone,
   capaciteTronconToneClass,
 } from "./voyage-capacite";
-import { VoyageAjouterDossierForm } from "./voyage-ajouter-dossier-form";
-import {
-  formatLitres,
-  formatMontantTtc,
-  formatPriseShortId,
-  statutPriseLabel,
-  statutPriseTone,
-  type PriseCarburant,
-} from "../carburant/prise-carburant";
-import { VoyageApi } from "./voyage-api";
+import type { ArretVoyage } from "./voyage-planification";
 import {
   voyageActualTimelineEntries,
   voyagePlannedTimelineEntries,
@@ -136,6 +138,7 @@ const ETAPE_DOT_CLASS: Record<TypeEtape, string> = {
     OpsTimeline,
     StatutChip,
     RemorqueCapacityView,
+    ItineraireCarte,
     VoyageAjouterDossierForm,
     ZardCardComponent,
     ZardCardContentComponent,
@@ -224,6 +227,27 @@ export class VoyageDetailPage {
     url: `${environment.apiBaseUrl}/voyages/${this.id()}`,
   }));
 
+  /** Arrêts persistés (construits à la création depuis les sites des dossiers). */
+  protected readonly arrets = httpResource<ArretVoyage[]>(() => ({
+    url: `${environment.apiBaseUrl}/voyages/${this.id()}/arrets`,
+  }));
+
+  protected readonly arretsCarte = computed<readonly ArretCarte[]>(() =>
+    (this.arrets.value() ?? []).map((arret) => ({
+      id: arret.id,
+      latitude: arret.latitude,
+      libelle: arret.libelle,
+      longitude: arret.longitude,
+    }))
+  );
+
+  /** Libellé de l'arrêt correspondant à une étape, quand trajet et arrêts sont alignés. */
+  protected arretLibelle(ordre: number): string | null {
+    const arrets = this.arrets.value() ?? [];
+    const etapes = this.voyage.value()?.trajet.etapes.length ?? 0;
+    return arrets.length === etapes ? (arrets[ordre]?.libelle ?? null) : null;
+  }
+
   protected readonly vehicules = httpResource<PageResponse<VehiculeLookup>>(
     () => ({
       params: { page: 0, size: 50 },
@@ -273,12 +297,12 @@ export class VoyageDetailPage {
     url: `${environment.apiBaseUrl}/voyages/${this.id()}/evenements`,
   }));
 
-  protected readonly prisesCarburant = httpResource<PageResponse<PriseCarburant>>(
-    () => ({
-      params: { page: 0, size: 20, voyageId: this.id() },
-      url: `${environment.apiBaseUrl}/prises-carburant`,
-    })
-  );
+  protected readonly prisesCarburant = httpResource<
+    PageResponse<PriseCarburant>
+  >(() => ({
+    params: { page: 0, size: 20, voyageId: this.id() },
+    url: `${environment.apiBaseUrl}/prises-carburant`,
+  }));
 
   protected readonly formatLitres = formatLitres;
   protected readonly formatMontantTtc = formatMontantTtc;

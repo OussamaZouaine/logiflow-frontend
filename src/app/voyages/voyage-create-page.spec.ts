@@ -4,18 +4,178 @@ import {
   provideHttpClientTesting,
 } from "@angular/common/http/testing";
 import { TestBed } from "@angular/core/testing";
-import { provideRouter } from "@angular/router";
+import { provideRouter, Router } from "@angular/router";
+import type { OptionVoyage, PropositionsVoyage } from "../ia/planification";
 import { VoyageCreatePage } from "./voyage-create-page";
 
 const EMPTY_PAGE = {
   content: [],
   pageNumber: 0,
-  pageSize: 50,
+  pageSize: 100,
   totalElements: 0,
   totalPages: 0,
 };
 
+const RESSOURCES = {
+  chauffeurs: [
+    {
+      categoriesPermis: ["C", "CE"],
+      habilitationsValides: ["ADR_BASE"],
+      id: "ch-1",
+      matricule: "DRV-0001",
+      nom: "Martin",
+      prenom: "Jean",
+    },
+  ],
+  remorques: [],
+  vehicules: [
+    {
+      carrosserie: null,
+      chargeUtileKg: 12_000,
+      id: "ve-1",
+      immatriculation: "GP-002-BH",
+      statut: "DISPONIBLE",
+      type: "PORTEUR",
+    },
+  ],
+};
+
+const OPTION: OptionVoyage = {
+  alertes: [],
+  arrets: [
+    {
+      attenteMin: 0,
+      chargeApresKg: 6000,
+      distanceDepuisPrecedentKm: 0,
+      dossiersCharges: ["d-1"],
+      dossiersDecharges: [],
+      dureeDepuisPrecedentMin: 0,
+      eta: "2026-09-27T06:00:00Z",
+      etd: "2026-09-27T06:45:00Z",
+      fenetreRespectee: true,
+      latitude: 45.76,
+      libelle: "SITE-DEMO-002 — Plateforme Lyon Est",
+      longitude: 4.84,
+      ordre: 0,
+      siteId: "site-lyon",
+    },
+    {
+      attenteMin: 0,
+      chargeApresKg: 0,
+      distanceDepuisPrecedentKm: 314,
+      dossiersCharges: [],
+      dossiersDecharges: ["d-1"],
+      dureeDepuisPrecedentMin: 270,
+      eta: "2026-09-27T11:15:00Z",
+      etd: "2026-09-27T12:00:00Z",
+      fenetreRespectee: true,
+      latitude: 43.3,
+      libelle: "SITE-DEMO-003 — Hub Marseille",
+      longitude: 5.37,
+      ordre: 1,
+      siteId: "site-mrs",
+    },
+  ],
+  arriveePrevue: "2026-09-27T12:00:00Z",
+  chauffeurIds: ["ch-1"],
+  conformite: { avertissements: [], bloquants: [], conforme: true },
+  departPrevu: "2026-09-27T06:00:00Z",
+  dossierIds: ["d-1"],
+  indicateurs: {
+    coutEstime: 553,
+    coutParTonne: 92,
+    distanceKm: 314,
+    dureeConduiteMin: 270,
+    dureeTotaleMin: 360,
+    fenetresManquees: 0,
+    nbDossiers: 1,
+    palettes: 12,
+    poidsKg: 6000,
+    tauxRemplissagePoids: 0.5,
+    tauxRemplissageVolume: 0.3,
+    volumeM3: 24,
+  },
+  justification: "Remplissage correct sur un trajet direct.",
+  libelleObjectif: "Remplissage maximal",
+  objectif: "REMPLISSAGE",
+  rang: 1,
+  recommandee: true,
+  remorqueId: null,
+  typeVoyage: "SIMPLE",
+  vehiculeId: "ve-1",
+  voyage: {
+    affectations: [
+      {
+        chauffeurId: "ch-1",
+        dateAffectation: "2026-09-27T06:00:00Z",
+        role: "TITULAIRE",
+      },
+    ],
+    arrets: [{ siteId: "site-lyon" }, { siteId: "site-mrs" }],
+    arriveePrevue: "2026-09-27T12:00:00Z",
+    departPrevu: "2026-09-27T06:00:00Z",
+    dossierIds: ["d-1"],
+    portee: "NATIONAL",
+    remorqueId: null,
+    trajet: {
+      distanceTotaleKm: 314,
+      dureeConduiteMin: 270,
+      dureeTotaleMin: 360,
+      etapes: [
+        {
+          chargeApresKg: 6000,
+          distanceDepuisPrecedenteKm: 0,
+          eta: "2026-09-27T06:00:00Z",
+          etd: "2026-09-27T06:45:00Z",
+          ordre: 0,
+          type: "CHARGEMENT",
+        },
+        {
+          chargeApresKg: 0,
+          distanceDepuisPrecedenteKm: 314,
+          eta: "2026-09-27T11:15:00Z",
+          etd: null,
+          ordre: 1,
+          type: "DECHARGEMENT",
+        },
+      ],
+    },
+    typeVoyage: "SIMPLE",
+    vehiculeId: "ve-1",
+  },
+};
+
+const PROPOSITIONS: PropositionsVoyage = {
+  comparaison: "Une seule option réalisable.",
+  dossiersNonPlanifiables: [],
+  libelles: {
+    chauffeurs: { "ch-1": "Jean Martin (DRV-0001)" },
+    dossiers: { "d-1": "DT-2026-900001" },
+    remorques: {},
+    vehicules: { "ve-1": "GP-002-BH" },
+  },
+  nbDossiersCandidats: 1,
+  options: [OPTION],
+  portee: "NATIONAL",
+  sourceDistances: "HAVERSINE",
+  sourceRedaction: "GABARIT",
+};
+
+interface Page {
+  chauffeurSelectOptions: () => readonly { label: string }[];
+  choisir: (option: OptionVoyage) => void;
+  draft: () => { chauffeurId: string; typeVoyage: string; vehiculeId: string };
+  mode: () => string;
+  onSubmit: (event: SubmitEvent) => Promise<void>;
+  proposer: (event: SubmitEvent) => Promise<void>;
+  selectedDossierIds: () => string[];
+}
+
+const EVENEMENT = { preventDefault: vi.fn() } as unknown as SubmitEvent;
+
 describe("VoyageCreatePage", () => {
+  let http: HttpTestingController;
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [VoyageCreatePage],
@@ -25,298 +185,134 @@ describe("VoyageCreatePage", () => {
         provideRouter([]),
       ],
     }).compileComponents();
+    http = TestBed.inject(HttpTestingController);
   });
 
-    it("renders chauffeur names from nom and prenom", async () => {
-    const fixture = TestBed.createComponent(VoyageCreatePage);
-    fixture.detectChanges();
-
-    const http = TestBed.inject(HttpTestingController);
-    http.expectOne((req) => req.url === "/api/v1/vehicules").flush(EMPTY_PAGE);
+  function flushLookups(): void {
     http.expectOne((req) => req.url === "/api/v1/dossiers").flush(EMPTY_PAGE);
     http.expectOne((req) => req.url === "/api/v1/sites").flush(EMPTY_PAGE);
-    http.expectOne((req) => req.url === "/api/v1/remorques").flush(EMPTY_PAGE);
     http
-      .expectOne((req) => req.url === "/api/v1/chauffeurs")
-      .flush({
-        content: [
-          {
-            disponibilite: "DISPONIBLE",
-            id: "66666666-6666-6666-6666-666666666666",
-            matricule: "CH-001",
-            nom: "Martin",
-            prenom: "Jean",
-            statut: "ACTIF",
-          },
-        ],
-        pageNumber: 0,
-        pageSize: 50,
-        totalElements: 1,
-        totalPages: 1,
-      });
+      .expectOne((req) => req.url === "/api/v1/voyages/ressources-disponibles")
+      .flush(RESSOURCES);
+  }
 
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    const compiled = fixture.nativeElement as HTMLElement;
-    const page = fixture.componentInstance as unknown as {
-      chauffeurSelectOptions: () => readonly { label: string }[];
-    };
-    expect(compiled.textContent).toContain("Nouveau voyage");
-    expect(page.chauffeurSelectOptions()[0]?.label).toBe("CH-001 — Jean Martin");
-    expect(compiled.querySelector("#vehiculeId")).toBeTruthy();
-    expect(compiled.textContent).toContain("Calculer via IA");
-    expect(compiled.textContent).toContain("Suggérer un groupage");
-    http.verify();
-  });
-
-  it("calls IA groupage and applies a proposition", async () => {
+  it("opens in assisted mode and shows the compared proposals", async () => {
     const fixture = TestBed.createComponent(VoyageCreatePage);
     fixture.detectChanges();
+    flushLookups();
+    const page = fixture.componentInstance as unknown as Page;
 
-    const http = TestBed.inject(HttpTestingController);
-    http.expectOne((req) => req.url === "/api/v1/vehicules").flush(EMPTY_PAGE);
-    http
-      .expectOne((req) => req.url === "/api/v1/dossiers")
-      .flush({
-        content: [
-          {
-            carrosserieRequise: null,
-            commandeId: "cmd-1",
-            contientAdr: false,
-            documents: [],
-            familleMarchandise: "GENERAL",
-            groupable: true,
-            id: "dossier-1",
-            lignesMarchandise: [],
-            nbPalettes: 0,
-            poidsBrutKg: 1000,
-            reference: "DOS-1",
-            segments: [],
-            statut: "CREE",
-            temperatureRequise: null,
-            typeTransport: "NATIONAL",
-            volumeM3: 10,
-          },
-          {
-            carrosserieRequise: null,
-            commandeId: "cmd-2",
-            contientAdr: false,
-            documents: [],
-            familleMarchandise: "GENERAL",
-            groupable: true,
-            id: "dossier-2",
-            lignesMarchandise: [],
-            nbPalettes: 0,
-            poidsBrutKg: 800,
-            reference: "DOS-2",
-            segments: [],
-            statut: "CREE",
-            temperatureRequise: null,
-            typeTransport: "NATIONAL",
-            volumeM3: 8,
-          },
-        ],
-        pageNumber: 0,
-        pageSize: 50,
-        totalElements: 2,
-        totalPages: 1,
-      });
-    http.expectOne((req) => req.url === "/api/v1/sites").flush(EMPTY_PAGE);
-    http.expectOne((req) => req.url === "/api/v1/remorques").flush(EMPTY_PAGE);
-    http.expectOne((req) => req.url === "/api/v1/chauffeurs").flush(EMPTY_PAGE);
-
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    const compiled = fixture.nativeElement as HTMLElement;
-    const suggestButton = Array.from(compiled.querySelectorAll("button")).find(
-      (node) => node.textContent?.includes("Suggérer un groupage")
-    );
-    expect(suggestButton).toBeTruthy();
-    suggestButton?.click();
-    fixture.detectChanges();
-
-    const groupageReq = http.expectOne(
-      (req) => req.url === "/api/v1/ia/groupage/propositions"
-    );
-    expect(groupageReq.request.body).toEqual({
-      dossierIds: ["dossier-1", "dossier-2"],
+    expect(page.mode()).toBe("assiste");
+    const envoi = page.proposer(EVENEMENT);
+    const req = http.expectOne("/api/v1/ia/planification/propositions");
+    expect(req.request.body).toMatchObject({
+      nbOptions: 3,
+      portee: "NATIONAL",
+      typeVoyage: "GROUPAGE",
     });
-    groupageReq.flush([
-      {
-        confiance: null,
-        dossierIds: ["dossier-1", "dossier-2"],
-        gainKm: null,
-        gainMarge: null,
-        genereParIa: false,
-        justification: "Regroupement de base.",
-        score: null,
-      },
-    ]);
-
-    await fixture.whenStable();
+    req.flush(PROPOSITIONS);
+    await envoi;
+    fixture.detectChanges();
+    for (const geometrie of http.match(
+      (r) => r.url === "/api/v1/ia/itineraires/geometrie"
+    )) {
+      geometrie.flush({ geometrie: [] });
+    }
     fixture.detectChanges();
 
-    expect(compiled.textContent).toContain("DOS-1 · DOS-2");
-    const applyButton = Array.from(compiled.querySelectorAll("button")).find(
-      (node) => node.textContent?.trim() === "Appliquer"
-    );
-    expect(applyButton).toBeTruthy();
-    applyButton?.click();
-    fixture.detectChanges();
-
-    const checkboxes = compiled.querySelectorAll(
-      'input[type="checkbox"]:checked'
-    );
-    expect(checkboxes.length).toBe(2);
-    const page = fixture.componentInstance as unknown as {
-      draft: () => { typeVoyage: string };
-    };
-    expect(page.draft().typeVoyage).toBe("GROUPAGE");
-    http.verify();
+    const texte = (fixture.nativeElement as HTMLElement).textContent ?? "";
+    expect(texte).toContain("Option 1 — Remplissage maximal");
+    expect(texte).toContain("Recommandée");
+    expect(texte).toContain("DT-2026-900001");
+    expect(texte).toContain("Jean Martin (DRV-0001)");
+    expect(texte).toContain("Choisir cette proposition");
   });
 
-  it("calls IA itinéraire and fills distance and duration", async () => {
+  it("prefills the manual form from a chosen proposal and submits its stops", async () => {
     const fixture = TestBed.createComponent(VoyageCreatePage);
     fixture.detectChanges();
+    flushLookups();
+    const page = fixture.componentInstance as unknown as Page;
+    const navigate = vi
+      .spyOn(TestBed.inject(Router), "navigate")
+      .mockResolvedValue(true);
 
-    const http = TestBed.inject(HttpTestingController);
-    http.expectOne((req) => req.url === "/api/v1/vehicules").flush(EMPTY_PAGE);
-    http
-      .expectOne((req) => req.url === "/api/v1/dossiers")
-      .flush({
-        content: [
-          {
-            carrosserieRequise: null,
-            commandeId: "cmd-1",
-            contientAdr: false,
-            documents: [],
-            familleMarchandise: "GENERAL",
-            groupable: true,
-            id: "dossier-1",
-            lignesMarchandise: [],
-            nbPalettes: 0,
-            poidsBrutKg: 1000,
-            reference: "DOS-1",
-            segments: [
-              {
-                fenetre: {
-                  debut: "2026-09-01T08:00:00Z",
-                  fin: "2026-09-01T10:00:00Z",
-                },
-                ordre: 1,
-                realiseLe: null,
-                siteId: "site-depart",
-                type: "CHARGEMENT",
-              },
-              {
-                fenetre: {
-                  debut: "2026-09-01T16:00:00Z",
-                  fin: "2026-09-01T18:00:00Z",
-                },
-                ordre: 2,
-                realiseLe: null,
-                siteId: "site-arrivee",
-                type: "DECHARGEMENT",
-              },
-            ],
-            statut: "CREE",
-            temperatureRequise: null,
-            typeTransport: "NATIONAL",
-            volumeM3: 10,
-          },
-        ],
-        pageNumber: 0,
-        pageSize: 50,
-        totalElements: 1,
-        totalPages: 1,
-      });
-    http
-      .expectOne((req) => req.url === "/api/v1/sites")
-      .flush({
-        content: [
-          {
-            actif: true,
-            adresse: null,
-            clientId: null,
-            code: "SITE-PARIS",
-            contraintesAcces: null,
-            id: "site-depart",
-            libelle: "Paris Nord",
-            localisation: { latitude: 48.86, longitude: 2.35 },
-          },
-          {
-            actif: true,
-            adresse: null,
-            clientId: null,
-            code: "SITE-LYON",
-            contraintesAcces: null,
-            id: "site-arrivee",
-            libelle: "Lyon Sud",
-            localisation: { latitude: 45.75, longitude: 4.85 },
-          },
-        ],
-        pageNumber: 0,
-        pageSize: 50,
-        totalElements: 2,
-        totalPages: 1,
-      });
-    http.expectOne((req) => req.url === "/api/v1/remorques").flush(EMPTY_PAGE);
-    http.expectOne((req) => req.url === "/api/v1/chauffeurs").flush(EMPTY_PAGE);
-
-    await fixture.whenStable();
+    page.choisir(OPTION);
     fixture.detectChanges();
 
-    const compiled = fixture.nativeElement as HTMLElement;
-    const checkbox = compiled.querySelector(
-      'input[type="checkbox"]'
-    ) as HTMLInputElement;
-    checkbox.click();
-    fixture.detectChanges();
-
-    const button = Array.from(compiled.querySelectorAll("button")).find((node) =>
-      node.textContent?.includes("Calculer via IA")
+    expect(page.mode()).toBe("manuel");
+    expect(page.selectedDossierIds()).toEqual(["d-1"]);
+    expect(page.draft()).toMatchObject({
+      chauffeurId: "ch-1",
+      typeVoyage: "SIMPLE",
+      vehiculeId: "ve-1",
+    });
+    for (const req of http.match(
+      (r) => r.url === "/api/v1/voyages/ressources-disponibles"
+    )) {
+      req.flush(RESSOURCES);
+    }
+    await new Promise((resolve) => {
+      globalThis.setTimeout(resolve, 0);
+    });
+    expect(page.chauffeurSelectOptions()[0]?.label).toBe(
+      "DRV-0001 — Jean Martin · C/CE · ADR"
     );
-    expect(button).toBeTruthy();
-    button?.click();
-    fixture.detectChanges();
-
-    const calcReq = http.expectOne(
-      (req) => req.url === "/api/v1/ia/itineraires/calcul"
-    );
-    expect(calcReq.request.body).toEqual({
-      points: [
-        {
-          latitude: 48.86,
-          libelle: "Chargement · SITE-PARIS — Paris Nord",
-          longitude: 2.35,
-        },
-        {
-          latitude: 45.75,
-          libelle: "Déchargement · SITE-LYON — Lyon Sud",
-          longitude: 4.85,
-        },
+    const conformite = http.expectOne("/api/v1/voyages/conformite");
+    expect(conformite.request.body).toMatchObject({
+      arrets: [{ siteId: "site-lyon" }, { siteId: "site-mrs" }],
+      dossierIds: ["d-1"],
+      vehiculeId: "ve-1",
+    });
+    conformite.flush({
+      anomalies: [
+        { bloquante: false, code: "FENETRE", message: "Fenêtre hors période" },
       ],
+      arrets: [],
+      capaciteKg: 12_000,
+      chargeMaxKg: 6000,
+      conforme: true,
+      tauxRemplissage: 0.5,
     });
-    calcReq.flush({
-      distanceKm: 462.7,
-      dureeMin: 285.4,
-      geometrie: [],
-      segments: [],
-    });
-
     await fixture.whenStable();
     fixture.detectChanges();
+    const texte = (fixture.nativeElement as HTMLElement).textContent ?? "";
+    expect(texte).toContain("Voyage conforme");
+    expect(texte).toContain("Fenêtre hors période");
 
-    const distanceInput = compiled.querySelector(
-      "#distanceTotaleKm"
-    ) as HTMLInputElement;
-    const dureeInput = compiled.querySelector(
-      "#dureeConduiteMin"
-    ) as HTMLInputElement;
-    expect(distanceInput.value).toBe("463");
-    expect(dureeInput.value).toBe("285");
-    http.verify();
+    const envoi = page.onSubmit(EVENEMENT);
+    await fixture.whenStable();
+    const creation = http.expectOne(
+      (r) => r.url === "/api/v1/voyages" && r.method === "POST"
+    );
+    expect(creation.request.body.arrets).toEqual([
+      { siteId: "site-lyon" },
+      { siteId: "site-mrs" },
+    ]);
+    expect(creation.request.body.trajet.etapes).toHaveLength(2);
+    creation.flush({ id: "voy-1" });
+    await envoi;
+
+    expect(navigate).toHaveBeenCalledWith(["/voyages", "voy-1"]);
+  });
+
+  it("offers manual planning when the agent is unavailable", async () => {
+    const fixture = TestBed.createComponent(VoyageCreatePage);
+    fixture.detectChanges();
+    flushLookups();
+    const page = fixture.componentInstance as unknown as Page;
+
+    const envoi = page.proposer(EVENEMENT);
+    http.expectOne("/api/v1/ia/planification/propositions").flush(
+      {
+        detail: "Le service IA (planification) est momentanément indisponible",
+      },
+      { status: 503, statusText: "Service Unavailable" }
+    );
+    await envoi;
+    fixture.detectChanges();
+
+    const texte = (fixture.nativeElement as HTMLElement).textContent ?? "";
+    expect(texte).toContain("Passer en mode manuel");
   });
 });
