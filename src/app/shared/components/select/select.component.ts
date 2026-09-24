@@ -56,6 +56,7 @@ import {
   selectViewportVariants,
   type ZardSelectAlignVariants,
   type ZardSelectPositionVariants,
+  type ZardSelectPreferOverlaySideVariants,
 } from '@/shared/components/select/select.variants';
 import { mergeClasses } from '@/shared/utils/merge-classes';
 
@@ -218,6 +219,7 @@ export class ZardSelectComponent implements ControlValueAccessor, OnDestroy {
   readonly zMultiple = input(false, { transform: booleanAttribute });
   readonly zPlaceholder = input<string>('Select an option...');
   readonly zPosition = input<ZardSelectPositionVariants>('item-aligned');
+  readonly zPreferOverlaySide = input<ZardSelectPreferOverlaySideVariants>('auto');
   readonly zValue = model<string | string[]>(this.zMultiple() ? [] : '');
 
   readonly zSelectionChange = output<string | string[]>();
@@ -871,7 +873,29 @@ export class ZardSelectComponent implements ControlValueAccessor, OnDestroy {
   /** Height the dropdown may occupy without overflowing the viewport. */
   private getAvailableContentHeight(): number {
     const viewportHeight = this.viewportRuler.getViewportSize().height;
-    return Math.max(Math.min(MAX_CONTENT_HEIGHT, viewportHeight - VIEWPORT_MARGIN * 2), 0);
+    const cap = Math.max(
+      Math.min(MAX_CONTENT_HEIGHT, viewportHeight - VIEWPORT_MARGIN * 2),
+      0
+    );
+
+    const prefer = this.zPreferOverlaySide();
+    if (prefer === 'auto') {
+      return cap;
+    }
+
+    const trigger = this.elementRef.nativeElement.querySelector('button');
+    if (!trigger) {
+      return cap;
+    }
+
+    const rect = trigger.getBoundingClientRect();
+    if (prefer === 'bottom') {
+      const below = viewportHeight - rect.bottom - VIEWPORT_MARGIN;
+      return Math.max(Math.min(cap, below), 0);
+    }
+
+    const above = rect.top - VIEWPORT_MARGIN;
+    return Math.max(Math.min(cap, above), 0);
   }
 
   private connectedPositions(itemAlignedOffset?: { bottom: number; top: number }): ConnectedPosition[] {
@@ -880,22 +904,29 @@ export class ZardSelectComponent implements ControlValueAccessor, OnDestroy {
     const bottomOffsetY = itemAlignedOffset?.bottom ?? 4;
     const topOffsetY = itemAlignedOffset?.top ?? -4;
 
-    return [
-      {
-        originX,
-        originY: 'bottom',
-        overlayX,
-        overlayY: 'top',
-        offsetY: bottomOffsetY,
-      },
-      {
-        originX,
-        originY: 'top',
-        overlayX,
-        overlayY: 'bottom',
-        offsetY: topOffsetY,
-      },
-    ];
+    const openBelow: ConnectedPosition = {
+      originX,
+      originY: 'bottom',
+      overlayX,
+      overlayY: 'top',
+      offsetY: bottomOffsetY,
+    };
+    const openAbove: ConnectedPosition = {
+      originX,
+      originY: 'top',
+      overlayX,
+      overlayY: 'bottom',
+      offsetY: topOffsetY,
+    };
+
+    switch (this.zPreferOverlaySide()) {
+      case 'bottom':
+        return [openBelow];
+      case 'top':
+        return [openAbove];
+      default:
+        return [openBelow, openAbove];
+    }
   }
 
   private createOverlay() {

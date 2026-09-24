@@ -2,6 +2,8 @@ import {
   affectationsDepuisDraft,
   draftToWrite,
   emptyVoyageDraft,
+  lifecycleStepPhase,
+  primaryVoyageTransition,
   totalChargeKgFromDossiers,
   validateDossierIds,
 } from "./voyage";
@@ -24,6 +26,19 @@ describe("voyage domain helpers", () => {
       ],
     ]);
     expect(totalChargeKgFromDossiers(["d1", "d2"], dossiers)).toBe(800);
+  });
+
+  it("picks the earliest lifecycle step as primary transition", () => {
+    expect(primaryVoyageTransition(["ANNULE", "PLANIFIE"])).toBe("PLANIFIE");
+    expect(primaryVoyageTransition(["ANNULE"])).toBeNull();
+    expect(primaryVoyageTransition(["EN_COURS", "TERMINE"])).toBe("EN_COURS");
+  });
+
+  it("marks lifecycle step phases relative to current statut", () => {
+    expect(lifecycleStepPhase("BROUILLON", "PLANIFIE")).toBe("past");
+    expect(lifecycleStepPhase("PLANIFIE", "PLANIFIE")).toBe("current");
+    expect(lifecycleStepPhase("TERMINE", "PLANIFIE")).toBe("future");
+    expect(lifecycleStepPhase("PLANIFIE", "ANNULE")).toBe("future");
   });
 });
 

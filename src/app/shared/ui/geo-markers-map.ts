@@ -1,5 +1,6 @@
 import {
   type AfterViewInit,
+  booleanAttribute,
   Component,
   DestroyRef,
   type ElementRef,
@@ -46,16 +47,36 @@ const ROUTE_POLYLINE_COLOR = "#215544";
   selector: "app-geo-markers-map",
   styles: `
     :host {
-      display: block;
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
       width: 100%;
+      min-height: 18rem;
+      border-radius: inherit;
     }
 
     .map-host {
-      height: 100%;
-      min-height: 20rem;
+      flex: 1 1 auto;
       width: 100%;
+      min-height: 18rem;
       z-index: 0;
       overflow: hidden;
+    }
+
+    .map-host--embedded {
+      min-height: 18rem;
+      border: none;
+      border-radius: inherit;
+      background: color-mix(in oklch, var(--color-canvas) 42%, var(--color-surface));
+      box-shadow:
+        inset 0 0 0 1px oklch(0 0 0 / 0.1),
+        0 1px 2px oklch(0 0 0 / 0.04);
+    }
+
+    :host-context(.dark) .map-host--embedded {
+      box-shadow:
+        inset 0 0 0 1px oklch(1 0 0 / 0.1),
+        0 1px 2px oklch(0 0 0 / 0.2);
     }
 
     .map-host ::ng-deep .leaflet-container {
@@ -70,7 +91,9 @@ const ROUTE_POLYLINE_COLOR = "#215544";
     <div
       #mapHost
       [attr.aria-label]="ariaLabel()"
-      class="map-host surface-panel"
+      [class.map-host--embedded]="embedded()"
+      [class.surface-panel]="!embedded()"
+      class="map-host"
       role="application"
     ></div>
   `,
@@ -82,6 +105,8 @@ export class GeoMarkersMap implements AfterViewInit {
   readonly path = input<readonly GeoMapPathPoint[]>([]);
   readonly focusId = input<string | null>(null);
   readonly ariaLabel = input("Carte");
+  /** Flush inset inside a parent card (no outer surface-panel frame). */
+  readonly embedded = input(false, { transform: booleanAttribute });
 
   private readonly mapHost =
     viewChild.required<ElementRef<HTMLElement>>("mapHost");
@@ -90,6 +115,7 @@ export class GeoMarkersMap implements AfterViewInit {
   private readonly layer = L.layerGroup();
   private readonly markersById = new Map<string, L.Marker>();
   private readonly mapReady = signal(false);
+  private resizeObserver?: ResizeObserver;
 
   constructor() {
     effect(() => {
@@ -106,12 +132,37 @@ export class GeoMarkersMap implements AfterViewInit {
 
   ngAfterViewInit(): void {
     this.initMap();
+    this.observeMapHostSize();
     this.destroyRef.onDestroy(() => {
+      this.resizeObserver?.disconnect();
+      this.resizeObserver = undefined;
       this.map?.remove();
       this.map = null;
       this.markersById.clear();
       this.mapReady.set(false);
     });
+  }
+
+  /** Call after the host layout changes (e.g. tab panel shown). */
+  refreshLayout(): void {
+    requestAnimationFrame(() => {
+      this.map?.invalidateSize();
+      requestAnimationFrame(() => this.map?.invalidateSize());
+    });
+  }
+
+  private observeMapHostSize(): void {
+    if (typeof ResizeObserver === "undefined") {
+      return;
+    }
+    const host = this.mapHost().nativeElement;
+    this.resizeObserver = new ResizeObserver(() => {
+      if (!this.mapReady()) {
+        return;
+      }
+      this.refreshLayout();
+    });
+    this.resizeObserver.observe(host);
   }
 
   private initMap(): void {
@@ -136,12 +187,7 @@ export class GeoMarkersMap implements AfterViewInit {
     this.renderMapContent(this.markers(), this.path());
     this.focusMarker(this.focusId());
 
-    requestAnimationFrame(() => {
-      this.map?.invalidateSize();
-      requestAnimationFrame(() => {
-        this.map?.invalidateSize();
-      });
-    });
+    this.refreshLayout();
   }
 
   private renderMapContent(
