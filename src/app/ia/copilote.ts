@@ -227,6 +227,7 @@ export function canSubmitCopiloteQuestion(question: string): boolean {
 }
 
 const ROUTES_SOURCES: Readonly<Record<string, string>> = {
+  CHAUFFEUR: "/chauffeurs",
   CLIENT: "/clients",
   COMMANDE: "/commandes",
   DOSSIER: "/dossiers",
@@ -237,6 +238,9 @@ const ROUTES_SOURCES: Readonly<Record<string, string>> = {
 
 /** Page de détail d'une source citée, ou null si l'entité n'a pas de fiche. */
 export function routeSource(source: SourceCopilote): string | null {
+  if (source.type === "PLANIFICATION") {
+    return "/voyages/nouveau";
+  }
   const base = ROUTES_SOURCES[source.type];
   if (!(base && source.id)) {
     return null;
@@ -249,6 +253,7 @@ const LIBELLES_SOURCES: Readonly<Record<string, string>> = {
   CLIENT: "Client",
   COMMANDE: "Commande",
   DOSSIER: "Dossier",
+  PLANIFICATION: "Planification",
   REMORQUE: "Remorque",
   VEHICULE: "Véhicule",
   VOYAGE: "Voyage",

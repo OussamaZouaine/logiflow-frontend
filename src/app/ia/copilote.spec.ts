@@ -88,7 +88,14 @@ describe("copilote helpers", () => {
     ).toBe("/dossiers/d-1");
     expect(
       routeSource({ id: "c-1", reference: "Jean Dupont", type: "CHAUFFEUR" })
-    ).toBeNull();
+    ).toBe("/chauffeurs/c-1");
+    expect(
+      routeSource({
+        id: null,
+        reference: "Planification",
+        type: "PLANIFICATION",
+      })
+    ).toBe("/voyages/nouveau");
     expect(
       routeSource({ id: null, reference: "VOY-1", type: "VOYAGE" })
     ).toBeNull();
