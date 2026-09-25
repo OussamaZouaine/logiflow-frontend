@@ -335,8 +335,8 @@
       </div>
       @if (scoreSante.value()!.necessiteIntervention && canMaintenance()) {
       <p class="text-sm text-amber">
-        Intervention recommandée — créez un ordre de travail si ce n'est pas
-        déjà fait.
+        Intervention recommandée — planifiez un ordre de travail depuis la
+        section Maintenance si ce n'est pas déjà fait.
       </p>
       }
     </div>
@@ -420,115 +420,6 @@
   </app-form-section>
 
   @if (canMaintenance()) {
-  <app-form-section
-    description="Les plans d'entretien décrivent la périodicité préventive ; les ordres de travail exécutent une intervention. Un plan ne crée pas d'ordre automatiquement."
-    title="Maintenance"
-  >
-    <div class="fiche-subsection">
-      <div class="fiche-subsection__header">
-        <h3 class="fiche-subsection__title">Plans d'entretien</h3>
-        <a
-          [queryParams]="{ vehiculeId: id() }"
-          class="btn-outline pressable min-h-9 px-3 py-1.5 text-xs"
-          routerLink="/maintenance/plans/nouveau"
-        >
-          Nouveau plan
-        </a>
-      </div>
-
-      @if (plansEntretien.isLoading()) {
-      <p class="fiche-load-hint" role="status">Chargement…</p>
-      } @else if (plansEntretien.error()) {
-      <app-fiche-error
-        (retry)="plansEntretien.reload()"
-        [message]="plansLoadError()"
-      />
-      } @else if (plansEntretienList().length === 0) {
-      <p class="fiche-meta">Aucun plan pour ce véhicule.</p>
-      } @else {
-      <ul class="flex flex-col gap-2">
-        @for (plan of plansEntretienList(); track plan.id) {
-        <li>
-          <a
-            [routerLink]="['/maintenance/plans', plan.id]"
-            class="fiche-link-card pressable"
-          >
-            <span class="font-medium text-ink">{{ plan.libelle }}</span>
-            <span class="font-mono text-xs tabular-nums text-muted">
-              {{ formatPeriodicite(plan) }}
-            </span>
-          </a>
-        </li>
-        }
-      </ul>
-      }
-    </div>
-
-    <div class="fiche-subsection fiche-subsection--divider">
-      <div class="fiche-subsection__header">
-        <h3 class="fiche-subsection__title">Ordres de travail</h3>
-        <a
-          [queryParams]="{ vehiculeId: id() }"
-          class="btn-primary pressable min-h-9 px-3 py-1.5 text-xs"
-          routerLink="/maintenance/nouveau"
-        >
-          Nouvel ordre
-        </a>
-      </div>
-
-      @if (ordresTravail.isLoading()) {
-      <p class="fiche-load-hint" role="status">Chargement…</p>
-      } @else if (ordresTravail.error()) {
-      <app-fiche-error
-        (retry)="ordresTravail.reload()"
-        [message]="ordresLoadError()"
-      />
-      } @else if (ordresTravailList().length === 0) {
-      <p class="fiche-meta">Aucun ordre pour ce véhicule.</p>
-      } @else {
-      <ul class="flex flex-col gap-2">
-        @for (ordre of ordresTravailList(); track ordre.id) {
-        <li>
-          <a
-            [routerLink]="['/maintenance', ordre.id]"
-            class="fiche-link-card pressable"
-          >
-            <span class="font-mono text-xs text-pine">
-              #{{ formatOrdreShortId(ordre.id) }}
-            </span>
-            <span class="text-ink"
-              >{{ typeInterventionLabel(ordre.type) }}</span
-            >
-            <app-statut-chip
-              [label]="statutOtLabel(ordre.statut)"
-              [tone]="statutOtTone(ordre.statut)"
-            />
-            <span class="font-mono text-xs tabular-nums text-muted">
-              {{ formatDateTime(ordre.datePlanifiee) }}
-            </span>
-          </a>
-        </li>
-        }
-      </ul>
-      }
-    </div>
-
-    <div class="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs">
-      <a
-        [queryParams]="{ vehiculeId: id() }"
-        class="pressable font-medium text-pine underline-offset-2 hover:underline"
-        routerLink="/maintenance"
-      >
-        Tous les ordres
-      </a>
-      <a
-        [queryParams]="{ vehiculeId: id() }"
-        class="pressable font-medium text-pine underline-offset-2 hover:underline"
-        routerLink="/maintenance/plans"
-      >
-        Tous les plans
-      </a>
-    </div>
-  </app-form-section>
+  <app-engin-maintenance-section [enginId]="id()" typeEngin="VEHICULE" />
   } }
 </div>

@@ -8,44 +8,53 @@ import {
   input,
   signal,
 } from "@angular/core";
-import { bindShellBreadcrumbLeaf } from "../core/nav/shell-breadcrumb-leaf";
 import { FormField, form, min, required, submit } from "@angular/forms/signals";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import { lucideCheck } from "@ng-icons/lucide";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
+import { DemoSessionService } from "../core/auth/demo-session";
 import { firstFieldError } from "../core/forms/first-field-error";
 import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
-import { DocumentApi } from "../documents/document-api";
+import { bindShellBreadcrumbLeaf } from "../core/nav/shell-breadcrumb-leaf";
+import { WORK_DESTINATIONS } from "../core/nav/work-destination";
 import {
   DOCUMENT_TYPES,
+  type Document,
   documentTypeLabel,
   emptyDocumentUploadDraft,
   formatDocumentExpiration,
   isDocumentType,
-  type Document,
 } from "../documents/document";
+import { DocumentApi } from "../documents/document-api";
+import { EnginMaintenanceSection } from "../maintenance/engin-maintenance-section";
+import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
 import { enumToSelectOptions } from "../shared/ui/field-select";
 import { statutOptionsFrom } from "../shared/ui/list-filter";
-import { vehiculeStatutIcon } from "../shared/ui/list-statut-icons";
 import { statutIconForValue } from "../shared/ui/list-statut-filter";
-import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
-import { ToastService } from "../shared/ui/toast";
+import { vehiculeStatutIcon } from "../shared/ui/list-statut-icons";
 import { StatutChip } from "../shared/ui/statut-chip";
-import { NgIcon, provideIcons } from "@ng-icons/core";
-import { lucideCheck } from "@ng-icons/lucide";
+import { ToastService } from "../shared/ui/toast";
 import {
   carrosserieDisplay,
   formatMarqueModele,
   formatRemorqueDate,
+  type Remorque,
   remorqueStatutLabel,
   remorqueStatutTone,
   typeRemorqueDisplay,
   VEHICULE_STATUTS,
-  type Remorque,
 } from "./remorque";
 import { RemorqueApi } from "./remorque-api";
 
 @Component({
-  imports: [FormField, NgIcon, StatutChip, ...FICHE_PAGE_IMPORTS],
+  imports: [
+    EnginMaintenanceSection,
+    FormField,
+    NgIcon,
+    StatutChip,
+    ...FICHE_PAGE_IMPORTS,
+  ],
   selector: "app-remorque-detail-page",
   templateUrl: "./remorque-detail-page.html",
   viewProviders: [provideIcons({ lucideCheck })],
@@ -54,9 +63,14 @@ export class RemorqueDetailPage {
   private readonly api = inject(RemorqueApi);
   private readonly documentApi = inject(DocumentApi);
   private readonly toast = inject(ToastService);
+  private readonly session = inject(DemoSessionService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly id = input.required<string>();
+
+  protected readonly canMaintenance = computed(() =>
+    this.session.hasAnyRole(WORK_DESTINATIONS.maintenance.roles)
+  );
 
   protected readonly statutOptions = statutOptionsFrom(
     VEHICULE_STATUTS,
@@ -131,9 +145,7 @@ export class RemorqueDetailPage {
     bindShellBreadcrumbLeaf(
       this.destroyRef,
       computed(() =>
-        this.remorque.hasValue()
-          ? this.remorque.value().immatriculation
-          : null
+        this.remorque.hasValue() ? this.remorque.value().immatriculation : null
       )
     );
 

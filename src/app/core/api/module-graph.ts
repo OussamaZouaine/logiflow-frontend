@@ -22,6 +22,9 @@ export type ApiEntityId =
   | "document"
   | "planEntretien"
   | "ordreTravail"
+  | "sinistre"
+  | "prestataire"
+  | "contratAssurance"
   | "scoreSante"
   | "utilisateur";
 
@@ -199,11 +202,17 @@ export const API_ENTITY_GRAPH: readonly ApiEntityRelation[] = [
     entity: "planEntretien",
     label: "Plan d'entretien",
     references: [
-      { field: "vehiculeId", kind: "fk", target: "vehicule" },
       {
-        field: "ordreTravail",
+        field: "engin",
+        kind: "fk",
+        notes: "Véhicule ou remorque",
+        target: "vehicule",
+      },
+      { field: "prestataireId", kind: "fk", target: "prestataire" },
+      {
+        field: "derniereRealisation",
         kind: "derived",
-        notes: "Not linked in API — schedule vs execution are separate",
+        notes: "Mise à jour à la clôture d'un OT lié (planId)",
         target: "ordreTravail",
       },
     ],
@@ -216,11 +225,57 @@ export const API_ENTITY_GRAPH: readonly ApiEntityRelation[] = [
   {
     entity: "ordreTravail",
     label: "Ordre de travail",
-    references: [{ field: "vehiculeId", kind: "fk", target: "vehicule" }],
+    references: [
+      {
+        field: "engin",
+        kind: "fk",
+        notes: "Véhicule ou remorque",
+        target: "vehicule",
+      },
+      { field: "planId", kind: "fk", target: "planEntretien" },
+      { field: "sinistreId", kind: "fk", target: "sinistre" },
+      { field: "prestataireId", kind: "fk", target: "prestataire" },
+    ],
     routes: {
-      create: "/maintenance/nouveau",
-      detail: "/maintenance/:id",
-      list: "/maintenance",
+      create: "/maintenance/ordres-travail/nouveau",
+      detail: "/maintenance/ordres-travail/:id",
+      list: "/maintenance/ordres-travail",
+    },
+  },
+  {
+    entity: "sinistre",
+    label: "Sinistre",
+    references: [
+      { field: "vehiculeId", kind: "fk", target: "vehicule" },
+      { field: "remorqueId", kind: "fk", target: "remorque" },
+      { field: "chauffeurId", kind: "fk", target: "chauffeur" },
+      { field: "voyageId", kind: "fk", target: "voyage" },
+      { field: "contratId", kind: "fk", target: "contratAssurance" },
+    ],
+    routes: {
+      create: "/maintenance/sinistres/nouveau",
+      detail: "/maintenance/sinistres/:id",
+      list: "/maintenance/sinistres",
+    },
+  },
+  {
+    entity: "prestataire",
+    label: "Prestataire",
+    references: [],
+    routes: {
+      create: "/maintenance/prestataires/nouveau",
+      detail: "/maintenance/prestataires/:id",
+      list: "/maintenance/prestataires",
+    },
+  },
+  {
+    entity: "contratAssurance",
+    label: "Contrat d'assurance",
+    references: [{ field: "assureurId", kind: "fk", target: "prestataire" }],
+    routes: {
+      create: "/maintenance/contrats/nouveau",
+      detail: "/maintenance/contrats/:id",
+      list: "/maintenance/contrats",
     },
   },
   {

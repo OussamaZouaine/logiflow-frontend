@@ -227,16 +227,25 @@ export function canSubmitCopiloteQuestion(question: string): boolean {
 }
 
 const ROUTES_SOURCES: Readonly<Record<string, string>> = {
+  CHAUFFEUR: "/chauffeurs",
   CLIENT: "/clients",
   COMMANDE: "/commandes",
   DOSSIER: "/dossiers",
+  ORDRE_TRAVAIL: "/maintenance/ordres-travail",
   REMORQUE: "/remorques",
+  SINISTRE: "/maintenance/sinistres",
   VEHICULE: "/vehicules",
   VOYAGE: "/voyages",
 };
 
 /** Page de détail d'une source citée, ou null si l'entité n'a pas de fiche. */
 export function routeSource(source: SourceCopilote): string | null {
+  if (source.type === "PLANIFICATION") {
+    return "/voyages/nouveau";
+  }
+  if (source.type === "COUTS_MAINTENANCE") {
+    return "/maintenance/couts";
+  }
   const base = ROUTES_SOURCES[source.type];
   if (!(base && source.id)) {
     return null;
@@ -248,8 +257,12 @@ const LIBELLES_SOURCES: Readonly<Record<string, string>> = {
   CHAUFFEUR: "Chauffeur",
   CLIENT: "Client",
   COMMANDE: "Commande",
+  COUTS_MAINTENANCE: "Coûts de maintenance",
   DOSSIER: "Dossier",
+  ORDRE_TRAVAIL: "Ordre de travail",
+  PLANIFICATION: "Planification",
   REMORQUE: "Remorque",
+  SINISTRE: "Sinistre",
   VEHICULE: "Véhicule",
   VOYAGE: "Voyage",
 };

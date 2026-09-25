@@ -44,8 +44,8 @@ describe("destinationNavGroupsForRoles", () => {
     const groups = destinationNavGroupsForRoles(["CHAUFFEUR"]);
     expect(groups.map((g) => g.section)).toEqual(["Exploitation", "Planning"]);
     expect(groups.flatMap((g) => g.items.map((d) => d.id))).toEqual([
-      "voyages",
       "carburant",
+      "voyages",
     ]);
   });
 

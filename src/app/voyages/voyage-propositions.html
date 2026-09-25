@@ -1,0 +1,254 @@
+<section aria-label="Propositions de voyages" class="flex flex-col gap-4">
+  <p class="text-xs text-muted">
+    {{ propositions().nbDossiersCandidats }} dossier(s) candidat(s) ·
+    {{ options().length }} proposition(s) · {{ source() }}
+  </p>
+
+  @if (propositions().dossiersNonPlanifiables.length > 0) {
+  <p class="flex items-start gap-2 rounded-lg border border-amber/30 bg-amber/5 px-3 py-2 text-sm text-ink">
+    <ng-icon aria-hidden="true" class="mt-0.5 text-amber" name="lucideTriangleAlert" />
+    <span>
+      Sans ressource compatible sur la période :
+      {{ propositions().dossiersNonPlanifiables.join(", ") }}
+    </span>
+  </p>
+  }
+
+  @if (options().length === 0) {
+  <p class="rounded-lg border border-line bg-canvas px-4 py-6 text-center text-sm text-muted">
+    {{ propositions().comparaison }}
+  </p>
+  } @else {
+  <div class="overflow-x-auto rounded-lg border border-line">
+    <table class="w-full min-w-xl text-left text-sm">
+      <caption class="sr-only">Comparatif des propositions</caption>
+      <thead class="list-table-head">
+        <tr>
+          <th class="px-3 py-2 font-medium" scope="col">Indicateur</th>
+          @for (option of options(); track option.rang) {
+          <th class="px-3 py-2 font-medium" scope="col">
+            Option {{ option.rang }}
+            @if (option.recommandee) {
+            <app-statut-chip label="Recommandée" tone="pine" />
+            }
+            <span class="block text-xs font-normal text-muted">
+              {{ option.libelleObjectif }}
+            </span>
+          </th>
+          }
+        </tr>
+      </thead>
+      <tbody class="font-mono text-xs tabular-nums">
+        <tr class="border-b border-line">
+          <th class="px-3 py-2 font-sans font-normal text-muted" scope="row">Dossiers</th>
+          @for (option of options(); track option.rang) {
+          <td
+            [class.font-semibold]="option.indicateurs.nbDossiers === meilleures()?.dossiers"
+            class="px-3 py-2"
+          >
+            {{ option.indicateurs.nbDossiers }}
+          </td>
+          }
+        </tr>
+        <tr class="border-b border-line">
+          <th class="px-3 py-2 font-sans font-normal text-muted" scope="row">Distance</th>
+          @for (option of options(); track option.rang) {
+          <td
+            [class.font-semibold]="option.indicateurs.distanceKm === meilleures()?.distance"
+            class="px-3 py-2"
+          >
+            {{ option.indicateurs.distanceKm }} km
+          </td>
+          }
+        </tr>
+        <tr class="border-b border-line">
+          <th class="px-3 py-2 font-sans font-normal text-muted" scope="row">
+            Conduite / durée totale
+          </th>
+          @for (option of options(); track option.rang) {
+          <td class="px-3 py-2">
+            {{ formatDureeMin(option.indicateurs.dureeConduiteMin) }} /
+            {{ formatDureeMin(option.indicateurs.dureeTotaleMin) }}
+          </td>
+          }
+        </tr>
+        <tr class="border-b border-line">
+          <th class="px-3 py-2 font-sans font-normal text-muted" scope="row">Remplissage</th>
+          @for (option of options(); track option.rang) {
+          <td
+            [class.font-semibold]="
+              tauxRemplissage(option.indicateurs) === meilleures()?.remplissage
+            "
+            class="px-3 py-2"
+          >
+            {{ formatPourcentage(tauxRemplissage(option.indicateurs)) }}
+            <span class="text-muted">
+              ({{ option.indicateurs.poidsKg / 1000 }} t · {{ option.indicateurs.palettes }} pal.)
+            </span>
+          </td>
+          }
+        </tr>
+        <tr class="border-b border-line">
+          <th class="px-3 py-2 font-sans font-normal text-muted" scope="row">Fenêtres manquées</th>
+          @for (option of options(); track option.rang) {
+          <td
+            [class.text-brake]="option.indicateurs.fenetresManquees > 0"
+            class="px-3 py-2"
+          >
+            {{ option.indicateurs.fenetresManquees }}
+          </td>
+          }
+        </tr>
+        <tr class="border-b border-line">
+          <th class="px-3 py-2 font-sans font-normal text-muted" scope="row">Coût estimé</th>
+          @for (option of options(); track option.rang) {
+          <td
+            [class.font-semibold]="option.indicateurs.coutEstime === meilleures()?.cout"
+            class="px-3 py-2"
+          >
+            {{ formatMontantArrondi(option.indicateurs.coutEstime) }}
+            @if (option.indicateurs.coutParTonne !== null) {
+            <span class="text-muted">
+              ({{ formatMontantArrondi(option.indicateurs.coutParTonne) }}/t)
+            </span>
+            }
+          </td>
+          }
+        </tr>
+        <tr>
+          <th class="px-3 py-2 font-sans font-normal text-muted" scope="row">Conformité</th>
+          @for (option of options(); track option.rang) {
+          <td class="px-3 py-2 font-sans">
+            <app-statut-chip
+              [label]="option.conformite.conforme ? 'Conforme' : 'Non conforme'"
+              [tone]="option.conformite.conforme ? 'pine' : 'brake'"
+            />
+          </td>
+          }
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="flex items-start gap-2 text-sm text-ink">
+    <ng-icon aria-hidden="true" class="mt-0.5 shrink-0 text-pine" name="lucideSparkles" />
+    <span>{{ propositions().comparaison }}</span>
+  </p>
+
+  <ol class="flex flex-col gap-4">
+    @for (option of options(); track option.rang) {
+    <li
+      [attr.aria-label]="'Option ' + option.rang"
+      [class.border-pine]="option.recommandee"
+      class="rounded-xl border border-line bg-canvas p-4"
+    >
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 class="flex flex-wrap items-center gap-2 font-medium text-ink">
+            Option {{ option.rang }} — {{ option.libelleObjectif }}
+            @if (option.recommandee) {
+            <app-statut-chip label="Recommandée" tone="pine" />
+            }
+          </h3>
+          <p class="mt-1 text-sm text-muted">{{ option.justification }}</p>
+        </div>
+        <button (click)="choisir.emit(option)" type="button" z-button zSize="sm">
+          Choisir cette proposition
+        </button>
+      </div>
+
+      <dl class="mt-3 grid gap-2 text-sm sm:grid-cols-3">
+        <div>
+          <dt class="text-xs text-muted">Dossiers</dt>
+          <dd class="text-ink">{{ dossiers(option.dossierIds) }}</dd>
+        </div>
+        <div>
+          <dt class="flex items-center gap-1 text-xs text-muted">
+            <ng-icon aria-hidden="true" name="lucideTruck" /> Véhicule
+          </dt>
+          <dd class="font-mono text-xs text-ink">{{ vehicule(option) }}</dd>
+        </div>
+        <div>
+          <dt class="flex items-center gap-1 text-xs text-muted">
+            <ng-icon aria-hidden="true" name="lucideUsers" /> Équipage
+          </dt>
+          <dd class="text-ink">{{ chauffeurs(option) }}</dd>
+        </div>
+      </dl>
+
+      <div class="mt-3 grid gap-4 lg:grid-cols-2">
+        <app-itineraire-carte
+          [ariaLabel]="'Itinéraire de l\'option ' + option.rang"
+          [arrets]="arretsCarte(option)"
+        />
+        <ol aria-label="Frise des arrêts" class="flex flex-col gap-2">
+          @for (arret of option.arrets; track arret.ordre) {
+          <li class="flex gap-3 text-sm">
+            <span
+              class="flex size-6 shrink-0 items-center justify-center rounded-full bg-pine/10 font-mono text-xs text-pine"
+            >
+              {{ arret.ordre + 1 }}
+            </span>
+            <div class="min-w-0">
+              <p class="text-ink">
+                {{ arret.libelle }}
+                <span class="text-xs text-muted">· {{ natureArret(arret) }}</span>
+              </p>
+              <p class="flex flex-wrap items-center gap-x-2 font-mono text-xs tabular-nums text-muted">
+                <ng-icon aria-hidden="true" name="lucideClock" />
+                {{ formatHeure(arret.eta) }} → {{ formatHeure(arret.etd) }}
+                @if (arret.ordre > 0) {
+                · {{ arret.distanceDepuisPrecedentKm }} km
+                }
+                @if (arret.attenteMin > 0) {
+                · attente {{ formatDureeMin(arret.attenteMin) }}
+                }
+              </p>
+              <p class="text-xs text-muted">
+                @if (arret.dossiersCharges.length > 0) {
+                ↑ {{ dossiers(arret.dossiersCharges) }}
+                }
+                @if (arret.dossiersDecharges.length > 0) {
+                ↓ {{ dossiers(arret.dossiersDecharges) }}
+                }
+              </p>
+              @if (!arret.fenetreRespectee) {
+              <p class="text-xs text-brake">Fenêtre horaire non respectée</p>
+              }
+            </div>
+          </li>
+          }
+        </ol>
+      </div>
+
+      @if (
+        option.alertes.length > 0 ||
+          option.conformite.bloquants.length > 0 ||
+          option.conformite.avertissements.length > 0
+      ) {
+      <ul class="mt-3 flex flex-col gap-1 text-xs">
+        @for (message of option.conformite.bloquants; track message) {
+        <li class="flex items-start gap-1 text-brake">
+          <ng-icon aria-hidden="true" class="mt-0.5 shrink-0" name="lucideCircleAlert" />
+          {{ message }}
+        </li>
+        }
+        @for (message of option.alertes; track message) {
+        <li class="flex items-start gap-1 text-amber">
+          <ng-icon aria-hidden="true" class="mt-0.5 shrink-0" name="lucideTriangleAlert" />
+          {{ message }}
+        </li>
+        }
+        @for (message of option.conformite.avertissements; track message) {
+        <li class="flex items-start gap-1 text-muted">
+          <ng-icon aria-hidden="true" class="mt-0.5 shrink-0" name="lucideTriangleAlert" />
+          {{ message }}
+        </li>
+        }
+      </ul>
+      }
+    </li>
+    }
+  </ol>
+  }
+</section>

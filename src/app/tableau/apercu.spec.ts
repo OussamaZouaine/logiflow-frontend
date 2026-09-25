@@ -1,8 +1,8 @@
 import type { Commande } from "../commandes/commande";
-import type { Dossier } from "../dossiers/dossier";
 import type { PageResponse } from "../core/api/page-response";
 import type { WorkDestination } from "../core/nav/work-destination";
 import { WORK_DESTINATIONS } from "../core/nav/work-destination";
+import type { Dossier } from "../dossiers/dossier";
 import type { Vehicule } from "../vehicules/vehicule";
 import type { Voyage } from "../voyages/voyage";
 import {
@@ -11,15 +11,15 @@ import {
   apercuToneBorderClass,
   apercuToneClass,
   apercuToneOnFillClass,
-  commandeStatutTone,
-  vehiculeStatutTone,
-  voyageStatutTone,
   commandeStatutSlices,
+  commandeStatutTone,
   dossierStatutSlices,
   isCompleteCollection,
   shouldShowStatutBreakdown,
   vehiculeStatutSlices,
+  vehiculeStatutTone,
   voyageStatutSlices,
+  voyageStatutTone,
 } from "./apercu";
 
 describe("apercuDestinations", () => {
@@ -38,8 +38,8 @@ describe("apercuDestinations", () => {
 });
 
 describe("apercuApiPath", () => {
-  it("maps maintenance to ordres-travail", () => {
-    expect(apercuApiPath("maintenance")).toBe("ordres-travail");
+  it("maps maintenance to maintenance/ordres-travail", () => {
+    expect(apercuApiPath("maintenance")).toBe("maintenance/ordres-travail");
     expect(apercuApiPath("carburant")).toBe("prises-carburant");
     expect(apercuApiPath("sites")).toBe("sites");
   });

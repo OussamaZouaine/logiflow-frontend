@@ -1,9 +1,10 @@
 <z-tab-group
+  (zTabChange)="onTabChange($event)"
   aria-label="Sections maintenance"
   class="w-fit max-w-full [&>div.flex-1]:hidden"
   zVariant="section"
-  (zTabChange)="onTabChange($event)"
 >
-  <z-tab label="Ordres de travail" />
-  <z-tab label="Plans d'entretien" />
+  @for (section of sections; track section.lien) {
+  <z-tab [label]="section.label" />
+  }
 </z-tab-group>

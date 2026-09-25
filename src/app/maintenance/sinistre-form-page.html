@@ -1,0 +1,198 @@
+<app-form-page-header
+  [description]="
+    edition()
+      ? 'Circonstances, tiers et suivi assurance.'
+      : 'Le contrat d\'assurance et sa franchise sont repris automatiquement. Cochez « immobilisé » si l\'engin ne peut plus rouler.'
+  "
+  [title]="edition() ? 'Modifier le sinistre' : 'Déclarer un sinistre'"
+  listLabel="Sinistres"
+  listLink="/maintenance/sinistres"
+/>
+
+@if (chargement()) {
+<p class="text-sm text-muted" role="status">Chargement…</p>
+} @else {
+<form (submit)="onSubmit($event)" class="form-page" novalidate>
+  <app-form-validation-summary [show]="sinistreForm().touched() && sinistreForm().invalid()" />
+
+  <app-form-section title="Engins et conducteur">
+    <div class="form-page__coords">
+      <app-form-field
+        [error]="showFieldError(sinistreForm.vehiculeId()) ? firstFieldError(sinistreForm.vehiculeId().errors()) : null"
+        inputId="vehiculeId"
+        label="Véhicule"
+      >
+        <app-field-select
+          [formField]="sinistreForm.vehiculeId"
+          [invalid]="showFieldError(sinistreForm.vehiculeId())"
+          [options]="vehiculeOptions()"
+          inputId="vehiculeId"
+          placeholder="Aucun véhicule"
+        />
+      </app-form-field>
+      <app-form-field inputId="remorqueId" label="Remorque">
+        <app-field-select
+          [formField]="sinistreForm.remorqueId"
+          [options]="remorqueOptions()"
+          inputId="remorqueId"
+          placeholder="Aucune remorque"
+        />
+      </app-form-field>
+    </div>
+    <app-form-field inputId="chauffeurId" label="Chauffeur">
+      <app-field-select
+        [formField]="sinistreForm.chauffeurId"
+        [options]="chauffeurOptions()"
+        inputId="chauffeurId"
+        placeholder="Non renseigné"
+      />
+    </app-form-field>
+    @if (contratApplicable.value(); as contrat) {
+    <p class="text-sm text-muted" role="status">
+      Couvert par le contrat {{ contrat.numeroPolice }} — franchise
+      {{ contrat.franchise ?? 0 }} DH (reprise automatiquement).
+    </p>
+    } @else if (contratApplicable.hasValue()) {
+    <p class="text-sm text-amber" role="status">Aucun contrat d'assurance ne couvre cet engin à cette date.</p>
+    }
+  </app-form-section>
+
+  <app-form-section title="Circonstances">
+    <div class="form-page__coords">
+      <app-form-field
+        [error]="showFieldError(sinistreForm.dateSurvenance()) ? firstFieldError(sinistreForm.dateSurvenance().errors()) : null"
+        inputId="dateSurvenance"
+        label="Date et heure *"
+      >
+        <app-iso-datetime-input
+          [formField]="sinistreForm.dateSurvenance"
+          inputId="dateSurvenance"
+          timeAriaLabel="Heure du sinistre"
+        />
+      </app-form-field>
+      <app-form-field inputId="lieu" label="Lieu">
+        <input [class]="fieldClasses(sinistreForm.lieu())" [formField]="sinistreForm.lieu" id="lieu" type="text">
+      </app-form-field>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-3">
+      <app-form-field inputId="type" label="Nature *">
+        <app-field-select [formField]="sinistreForm.type" [options]="typeOptions" inputId="type" />
+      </app-form-field>
+      <app-form-field inputId="gravite" label="Gravité *">
+        <app-field-select [formField]="sinistreForm.gravite" [options]="graviteOptions" inputId="gravite" />
+      </app-form-field>
+      <app-form-field inputId="responsabilite" label="Responsabilité">
+        <app-field-select
+          [formField]="sinistreForm.responsabilite"
+          [options]="responsabiliteOptions"
+          inputId="responsabilite"
+        />
+      </app-form-field>
+    </div>
+    <app-form-field
+      [error]="showFieldError(sinistreForm.description()) ? firstFieldError(sinistreForm.description().errors()) : null"
+      inputId="description"
+      label="Description des circonstances *"
+    >
+      <textarea
+        [class]="fieldClasses(sinistreForm.description())"
+        [formField]="sinistreForm.description"
+        id="description"
+        rows="3"
+      ></textarea>
+    </app-form-field>
+    <div class="grid gap-2 sm:grid-cols-2">
+      <label class="flex items-center gap-2 text-sm"><input (change)="basculer('constatAmiable')" [checked]="draft().constatAmiable" type="checkbox"> Constat amiable rempli</label>
+      <label class="flex items-center gap-2 text-sm"><input (change)="basculer('rapportPolice')" [checked]="draft().rapportPolice" type="checkbox"> Rapport de police / gendarmerie</label>
+      <label class="flex items-center gap-2 text-sm"><input (change)="basculer('blesses')" [checked]="draft().blesses" type="checkbox"> Blessés</label>
+      <label class="flex items-center gap-2 text-sm font-medium text-ink"><input (change)="basculer('enginImmobilise')" [checked]="draft().enginImmobilise" type="checkbox"> Engin immobilisé</label>
+    </div>
+  </app-form-section>
+
+  <app-form-section title="Tiers impliqué">
+    <label class="flex items-center gap-2 text-sm">
+      <input (change)="tiersOuvert.set(!tiersOuvert())" [checked]="tiersOuvert()" type="checkbox">
+      Un tiers est impliqué
+    </label>
+    @if (tiersOuvert()) {
+    <div class="form-page__coords">
+      <app-form-field inputId="tiersNom" label="Nom">
+        <input [class]="fieldClasses(sinistreForm.tiersNom())" [formField]="sinistreForm.tiersNom" id="tiersNom" type="text">
+      </app-form-field>
+      <app-form-field inputId="tiersImmatriculation" label="Immatriculation">
+        <input [class]="fieldClasses(sinistreForm.tiersImmatriculation())" [formField]="sinistreForm.tiersImmatriculation" id="tiersImmatriculation" type="text">
+      </app-form-field>
+    </div>
+    <div class="form-page__coords">
+      <app-form-field inputId="tiersAssureur" label="Assureur du tiers">
+        <input [class]="fieldClasses(sinistreForm.tiersAssureur())" [formField]="sinistreForm.tiersAssureur" id="tiersAssureur" type="text">
+      </app-form-field>
+      <app-form-field inputId="tiersNumeroPolice" label="N° de police du tiers">
+        <input [class]="fieldClasses(sinistreForm.tiersNumeroPolice())" [formField]="sinistreForm.tiersNumeroPolice" id="tiersNumeroPolice" type="text">
+      </app-form-field>
+    </div>
+    }
+  </app-form-section>
+
+  <app-form-section
+    description="À compléter au fil du dossier : déclaration, expertise, indemnisation."
+    title="Suivi assurance"
+  >
+    <div class="form-page__coords">
+      <app-form-field inputId="numeroDossierAssureur" label="N° de dossier chez l'assureur">
+        <input [class]="fieldClasses(sinistreForm.numeroDossierAssureur())" [formField]="sinistreForm.numeroDossierAssureur" id="numeroDossierAssureur" type="text">
+      </app-form-field>
+      <app-form-field inputId="dateDeclarationAssureur" label="Déclaré à l'assureur le">
+        <app-iso-date-input [formField]="sinistreForm.dateDeclarationAssureur" inputId="dateDeclarationAssureur" />
+      </app-form-field>
+    </div>
+    <div class="form-page__coords">
+      <app-form-field inputId="expertId" label="Expert">
+        <app-field-select [formField]="sinistreForm.expertId" [options]="expertOptions()" inputId="expertId" placeholder="Aucun expert" />
+      </app-form-field>
+      <app-form-field inputId="dateExpertise" label="Date d'expertise">
+        <app-iso-date-input [formField]="sinistreForm.dateExpertise" inputId="dateExpertise" />
+      </app-form-field>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-3">
+      <app-form-field
+        [error]="showFieldError(sinistreForm.estimationDommages()) ? firstFieldError(sinistreForm.estimationDommages().errors()) : null"
+        inputId="estimationDommages"
+        label="Estimation des dommages (DH)"
+      >
+        <input [class]="fieldClasses(sinistreForm.estimationDommages())" [formField]="sinistreForm.estimationDommages" id="estimationDommages" inputmode="decimal" type="text">
+      </app-form-field>
+      <app-form-field
+        [error]="showFieldError(sinistreForm.franchise()) ? firstFieldError(sinistreForm.franchise().errors()) : null"
+        inputId="franchise"
+        label="Franchise (DH)"
+      >
+        <input [class]="fieldClasses(sinistreForm.franchise())" [formField]="sinistreForm.franchise" id="franchise" inputmode="decimal" placeholder="Reprise du contrat" type="text">
+      </app-form-field>
+      <app-form-field
+        [error]="showFieldError(sinistreForm.indemnite()) ? firstFieldError(sinistreForm.indemnite().errors()) : null"
+        inputId="indemnite"
+        label="Indemnité perçue (DH)"
+      >
+        <input [class]="fieldClasses(sinistreForm.indemnite())" [formField]="sinistreForm.indemnite" id="indemnite" inputmode="decimal" type="text">
+      </app-form-field>
+    </div>
+  </app-form-section>
+
+  @if (formError()) {
+  <div class="alert-panel" role="alert">{{ formError() }}</div>
+  }
+
+  <app-form-actions>
+    <button class="btn-primary pressable min-h-11 px-5" type="submit">
+      {{ edition() ? "Enregistrer" : "Déclarer le sinistre" }}
+    </button>
+    <a
+      [routerLink]="edition() ? ['/maintenance/sinistres', id()] : ['/maintenance/sinistres']"
+      class="btn-outline pressable min-h-11 px-5"
+    >
+      Annuler
+    </a>
+  </app-form-actions>
+</form>
+}

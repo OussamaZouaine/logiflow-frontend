@@ -1,0 +1,115 @@
+<app-form-section
+  description="Plans d'entretien avec leur prochaine échéance, dernières interventions et sinistres de l'engin."
+  title="Maintenance"
+>
+  <div class="fiche-subsection">
+    <div class="fiche-subsection__header">
+      <h3 class="fiche-subsection__title">Plans d'entretien</h3>
+      <a
+        [queryParams]="prefill()"
+        class="btn-outline pressable min-h-9 px-3 py-1.5 text-xs"
+        routerLink="/maintenance/plans/nouveau"
+      >
+        Nouveau plan
+      </a>
+    </div>
+    @if (plans.isLoading() && !plans.hasValue()) {
+    <p class="fiche-load-hint" role="status">Chargement…</p>
+    } @else if (plans.error()) {
+    <app-fiche-error (retry)="plans.reload()" message="Plans indisponibles." />
+    } @else if (plans.value()?.content?.length === 0) {
+    <p class="fiche-meta">Aucun plan pour cet engin.</p>
+    } @else {
+    <ul class="flex flex-col gap-2">
+      @for (plan of plans.value()?.content; track plan.id) {
+      <li>
+        <a [routerLink]="['/maintenance/plans', plan.id]" class="fiche-link-card pressable">
+          <span class="font-medium text-ink">{{ plan.libelle }}</span>
+          <span class="text-xs text-muted">{{ formatPeriodicite(plan) }} · {{ formatEcheance(plan.echeance) }}</span>
+          <app-statut-chip [label]="libelle(plan.echeance?.etat ?? null)" [tone]="toneEcheance(plan.echeance?.etat)" />
+        </a>
+      </li>
+      }
+    </ul>
+    }
+  </div>
+
+  <div class="fiche-subsection fiche-subsection--divider">
+    <div class="fiche-subsection__header">
+      <h3 class="fiche-subsection__title">Derniers ordres de travail</h3>
+      <a
+        [queryParams]="prefill()"
+        class="btn-primary pressable min-h-9 px-3 py-1.5 text-xs"
+        routerLink="/maintenance/ordres-travail/nouveau"
+      >
+        Nouvel ordre
+      </a>
+    </div>
+    @if (ordres.isLoading() && !ordres.hasValue()) {
+    <p class="fiche-load-hint" role="status">Chargement…</p>
+    } @else if (ordres.error()) {
+    <app-fiche-error (retry)="ordres.reload()" message="Ordres de travail indisponibles." />
+    } @else if (ordres.value()?.content?.length === 0) {
+    <p class="fiche-meta">Aucun ordre de travail pour cet engin.</p>
+    } @else {
+    <ul class="flex flex-col gap-2">
+      @for (ot of ordres.value()?.content; track ot.id) {
+      <li>
+        <a [routerLink]="['/maintenance/ordres-travail', ot.id]" class="fiche-link-card pressable">
+          <span class="font-mono text-xs text-pine">{{ ot.reference }}</span>
+          <span class="text-ink">{{ ot.titre }}</span>
+          <app-statut-chip [label]="libelle(ot.statut)" [tone]="toneStatutOT(ot.statut)" />
+          <span class="font-mono text-xs tabular-nums text-muted">
+            {{ formatDateHeure(ot.finReelle ?? ot.debutPlanifie) }} · {{ formatMontant(ot.totalHt) }} HT
+          </span>
+        </a>
+      </li>
+      }
+    </ul>
+    }
+  </div>
+
+  <div class="fiche-subsection fiche-subsection--divider">
+    <div class="fiche-subsection__header">
+      <h3 class="fiche-subsection__title">Sinistres</h3>
+      <a
+        [queryParams]="prefillSinistre()"
+        class="btn-outline pressable min-h-9 px-3 py-1.5 text-xs"
+        routerLink="/maintenance/sinistres/nouveau"
+      >
+        Déclarer un sinistre
+      </a>
+    </div>
+    @if (sinistres.value()?.content?.length === 0) {
+    <p class="fiche-meta">Aucun sinistre pour cet engin.</p>
+    } @else if (sinistres.hasValue()) {
+    <ul class="flex flex-col gap-2">
+      @for (s of sinistres.value().content; track s.id) {
+      <li>
+        <a [routerLink]="['/maintenance/sinistres', s.id]" class="fiche-link-card pressable">
+          <span class="font-mono text-xs text-pine">{{ s.reference }}</span>
+          <span class="text-ink">{{ libelle(s.type) }}</span>
+          <app-statut-chip [label]="libelle(s.statut)" [tone]="toneStatutSinistre(s.statut)" />
+          <span class="font-mono text-xs tabular-nums text-muted">
+            {{ formatDate(s.dateSurvenance) }} · coût net {{ formatMontant(s.couts?.coutNet) }}
+          </span>
+        </a>
+      </li>
+      }
+    </ul>
+    }
+  </div>
+
+  <div class="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs">
+    <a
+      [queryParams]="{ enginId: enginId() }"
+      class="pressable font-medium text-pine underline-offset-2 hover:underline"
+      routerLink="/maintenance/ordres-travail"
+    >
+      Tous les ordres de cet engin
+    </a>
+    <a class="pressable font-medium text-pine underline-offset-2 hover:underline" routerLink="/maintenance/plans">
+      Tous les plans
+    </a>
+  </div>
+</app-form-section>

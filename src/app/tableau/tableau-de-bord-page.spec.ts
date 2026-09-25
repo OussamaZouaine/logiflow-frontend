@@ -5,11 +5,11 @@ import {
 } from "@angular/common/http/testing";
 import { TestBed } from "@angular/core/testing";
 import { provideRouter } from "@angular/router";
+import { provideZardCharts } from "@/shared/components/chart/chart-echarts.provider";
 import type { PageResponse } from "../core/api/page-response";
 import { AUTH_DEMO_TEST_PROVIDERS } from "../core/auth/auth-test-providers";
 import { DEMO_PASSWORD } from "../core/auth/demo-identity";
 import { DemoSessionService } from "../core/auth/demo-session";
-import { provideZardCharts } from "../shared/components/chart/chart-echarts.provider";
 import { TableauDeBordPage } from "./tableau-de-bord-page";
 
 function pageOf<T>(
@@ -34,6 +34,20 @@ function flushUrl(
     req.flush(body);
   }
 }
+
+/** jsdom ne fournit pas ResizeObserver, requis par les graphiques ECharts du tableau de bord. */
+class ResizeObserverFactice {
+  disconnect(): void {
+    // Rien à observer dans jsdom.
+  }
+  observe(): void {
+    // Rien à observer dans jsdom.
+  }
+  unobserve(): void {
+    // Rien à observer dans jsdom.
+  }
+}
+globalThis.ResizeObserver ??= ResizeObserverFactice;
 
 describe("TableauDeBordPage", () => {
   beforeEach(async () => {
@@ -61,7 +75,7 @@ describe("TableauDeBordPage", () => {
     flushUrl(http, "/api/v1/commandes", pageOf([]));
     flushUrl(http, "/api/v1/dossiers", pageOf([]));
     flushUrl(http, "/api/v1/voyages", pageOf([]));
-    flushUrl(http, "/api/v1/ordres-travail", pageOf([]));
+    flushUrl(http, "/api/v1/maintenance/ordres-travail", pageOf([]));
     flushUrl(http, "/api/v1/utilisateurs", pageOf([]));
     flushUrl(http, "/api/v1/prises-carburant", pageOf([]));
 
@@ -73,12 +87,13 @@ describe("TableauDeBordPage", () => {
     const fileDuJour = root.querySelector("#file-du-jour");
     expect(apercu).not.toBeNull();
     expect(fileDuJour).not.toBeNull();
-    expect(apercu).not.toBeNull();
-    expect(fileDuJour).not.toBeNull();
-    expect(
-      apercu!.compareDocumentPosition(fileDuJour!) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    // querySelectorAll renvoie les éléments dans l'ordre du document.
+    const ordre = [
+      ...root.querySelectorAll('[aria-label="Aperçu"], #file-du-jour'),
+    ];
+    expect(ordre.indexOf(apercu as Element)).toBeLessThan(
+      ordre.indexOf(fileDuJour as Element)
+    );
     http.verify();
   });
 
@@ -136,7 +151,7 @@ describe("TableauDeBordPage", () => {
     flushUrl(http, "/api/v1/commandes", pageOf([]));
     flushUrl(http, "/api/v1/dossiers", pageOf([]));
     flushUrl(http, "/api/v1/voyages", pageOf([]));
-    flushUrl(http, "/api/v1/ordres-travail", pageOf([], 2));
+    flushUrl(http, "/api/v1/maintenance/ordres-travail", pageOf([], 2));
     flushUrl(http, "/api/v1/utilisateurs", pageOf([]));
     flushUrl(http, "/api/v1/prises-carburant", pageOf([]));
 
@@ -159,7 +174,7 @@ describe("TableauDeBordPage", () => {
     fixture.detectChanges();
 
     const http = TestBed.inject(HttpTestingController);
-    flushUrl(http, "/api/v1/ordres-travail", pageOf([]));
+    flushUrl(http, "/api/v1/maintenance/ordres-travail", pageOf([]));
     flushUrl(
       http,
       "/api/v1/vehicules",
@@ -197,8 +212,8 @@ describe("TableauDeBordPage", () => {
       '[aria-label="Aperçu"]'
     );
     expect(apercu?.textContent).toContain("2");
-    expect(apercu?.textContent).toContain("Disponible");
-    expect(apercu?.textContent).toContain("En voyage");
+    // La répartition par statut est un graphique ECharts (canvas) : on vérifie sa présence.
+    expect(apercu?.querySelector(".apercu-kpi-card__chart")).not.toBeNull();
     http.verify();
   });
 
@@ -208,7 +223,7 @@ describe("TableauDeBordPage", () => {
     fixture.detectChanges();
 
     const http = TestBed.inject(HttpTestingController);
-    flushUrl(http, "/api/v1/ordres-travail", pageOf([]));
+    flushUrl(http, "/api/v1/maintenance/ordres-travail", pageOf([]));
     flushUrl(
       http,
       "/api/v1/vehicules",
@@ -236,7 +251,7 @@ describe("TableauDeBordPage", () => {
       '[aria-label="Aperçu"]'
     );
     expect(apercu?.textContent).toContain("3");
-    expect(apercu?.textContent).not.toContain("Disponible");
+    expect(apercu?.querySelector(".apercu-kpi-card__chart")).toBeNull();
     http.verify();
   });
 });

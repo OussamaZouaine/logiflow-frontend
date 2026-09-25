@@ -1,0 +1,161 @@
+<app-form-page-header
+  [description]="
+    edition()
+      ? 'L\'engin et la dernière réalisation ne se modifient pas ici : la clôture des OT liés tient la dernière réalisation à jour.'
+      : 'Au moins une périodicité (kilomètres, mois ou heures de fonctionnement).'
+  "
+  [title]="edition() ? 'Modifier le plan' : 'Nouveau plan d\'entretien'"
+  listLabel="Plans d'entretien"
+  listLink="/maintenance/plans"
+/>
+
+@if (chargement()) {
+<p class="text-sm text-muted" role="status">Chargement…</p>
+} @else {
+<form (submit)="onSubmit($event)" class="form-page" novalidate>
+  <app-form-validation-summary [show]="planForm().touched() && planForm().invalid()" />
+
+  <app-form-section title="Engin et intervention">
+    <div class="form-page__coords">
+      <app-form-field inputId="typeEngin" label="Type d'engin *">
+        @if (edition()) {
+        <p class="field flex items-center text-muted" id="typeEngin">{{ libelle(draft().typeEngin) }}</p>
+        } @else {
+        <app-field-select
+          (selectValueChange)="onTypeEngin($event)"
+          [options]="typeEnginOptions"
+          [selectValue]="draft().typeEngin"
+          inputId="typeEngin"
+        />
+        }
+      </app-form-field>
+      <app-form-field
+        [error]="showFieldError(planForm.enginId()) ? firstFieldError(planForm.enginId().errors()) : null"
+        inputId="enginId"
+        label="Engin *"
+      >
+        @if (edition()) {
+        <p class="field flex items-center font-mono text-muted" id="enginId">
+          {{ lookups.engins().get(draft().enginId)?.immatriculation ?? "…" }}
+        </p>
+        } @else {
+        <app-field-select
+          [formField]="planForm.enginId"
+          [invalid]="showFieldError(planForm.enginId())"
+          [options]="enginOptions()"
+          inputId="enginId"
+          placeholder="Choisir l'engin…"
+        />
+        }
+      </app-form-field>
+    </div>
+    <div class="form-page__coords">
+      <app-form-field
+        [error]="showFieldError(planForm.libelle()) ? firstFieldError(planForm.libelle().errors()) : null"
+        inputId="libelle"
+        label="Libellé *"
+      >
+        <input
+          [class]="fieldClasses(planForm.libelle())"
+          [formField]="planForm.libelle"
+          id="libelle"
+          placeholder="Révision périodique, contrôle technique…"
+          type="text"
+        >
+      </app-form-field>
+      <app-form-field inputId="type" label="Type d'intervention">
+        <app-field-select [formField]="planForm.type" [options]="typeOptions" inputId="type" />
+      </app-form-field>
+    </div>
+  </app-form-section>
+
+  <app-form-section title="Périodicité et alertes">
+    <div class="grid gap-4 sm:grid-cols-3">
+      <app-form-field
+        [error]="showFieldError(planForm.periodiciteKm()) ? firstFieldError(planForm.periodiciteKm().errors()) : null"
+        inputId="periodiciteKm"
+        label="Tous les … km"
+      >
+        <input [class]="fieldClasses(planForm.periodiciteKm())" [formField]="planForm.periodiciteKm" id="periodiciteKm" inputmode="numeric" type="text">
+      </app-form-field>
+      <app-form-field
+        [error]="showFieldError(planForm.periodiciteMois()) ? firstFieldError(planForm.periodiciteMois().errors()) : null"
+        inputId="periodiciteMois"
+        label="Tous les … mois"
+      >
+        <input [class]="fieldClasses(planForm.periodiciteMois())" [formField]="planForm.periodiciteMois" id="periodiciteMois" inputmode="numeric" type="text">
+      </app-form-field>
+      <app-form-field
+        [error]="showFieldError(planForm.periodiciteHeures()) ? firstFieldError(planForm.periodiciteHeures().errors()) : null"
+        inputId="periodiciteHeures"
+        label="Toutes les … heures"
+      >
+        <input [class]="fieldClasses(planForm.periodiciteHeures())" [formField]="planForm.periodiciteHeures" id="periodiciteHeures" inputmode="numeric" type="text">
+      </app-form-field>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-3">
+      <app-form-field inputId="seuilAlerteKm" label="Alerte à … km de l'échéance">
+        <input [class]="fieldClasses(planForm.seuilAlerteKm())" [formField]="planForm.seuilAlerteKm" id="seuilAlerteKm" inputmode="numeric" type="text">
+      </app-form-field>
+      <app-form-field inputId="seuilAlerteJours" label="Alerte à … jours de l'échéance">
+        <input [class]="fieldClasses(planForm.seuilAlerteJours())" [formField]="planForm.seuilAlerteJours" id="seuilAlerteJours" inputmode="numeric" type="text">
+      </app-form-field>
+      <app-form-field inputId="dureeEstimeeMin" label="Durée estimée (min)">
+        <input [class]="fieldClasses(planForm.dureeEstimeeMin())" [formField]="planForm.dureeEstimeeMin" id="dureeEstimeeMin" inputmode="numeric" type="text">
+      </app-form-field>
+    </div>
+    <div class="form-page__coords">
+      <app-form-field inputId="coutEstime" label="Coût estimé (DH HT)">
+        <input [class]="fieldClasses(planForm.coutEstime())" [formField]="planForm.coutEstime" id="coutEstime" inputmode="decimal" type="text">
+      </app-form-field>
+      <app-form-field inputId="prestataireId" label="Prestataire habituel">
+        <app-field-select
+          [formField]="planForm.prestataireId"
+          [options]="prestataireOptions()"
+          inputId="prestataireId"
+          placeholder="Atelier interne"
+        />
+      </app-form-field>
+    </div>
+    <label class="flex items-center gap-2 text-sm text-ink">
+      <input (change)="basculerActif()" [checked]="draft().actif" type="checkbox">
+      Plan actif (suivi des échéances)
+    </label>
+  </app-form-section>
+
+  @if (!edition()) {
+  <app-form-section
+    description="Facultatif : sans réalisation connue, l'échéance est estimée d'après la position du compteur dans le cycle."
+    title="Dernière réalisation"
+  >
+    <div class="grid gap-4 sm:grid-cols-3">
+      <app-form-field inputId="derniereDate" label="Date">
+        <app-iso-date-input [formField]="planForm.derniereDate" inputId="derniereDate" />
+      </app-form-field>
+      <app-form-field inputId="derniereKm" label="Kilométrage">
+        <input [class]="fieldClasses(planForm.derniereKm())" [formField]="planForm.derniereKm" id="derniereKm" inputmode="numeric" type="text">
+      </app-form-field>
+      <app-form-field inputId="derniereHeures" label="Heures">
+        <input [class]="fieldClasses(planForm.derniereHeures())" [formField]="planForm.derniereHeures" id="derniereHeures" inputmode="numeric" type="text">
+      </app-form-field>
+    </div>
+  </app-form-section>
+  }
+
+  @if (formError()) {
+  <div class="alert-panel" role="alert">{{ formError() }}</div>
+  }
+
+  <app-form-actions>
+    <button class="btn-primary pressable min-h-11 px-5" type="submit">
+      {{ edition() ? "Enregistrer" : "Créer le plan" }}
+    </button>
+    <a
+      [routerLink]="edition() ? ['/maintenance/plans', id()] : ['/maintenance/plans']"
+      class="btn-outline pressable min-h-11 px-5"
+    >
+      Annuler
+    </a>
+  </app-form-actions>
+</form>
+}

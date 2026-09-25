@@ -1,0 +1,127 @@
+<div class="flex flex-col gap-6">
+  <app-maintenance-tabs />
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <h1 class="module-page-title">Coûts de maintenance</h1>
+      <p class="mt-1 text-sm text-muted">
+        Ordres de travail terminés (lignes de coût réelles) et coût net des sinistres sur la période.
+      </p>
+    </div>
+    <div class="grid grid-cols-2 gap-3 sm:w-md">
+      <app-field-select
+        (selectValueChange)="choisirPeriode($event)"
+        [options]="periodeOptions"
+        [selectValue]="periode()"
+        inputId="couts-periode"
+      />
+      <app-field-select
+        (selectValueChange)="typeEngin.set($event)"
+        [options]="typeEnginOptions"
+        [selectValue]="typeEngin() || '__none__'"
+        inputId="couts-type-engin"
+      />
+    </div>
+  </div>
+
+  @if (couts.isLoading() && !couts.hasValue()) {
+  <app-list-table-skeleton label="Calcul des coûts" />
+  } @else if (couts.error()) {
+  <div class="alert-panel" role="alert">{{ erreur() }}</div>
+  } @else if (couts.hasValue()) {
+  <p class="text-xs text-muted">
+    Du {{ formatDate(couts.value().debut) }} au {{ formatDate(couts.value().fin) }}
+  </p>
+
+  <section aria-label="Indicateurs" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="rounded-xl border border-line bg-surface p-4">
+      <p class="text-xs text-muted">Maintenance (HT)</p>
+      <p class="mt-1 font-mono text-xl tabular-nums">{{ formatMontant(couts.value().totalHt) }}</p>
+      <p class="text-xs text-muted">
+        {{ couts.value().nombreOrdres }} OT terminé(s) · {{ formatMontant(couts.value().totalTtc) }} TTC
+      </p>
+    </div>
+    <div class="rounded-xl border border-line bg-surface p-4">
+      <p class="text-xs text-muted">Écart au budget estimé</p>
+      <p
+        [class.text-brake]="(ecartBudget() ?? 0) > 0"
+        [class.text-pine]="(ecartBudget() ?? 0) <= 0"
+        class="mt-1 font-mono text-xl tabular-nums"
+      >
+        {{ ecartLibelle() }}
+      </p>
+      <p class="text-xs text-muted">Budget : {{ formatMontant(couts.value().budgetEstime) }}</p>
+    </div>
+    <div class="rounded-xl border border-line bg-surface p-4">
+      <p class="text-xs text-muted">Sinistres</p>
+      <p class="mt-1 font-mono text-xl tabular-nums">{{ formatMontant(couts.value().coutNetSinistres) }}</p>
+      <p class="text-xs text-muted">
+        {{ couts.value().nombreSinistres }} sinistre(s) · {{ formatMontant(couts.value().indemnitesPercues) }}
+        d'indemnités
+      </p>
+    </div>
+    <div class="rounded-xl border border-pine/40 bg-pine/5 p-4">
+      <p class="text-xs text-muted">Coût global</p>
+      <p class="mt-1 font-mono text-xl font-semibold tabular-nums">{{ formatMontant(coutGlobal()) }}</p>
+      <p class="text-xs text-muted">Maintenance + coût net des sinistres</p>
+    </div>
+  </section>
+
+  <div class="grid gap-6 lg:grid-cols-2">
+    @for (bloc of [
+      { titre: "Par type d'intervention", lignes: parType() },
+      { titre: "Par nature", lignes: parNature() },
+      { titre: "Par mois", lignes: parMois() }
+    ]; track bloc.titre) {
+    <section class="rounded-xl border border-line bg-surface p-4">
+      <h2 class="font-medium text-ink">{{ bloc.titre }}</h2>
+      @if (bloc.lignes.length === 0) {
+      <p class="mt-2 text-sm text-muted">Aucune intervention terminée sur la période.</p>
+      } @else {
+      <ul class="mt-3 flex flex-col gap-2">
+        @for (l of bloc.lignes; track l.cle) {
+        <li class="text-sm">
+          <div class="flex justify-between gap-2">
+            <span>{{ l.libelle }} <span class="text-xs text-muted">({{ l.nombre }})</span></span>
+            <span class="font-mono text-xs tabular-nums">{{ formatMontant(l.totalHt) }}</span>
+          </div>
+          <div aria-hidden="true" class="mt-1 h-1.5 rounded-full bg-line/60">
+            <div [style.width.%]="l.part" class="h-1.5 rounded-full bg-pine"></div>
+          </div>
+        </li>
+        }
+      </ul>
+      }
+    </section>
+    }
+
+    <section class="rounded-xl border border-line bg-surface p-4">
+      <h2 class="font-medium text-ink">Engins les plus coûteux</h2>
+      @if (parEngin().length === 0) {
+      <p class="mt-2 text-sm text-muted">Aucune donnée.</p>
+      } @else {
+      <ol class="mt-3 flex flex-col gap-2">
+        @for (l of parEngin(); track l.cle) {
+        <li class="text-sm">
+          <div class="flex justify-between gap-2">
+            <a
+              [routerLink]="['/maintenance/ordres-travail']"
+              [queryParams]="{ enginId: l.cle }"
+              class="font-mono text-pine hover:underline"
+            >
+              {{ l.libelle }}
+            </a>
+            <span class="font-mono text-xs tabular-nums">
+              {{ formatMontant(l.totalHt) }} <span class="text-muted">· {{ l.nombre }} OT</span>
+            </span>
+          </div>
+          <div aria-hidden="true" class="mt-1 h-1.5 rounded-full bg-line/60">
+            <div [style.width.%]="l.part" class="h-1.5 rounded-full bg-amber"></div>
+          </div>
+        </li>
+        }
+      </ol>
+      }
+    </section>
+  </div>
+  }
+</div>

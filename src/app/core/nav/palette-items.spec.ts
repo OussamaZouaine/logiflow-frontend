@@ -1,7 +1,4 @@
-import {
-  filterPaletteItems,
-  paletteItemsForRoles,
-} from "./palette-items";
+import { filterPaletteItems, paletteItemsForRoles } from "./palette-items";
 
 describe("paletteItemsForRoles", () => {
   it("gives CHAUFFEUR voyages module but no create-voyage action", () => {
@@ -37,9 +34,9 @@ describe("paletteItemsForRoles", () => {
     expect(items.some((item) => item.path === "/utilisateurs/nouveau")).toBe(
       true
     );
-    expect(items.some((item) => item.path === "/maintenance/nouveau")).toBe(
-      true
-    );
+    expect(
+      items.some((item) => item.path === "/maintenance/ordres-travail/nouveau")
+    ).toBe(true);
   });
 });
 

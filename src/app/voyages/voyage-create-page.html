@@ -1,31 +1,179 @@
 <div class="voyage-create inner-page fiche-page--wide">
   <app-form-page-header
-    description="Conformité bloquante : véhicule disponible, documents valides, chauffeur disponible, solde de conduite suffisant."
+    description="L'agent de planification propose des voyages complets (dossiers groupés, itinéraire, ressources, équipage) ; la planification manuelle reste possible."
     icon="lucideRoute"
     title="Nouveau voyage"
   />
 
-  @if (
-    vehicules.isLoading() ||
-      dossiers.isLoading() ||
-      chauffeurs.isLoading() ||
-      sites.isLoading()
-  ) {
-  <p class="voyage-create__loading" role="status">
-    <ng-icon aria-hidden="true" class="animate-spin" name="lucideLoaderCircle" />
-    Chargement des ressources…
-  </p>
+  <div aria-label="Mode de planification" class="voyage-create__modes" role="group">
+    <button
+      (click)="choisirMode('assiste')"
+      [attr.aria-pressed]="mode() === 'assiste'"
+      [zType]="mode() === 'assiste' ? 'default' : 'outline'"
+      type="button"
+      z-button
+      zSize="sm"
+    >
+      <ng-icon aria-hidden="true" name="lucideSparkles" />
+      Planification assistée (IA)
+    </button>
+    <button
+      (click)="choisirMode('manuel')"
+      [attr.aria-pressed]="mode() === 'manuel'"
+      [zType]="mode() === 'manuel' ? 'default' : 'outline'"
+      type="button"
+      z-button
+      zSize="sm"
+    >
+      <ng-icon aria-hidden="true" name="lucideCalendarClock" />
+      Planification manuelle
+    </button>
+  </div>
+
+  @if (mode() === "assiste") {
+  <z-card>
+    <z-card-header>
+      <div class="voyage-create__section-head">
+        <ng-icon
+          aria-hidden="true"
+          class="voyage-create__section-icon"
+          name="lucideSparkles"
+        />
+        <div class="voyage-create__section-copy">
+          <z-card-title zTitle="Proposer des voyages" />
+          <z-card-description
+            zDescription="Période et type de voyage : l'agent groupe les dossiers à planifier, ordonne les arrêts, choisit tracteur, remorque et chauffeurs, puis compare ses propositions."
+          />
+        </div>
+      </div>
+    </z-card-header>
+    <z-card-content class="voyage-create__card-body flex flex-col">
+      <form (submit)="proposer($event)" class="flex flex-col gap-4" novalidate>
+        <div class="form-page__coords">
+          <app-form-field
+            [error]="
+              showFieldError(planForm.debut())
+                ? firstFieldError(planForm.debut().errors())
+                : null
+            "
+            inputId="planDebut"
+            label="Du *"
+          >
+            <app-iso-datetime-input
+              [ariaInvalid]="showFieldError(planForm.debut())"
+              [formField]="planForm.debut"
+              inputId="planDebut"
+              timeAriaLabel="Heure de début de période"
+            />
+          </app-form-field>
+          <app-form-field
+            [error]="
+              showFieldError(planForm.fin())
+                ? firstFieldError(planForm.fin().errors())
+                : null
+            "
+            inputId="planFin"
+            label="Au *"
+          >
+            <app-iso-datetime-input
+              [ariaInvalid]="showFieldError(planForm.fin())"
+              [formField]="planForm.fin"
+              inputId="planFin"
+              timeAriaLabel="Heure de fin de période"
+            />
+          </app-form-field>
+        </div>
+        <div class="voyage-create__plan-options">
+          <app-form-field inputId="planType" label="Type de voyage">
+            <app-field-select
+              [formField]="planForm.typeVoyage"
+              [options]="typeVoyageOptions"
+              inputId="planType"
+            />
+          </app-form-field>
+          <app-form-field inputId="planPortee" label="Portée">
+            <app-field-select
+              [formField]="planForm.portee"
+              [options]="porteeOptions"
+              inputId="planPortee"
+            />
+          </app-form-field>
+          <app-form-field inputId="planNbOptions" label="Propositions">
+            <app-field-select
+              (selectValueChange)="onNbOptions($event)"
+              [options]="nbOptionsChoix"
+              [selectValue]="'' + planDraft().nbOptions"
+              inputId="planNbOptions"
+            />
+          </app-form-field>
+        </div>
+        <div>
+          <button
+            [disabled]="planLoading()"
+            [zLoading]="planLoading()"
+            type="submit"
+            z-button
+          >
+            <ng-icon aria-hidden="true" name="lucideSparkles" />
+            {{ planLoading() ? "Analyse en cours…" : "Proposer des voyages" }}
+          </button>
+        </div>
+      </form>
+
+      @if (planLoading()) {
+      <p class="voyage-create__hint" role="status">
+        <ng-icon aria-hidden="true" class="animate-spin" name="lucideLoaderCircle" />
+        Groupage des dossiers, calcul des itinéraires et choix des ressources…
+      </p>
+      }
+      @if (planError()) {
+      <z-alert
+        zIcon="lucideCircleAlert"
+        zType="destructive"
+        [zDescription]="planError()!"
+      />
+      <p class="voyage-create__hint">
+        <ng-icon aria-hidden="true" name="lucideInfo" />
+        Vous pouvez planifier ce voyage manuellement.
+        <button
+          (click)="choisirMode('manuel')"
+          class="voyage-create__link"
+          type="button"
+        >
+          Passer en mode manuel
+        </button>
+      </p>
+      }
+      @if (propositions(); as resultat) {
+      <app-voyage-propositions (choisir)="choisir($event)" [propositions]="resultat" />
+      }
+    </z-card-content>
+  </z-card>
   } @else if (lookupsError()) {
   <z-alert
     zIcon="lucideCircleAlert"
     zType="destructive"
     [zDescription]="lookupsError()!"
   />
-  } @else if (lookupsReady()) {
+  } @else if (!lookupsReady()) {
+  <p class="voyage-create__loading" role="status">
+    <ng-icon aria-hidden="true" class="animate-spin" name="lucideLoaderCircle" />
+    Chargement des dossiers et des sites…
+  </p>
+  } @else {
   <form (submit)="onSubmit($event)" class="voyage-create__form" novalidate>
     <app-form-validation-summary
       [show]="createForm().touched() && createForm().invalid()"
     />
+
+    @if (propositionAppliquee(); as proposition) {
+    <p class="voyage-create__applied" role="status">
+      <ng-icon aria-hidden="true" name="lucideSparkles" />
+      Proposition {{ proposition.rang }} ({{ proposition.libelleObjectif.toLowerCase() }})
+      appliquée : ordre des arrêts et heures de passage de l'agent conservés tant que la
+      sélection de dossiers ne change pas. Relisez puis enregistrez.
+    </p>
+    }
 
     <z-card>
       <z-card-header>
@@ -38,7 +186,7 @@
           <div class="voyage-create__section-copy">
             <z-card-title zTitle="Planification" />
             <z-card-description
-              zDescription="Type, fenêtre horaire et moyens de transport."
+              zDescription="Type, période et moyens de transport libres sur cette période."
             />
           </div>
         </div>
@@ -116,6 +264,18 @@
           </app-form-field>
         </div>
 
+        @if (ressources.isLoading()) {
+        <p class="voyage-create__hint" role="status">
+          <ng-icon aria-hidden="true" class="animate-spin" name="lucideLoaderCircle" />
+          Recherche des ressources libres sur la période…
+        </p>
+        } @else if (ressources.error()) {
+        <p class="voyage-create__hint voyage-create__hint--error" role="alert">
+          <ng-icon aria-hidden="true" name="lucideCircleAlert" />
+          Ressources indisponibles : vérifiez les dates du voyage.
+        </p>
+        }
+
         <app-form-field
           [error]="
             showFieldError(createForm.vehiculeId())
@@ -132,13 +292,10 @@
             inputId="vehiculeId"
             placeholder="Choisir un véhicule…"
           />
-          @if (vehiculeOptions().length === 0) {
+          @if (ressources.hasValue() && vehiculeSelectOptions().length === 0) {
           <p class="voyage-create__hint">
             <ng-icon aria-hidden="true" name="lucideTruck" />
-            Aucun véhicule.
-            <a class="voyage-create__link" routerLink="/vehicules/nouveau">
-              En créer un
-            </a>
+            Aucun véhicule libre et exploitable sur cette période.
           </p>
           }
         </app-form-field>
@@ -150,23 +307,10 @@
             inputId="remorqueId"
             placeholder="Sans remorque"
           />
-          @if (remorquesLoading()) {
-          <p class="voyage-create__hint" role="status">
-            <ng-icon aria-hidden="true" class="animate-spin" name="lucideLoaderCircle" />
-            Chargement des remorques…
-          </p>
-          } @else if (remorqueLookupError()) {
-          <p class="voyage-create__hint voyage-create__hint--error" role="alert">
-            <ng-icon aria-hidden="true" name="lucideCircleAlert" />
-            {{ remorqueLookupError() }}
-          </p>
-          <p class="voyage-create__hint">
-            Le voyage peut être créé sans remorque.
-          </p>
-          } @else if (remorqueOptions().length === 0) {
+          @if (ressources.hasValue() && remorqueOptions().length === 0) {
           <p class="voyage-create__hint">
             <ng-icon aria-hidden="true" name="lucideContainer" />
-            Aucune remorque en base.
+            Aucune remorque libre sur cette période.
           </p>
           }
         </app-form-field>
@@ -182,9 +326,9 @@
             name="lucideFolderOpen"
           />
           <div class="voyage-create__section-copy">
-            <z-card-title zTitle="Dossiers & groupage IA" />
+            <z-card-title zTitle="Dossiers" />
             <z-card-description
-              zDescription="Propositions à partir des dossiers Créé groupables visibles ci-dessous."
+              zDescription="Dossiers au statut Créé ; les arrêts du voyage sont construits depuis leurs sites de chargement et de déchargement."
             />
           </div>
         </div>
@@ -248,78 +392,6 @@
           </ul>
           }
         </fieldset>
-
-        <div class="voyage-create__ia-row">
-          <p class="voyage-create__ia-copy">
-            <ng-icon aria-hidden="true" name="lucideSparkles" />
-            Lance une analyse IA sur les dossiers groupables.
-          </p>
-          <button
-            (click)="suggererGroupage()"
-            [disabled]="!canSuggererGroupage() || groupageLoading()"
-            type="button"
-            z-button
-            zSize="sm"
-            zType="outline"
-            [zLoading]="groupageLoading()"
-          >
-            <ng-icon aria-hidden="true" name="lucideSparkles" />
-            {{ groupageLoading() ? "Analyse…" : "Suggérer un groupage" }}
-          </button>
-        </div>
-        @if (groupageHint()) {
-        <p class="voyage-create__hint">
-          <ng-icon aria-hidden="true" name="lucideInfo" />
-          {{ groupageHint() }}
-        </p>
-        }
-        @if (groupageError()) {
-        <p class="voyage-create__hint voyage-create__hint--error" role="alert">
-          <ng-icon aria-hidden="true" name="lucideCircleAlert" />
-          {{ groupageError() }}
-        </p>
-        }
-        @if (groupagePropositions().length > 0) {
-        <ul class="voyage-create__propositions">
-          @for (
-            proposition of groupagePropositions();
-            track proposition.dossierIds.join(",")
-          ) {
-          <li class="voyage-create__proposition">
-            <div>
-              <p class="voyage-create__proposition-refs">
-                {{
-                  dossierReferencesForIds(
-                    proposition.dossierIds,
-                    dossiersById()
-                  ).join(" · ")
-                }}
-              </p>
-              <p class="mt-1 text-xs text-muted">
-                Score {{ formatPropositionScore(proposition.score) }}
-                @if (formatPropositionGainKm(proposition.gainKm); as gainKm) {
-                · gain {{ gainKm }}
-                }
-                · {{ propositionSourceLabel(proposition.genereParIa) }}
-              </p>
-              <p class="mt-2 text-xs text-ink">
-                {{ proposition.justification }}
-              </p>
-            </div>
-            <button
-              (click)="appliquerProposition(proposition)"
-              type="button"
-              z-button
-              zSize="sm"
-              zType="outline"
-            >
-              <ng-icon aria-hidden="true" name="lucideCheck" />
-              Appliquer
-            </button>
-          </li>
-          }
-        </ul>
-        }
       </z-card-content>
     </z-card>
 
@@ -342,7 +414,7 @@
           <div class="voyage-create__section-copy">
             <z-card-title zTitle="Équipage & itinéraire" />
             <z-card-description
-              zDescription="Distance et durée de conduite à partir des segments des dossiers sélectionnés (OSRM via le backend)."
+              zDescription="Chauffeurs libres et affectables sur la période ; distance et conduite calculées sur l'itinéraire des dossiers (OSRM via le backend)."
             />
           </div>
         </div>
@@ -364,10 +436,10 @@
             inputId="chauffeurId"
             placeholder="Choisir un chauffeur…"
           />
-          @if (chauffeurOptions().length === 0) {
+          @if (ressources.hasValue() && chauffeurSelectOptions().length === 0) {
           <p class="voyage-create__hint">
             <ng-icon aria-hidden="true" name="lucideUsers" />
-            Aucun chauffeur actif et disponible.
+            Aucun chauffeur libre et affectable sur cette période.
           </p>
           }
         </app-form-field>
@@ -461,6 +533,58 @@
         </div>
       </z-card-content>
     </z-card>
+
+    <section aria-label="Contrôle de conformité" class="voyage-create__conformite">
+      @if (conformite.isLoading()) {
+      <p class="voyage-create__hint" role="status">
+        <ng-icon aria-hidden="true" class="animate-spin" name="lucideLoaderCircle" />
+        Contrôle de conformité…
+      </p>
+      } @else if (conformite.value(); as rapport) {
+      <p
+        [class.text-brake]="!rapport.conforme"
+        [class.text-pine]="rapport.conforme"
+        class="flex items-center gap-2 text-sm font-medium"
+      >
+        <ng-icon
+          aria-hidden="true"
+          [name]="rapport.conforme ? 'lucideCircleCheck' : 'lucideCircleAlert'"
+        />
+        {{
+          rapport.conforme
+            ? "Voyage conforme : il peut être créé."
+            : "Voyage non conforme : corrigez les points bloquants."
+        }}
+        @if (rapport.arrets.length > 0) {
+        <span class="font-normal text-muted">
+          · {{ rapport.arrets.length }} arrêts ·
+          {{ rapport.arrets[0].libelle }} → {{ rapport.arrets[rapport.arrets.length - 1].libelle }}
+        </span>
+        }
+      </p>
+      @if (anomaliesBloquantes().length > 0 || avertissements().length > 0) {
+      <ul class="mt-2 flex flex-col gap-1 text-xs">
+        @for (anomalie of anomaliesBloquantes(); track anomalie.message) {
+        <li class="flex items-start gap-1 text-brake">
+          <ng-icon aria-hidden="true" class="mt-0.5 shrink-0" name="lucideCircleAlert" />
+          {{ anomalie.message }}
+        </li>
+        }
+        @for (anomalie of avertissements(); track anomalie.message) {
+        <li class="flex items-start gap-1 text-amber">
+          <ng-icon aria-hidden="true" class="mt-0.5 shrink-0" name="lucideTriangleAlert" />
+          {{ anomalie.message }}
+        </li>
+        }
+      </ul>
+      }
+      } @else {
+      <p class="voyage-create__hint">
+        <ng-icon aria-hidden="true" name="lucideInfo" />
+        Choisissez des dates cohérentes et au moins un dossier pour lancer le contrôle.
+      </p>
+      }
+    </section>
 
     @if (formError()) {
     <z-alert

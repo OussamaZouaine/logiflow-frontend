@@ -7,10 +7,13 @@ import {
 import { shellBreadcrumb } from "./core/nav/shell-breadcrumb-data";
 import { workDestination } from "./core/nav/work-destination";
 
-const maintenancePlansTrail = [
-  { label: "Maintenance", path: "/maintenance" },
-  { label: "Plans d'entretien", path: "/maintenance/plans" },
-] as const;
+/** Fil d'Ariane d'une section du module maintenance (Maintenance › section). */
+function maintenanceTrail(label: string, path: string) {
+  return [
+    { label: "Maintenance", path: "/maintenance" },
+    { label, path },
+  ] as const;
+}
 
 const carburantStationsTrail = [
   { label: "Carburant", path: "/carburant" },
@@ -35,11 +38,11 @@ export const routes: Routes = [
     canActivate: [signedInGuard],
     children: [
       {
+        data: { ...shellBreadcrumb.list("Tableau de bord") },
         loadComponent: () =>
           import("./tableau/tableau-de-bord-page").then(
             (module) => module.TableauDeBordPage
           ),
-        data: { ...shellBreadcrumb.list("Tableau de bord") },
         path: "",
         pathMatch: "full",
       },
@@ -295,11 +298,7 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           roles: CARBURANT_STATIONS_ALLOWED_ROLES,
-          ...shellBreadcrumb.nested(
-            "Carburant",
-            "/carburant",
-            "Stations"
-          ),
+          ...shellBreadcrumb.nested("Carburant", "/carburant", "Stations"),
         },
         loadComponent: () =>
           import("./carburant/stations-page").then(
@@ -350,8 +349,8 @@ export const routes: Routes = [
           ...shellBreadcrumb.list("Maintenance"),
         },
         loadComponent: () =>
-          import("./maintenance/maintenance-page").then(
-            (module) => module.MaintenancePage
+          import("./maintenance/maintenance-dashboard-page").then(
+            (module) => module.MaintenanceDashboardPage
           ),
         path: "maintenance",
       },
@@ -359,13 +358,59 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           roles: workDestination("maintenance").roles,
-          ...shellBreadcrumb.create("Maintenance", "/maintenance"),
+          ...shellBreadcrumb.nested(
+            "Maintenance",
+            "/maintenance",
+            "Ordres de travail"
+          ),
         },
         loadComponent: () =>
-          import("./maintenance/ordre-create-page").then(
-            (module) => module.OrdreCreatePage
+          import("./maintenance/ordres-travail-page").then(
+            (module) => module.OrdresTravailPage
           ),
-        path: "maintenance/nouveau",
+        path: "maintenance/ordres-travail",
+      },
+      {
+        canActivate: [roleGuard],
+        data: {
+          roles: workDestination("maintenance").roles,
+          ...shellBreadcrumb.createNested(
+            maintenanceTrail("Ordres de travail", "/maintenance/ordres-travail")
+          ),
+        },
+        loadComponent: () =>
+          import("./maintenance/ordre-form-page").then(
+            (module) => module.OrdreFormPage
+          ),
+        path: "maintenance/ordres-travail/nouveau",
+      },
+      {
+        canActivate: [roleGuard],
+        data: {
+          roles: workDestination("maintenance").roles,
+          ...shellBreadcrumb.detailNested(
+            maintenanceTrail("Ordres de travail", "/maintenance/ordres-travail")
+          ),
+        },
+        loadComponent: () =>
+          import("./maintenance/ordre-form-page").then(
+            (module) => module.OrdreFormPage
+          ),
+        path: "maintenance/ordres-travail/:id/modifier",
+      },
+      {
+        canActivate: [roleGuard],
+        data: {
+          roles: workDestination("maintenance").roles,
+          ...shellBreadcrumb.detailNested(
+            maintenanceTrail("Ordres de travail", "/maintenance/ordres-travail")
+          ),
+        },
+        loadComponent: () =>
+          import("./maintenance/ordre-detail-page").then(
+            (module) => module.OrdreDetailPage
+          ),
+        path: "maintenance/ordres-travail/:id",
       },
       {
         canActivate: [roleGuard],
@@ -378,20 +423,20 @@ export const routes: Routes = [
           ),
         },
         loadComponent: () =>
-          import("./maintenance/plans-entretien-page").then(
-            (module) => module.PlansEntretienPage
-          ),
+          import("./maintenance/plans-page").then((module) => module.PlansPage),
         path: "maintenance/plans",
       },
       {
         canActivate: [roleGuard],
         data: {
           roles: workDestination("maintenance").roles,
-          ...shellBreadcrumb.createNested([...maintenancePlansTrail]),
+          ...shellBreadcrumb.createNested(
+            maintenanceTrail("Plans d'entretien", "/maintenance/plans")
+          ),
         },
         loadComponent: () =>
-          import("./maintenance/plan-entretien-create-page").then(
-            (module) => module.PlanEntretienCreatePage
+          import("./maintenance/plan-form-page").then(
+            (module) => module.PlanFormPage
           ),
         path: "maintenance/plans/nouveau",
       },
@@ -399,11 +444,27 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           roles: workDestination("maintenance").roles,
-          ...shellBreadcrumb.detailNested([...maintenancePlansTrail]),
+          ...shellBreadcrumb.detailNested(
+            maintenanceTrail("Plans d'entretien", "/maintenance/plans")
+          ),
         },
         loadComponent: () =>
-          import("./maintenance/plan-entretien-detail-page").then(
-            (module) => module.PlanEntretienDetailPage
+          import("./maintenance/plan-form-page").then(
+            (module) => module.PlanFormPage
+          ),
+        path: "maintenance/plans/:id/modifier",
+      },
+      {
+        canActivate: [roleGuard],
+        data: {
+          roles: workDestination("maintenance").roles,
+          ...shellBreadcrumb.detailNested(
+            maintenanceTrail("Plans d'entretien", "/maintenance/plans")
+          ),
+        },
+        loadComponent: () =>
+          import("./maintenance/plan-detail-page").then(
+            (module) => module.PlanDetailPage
           ),
         path: "maintenance/plans/:id",
       },
@@ -411,13 +472,153 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           roles: workDestination("maintenance").roles,
-          ...shellBreadcrumb.detail("Maintenance", "/maintenance"),
+          ...shellBreadcrumb.nested("Maintenance", "/maintenance", "Sinistres"),
         },
         loadComponent: () =>
-          import("./maintenance/ordre-detail-page").then(
-            (module) => module.OrdreDetailPage
+          import("./maintenance/sinistres-page").then(
+            (module) => module.SinistresPage
           ),
-        path: "maintenance/:id",
+        path: "maintenance/sinistres",
+      },
+      {
+        canActivate: [roleGuard],
+        data: {
+          roles: workDestination("maintenance").roles,
+          ...shellBreadcrumb.createNested(
+            maintenanceTrail("Sinistres", "/maintenance/sinistres")
+          ),
+        },
+        loadComponent: () =>
+          import("./maintenance/sinistre-form-page").then(
+            (module) => module.SinistreFormPage
+          ),
+        path: "maintenance/sinistres/nouveau",
+      },
+      {
+        canActivate: [roleGuard],
+        data: {
+          roles: workDestination("maintenance").roles,
+          ...shellBreadcrumb.detailNested(
+            maintenanceTrail("Sinistres", "/maintenance/sinistres")
+          ),
+        },
+        loadComponent: () =>
+          import("./maintenance/sinistre-form-page").then(
+            (module) => module.SinistreFormPage
+          ),
+        path: "maintenance/sinistres/:id/modifier",
+      },
+      {
+        canActivate: [roleGuard],
+        data: {
+          roles: workDestination("maintenance").roles,
+          ...shellBreadcrumb.detailNested(
+            maintenanceTrail("Sinistres", "/maintenance/sinistres")
+          ),
+        },
+        loadComponent: () =>
+          import("./maintenance/sinistre-detail-page").then(
+            (module) => module.SinistreDetailPage
+          ),
+        path: "maintenance/sinistres/:id",
+      },
+      {
+        canActivate: [roleGuard],
+        data: {
+          roles: workDestination("maintenance").roles,
+          ...shellBreadcrumb.nested("Maintenance", "/maintenance", "Coûts"),
+        },
+        loadComponent: () =>
+          import("./maintenance/couts-page").then((module) => module.CoutsPage),
+        path: "maintenance/couts",
+      },
+      {
+        canActivate: [roleGuard],
+        data: {
+          roles: workDestination("maintenance").roles,
+          ...shellBreadcrumb.nested(
+            "Maintenance",
+            "/maintenance",
+            "Prestataires"
+          ),
+        },
+        loadComponent: () =>
+          import("./maintenance/prestataires-page").then(
+            (module) => module.PrestatairesPage
+          ),
+        path: "maintenance/prestataires",
+      },
+      {
+        canActivate: [roleGuard],
+        data: {
+          roles: workDestination("maintenance").roles,
+          ...shellBreadcrumb.createNested(
+            maintenanceTrail("Prestataires", "/maintenance/prestataires")
+          ),
+        },
+        loadComponent: () =>
+          import("./maintenance/prestataire-form-page").then(
+            (module) => module.PrestataireFormPage
+          ),
+        path: "maintenance/prestataires/nouveau",
+      },
+      {
+        canActivate: [roleGuard],
+        data: {
+          roles: workDestination("maintenance").roles,
+          ...shellBreadcrumb.detailNested(
+            maintenanceTrail("Prestataires", "/maintenance/prestataires")
+          ),
+        },
+        loadComponent: () =>
+          import("./maintenance/prestataire-form-page").then(
+            (module) => module.PrestataireFormPage
+          ),
+        path: "maintenance/prestataires/:id",
+      },
+      {
+        canActivate: [roleGuard],
+        data: {
+          roles: workDestination("maintenance").roles,
+          ...shellBreadcrumb.nested(
+            "Maintenance",
+            "/maintenance",
+            "Assurances"
+          ),
+        },
+        loadComponent: () =>
+          import("./maintenance/contrats-page").then(
+            (module) => module.ContratsPage
+          ),
+        path: "maintenance/contrats",
+      },
+      {
+        canActivate: [roleGuard],
+        data: {
+          roles: workDestination("maintenance").roles,
+          ...shellBreadcrumb.createNested(
+            maintenanceTrail("Assurances", "/maintenance/contrats")
+          ),
+        },
+        loadComponent: () =>
+          import("./maintenance/contrat-form-page").then(
+            (module) => module.ContratFormPage
+          ),
+        path: "maintenance/contrats/nouveau",
+      },
+      {
+        canActivate: [roleGuard],
+        data: {
+          roles: workDestination("maintenance").roles,
+          ...shellBreadcrumb.detailNested(
+            maintenanceTrail("Assurances", "/maintenance/contrats")
+          ),
+        },
+        loadComponent: () =>
+          import("./maintenance/contrat-form-page").then(
+            (module) => module.ContratFormPage
+          ),
+        path: "maintenance/contrats/:id",
       },
       {
         canActivate: [roleGuard],
