@@ -55,8 +55,8 @@
           <td class="px-4 py-3 font-mono text-xs tabular-nums text-muted">
             {{ formatDate(c.dateEffet) }} → {{ formatDate(c.dateEcheance) }}
           </td>
-          <td class="px-4 py-3 text-right font-mono text-xs tabular-nums">{{ formatEur(c.franchise) }}</td>
-          <td class="px-4 py-3 text-right font-mono text-xs tabular-nums">{{ formatEur(c.primeAnnuelle) }}</td>
+          <td class="px-4 py-3 text-right font-mono text-xs tabular-nums">{{ formatMontant(c.franchise) }}</td>
+          <td class="px-4 py-3 text-right font-mono text-xs tabular-nums">{{ formatMontant(c.primeAnnuelle) }}</td>
           <td class="px-4 py-3">
             @if (c.enVigueur) {
             <app-statut-chip label="En vigueur" tone="pine" />

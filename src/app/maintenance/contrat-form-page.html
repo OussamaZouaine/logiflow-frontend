@@ -65,14 +65,14 @@
       <app-form-field
         [error]="showFieldError(contratForm.franchise()) ? firstFieldError(contratForm.franchise().errors()) : null"
         inputId="franchise"
-        label="Franchise (€)"
+        label="Franchise (DH)"
       >
         <input [class]="fieldClasses(contratForm.franchise())" [formField]="contratForm.franchise" id="franchise" inputmode="decimal" type="text">
       </app-form-field>
       <app-form-field
         [error]="showFieldError(contratForm.primeAnnuelle()) ? firstFieldError(contratForm.primeAnnuelle().errors()) : null"
         inputId="primeAnnuelle"
-        label="Prime annuelle (€)"
+        label="Prime annuelle (DH)"
       >
         <input [class]="fieldClasses(contratForm.primeAnnuelle())" [formField]="contratForm.primeAnnuelle" id="primeAnnuelle" inputmode="decimal" type="text">
       </app-form-field>

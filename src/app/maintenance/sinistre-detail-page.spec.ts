@@ -8,7 +8,7 @@ import { provideRouter } from "@angular/router";
 import type { Sinistre } from "./maintenance";
 import { SinistreDetailPage } from "./sinistre-detail-page";
 
-const COUT_NET_ATTENDU = /1\s300,00\s€/;
+const COUT_NET_ATTENDU = /1\s300,00 DH/;
 
 const ID = "55555555-5555-5555-5555-555555555555";
 const VEHICULE = "33333333-3333-3333-3333-333333333333";

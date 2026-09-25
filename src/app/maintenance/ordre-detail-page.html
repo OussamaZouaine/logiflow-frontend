@@ -221,8 +221,8 @@
 
   <app-form-section
     [description]="
-      'Budget estimé ' + formatEur(ordre.value().budgetEstime) +
-      (ecartBudget() !== null ? ' · écart ' + formatEur(ecartBudget()) : '')
+      'Budget estimé ' + formatMontant(ordre.value().budgetEstime) +
+      (ecartBudget() !== null ? ' · écart ' + formatMontant(ecartBudget()) : '')
     "
     title="Lignes de coût"
   >

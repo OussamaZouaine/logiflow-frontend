@@ -19,8 +19,8 @@ import { LignesCoutEditor } from "./lignes-cout-editor";
 import {
   formatDate,
   formatDateHeure,
-  formatEur,
   formatKm,
+  formatMontant,
   type LigneCout,
   libelle,
   libelleTransitionOT,
@@ -73,7 +73,7 @@ export class OrdreDetailPage {
   protected readonly libelle = libelle;
   protected readonly formatDate = formatDate;
   protected readonly formatDateHeure = formatDateHeure;
-  protected readonly formatEur = formatEur;
+  protected readonly formatMontant = formatMontant;
   protected readonly formatKm = formatKm;
   protected readonly toneStatutOT = toneStatutOT;
   protected readonly tonePriorite = tonePriorite;

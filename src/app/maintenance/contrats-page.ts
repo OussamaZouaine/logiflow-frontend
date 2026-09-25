@@ -11,7 +11,7 @@ import { StatutChip } from "../shared/ui/statut-chip";
 import {
   type ContratAssurance,
   formatDate,
-  formatEur,
+  formatMontant,
   libelle,
 } from "./maintenance";
 import { creerLookupsMaintenance } from "./maintenance-lookups";
@@ -34,7 +34,7 @@ export class ContratsPage {
   protected readonly lookups = creerLookupsMaintenance();
   protected readonly libelle = libelle;
   protected readonly formatDate = formatDate;
-  protected readonly formatEur = formatEur;
+  protected readonly formatMontant = formatMontant;
 
   protected readonly page = signal(0);
 

@@ -12,7 +12,7 @@ import {
   formatDate,
   formatDateHeure,
   formatEcheance,
-  formatEur,
+  formatMontant,
   libelle,
   type OrdreTravail,
   type PlanEntretien,
@@ -120,7 +120,7 @@ export class MaintenanceDashboardPage {
 
   protected readonly lookups = creerLookupsMaintenance();
   protected readonly libelle = libelle;
-  protected readonly formatEur = formatEur;
+  protected readonly formatMontant = formatMontant;
   protected readonly formatDate = formatDate;
   protected readonly formatDateHeure = formatDateHeure;
   protected readonly formatEcheance = formatEcheance;

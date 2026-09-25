@@ -106,10 +106,10 @@
             [class.font-semibold]="option.indicateurs.coutEstime === meilleures()?.cout"
             class="px-3 py-2"
           >
-            {{ formatEuros(option.indicateurs.coutEstime) }}
+            {{ formatMontantArrondi(option.indicateurs.coutEstime) }}
             @if (option.indicateurs.coutParTonne !== null) {
             <span class="text-muted">
-              ({{ formatEuros(option.indicateurs.coutParTonne) }}/t)
+              ({{ formatMontantArrondi(option.indicateurs.coutParTonne) }}/t)
             </span>
             }
           </td>

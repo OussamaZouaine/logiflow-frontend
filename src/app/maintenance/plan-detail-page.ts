@@ -8,8 +8,8 @@ import {
   formatDate,
   formatDateHeure,
   formatEcheance,
-  formatEur,
   formatKm,
+  formatMontant,
   formatPeriodicite,
   libelle,
   type OrdreTravail,
@@ -34,7 +34,7 @@ export class PlanDetailPage {
   protected readonly formatDate = formatDate;
   protected readonly formatDateHeure = formatDateHeure;
   protected readonly formatEcheance = formatEcheance;
-  protected readonly formatEur = formatEur;
+  protected readonly formatMontant = formatMontant;
   protected readonly formatKm = formatKm;
   protected readonly formatPeriodicite = formatPeriodicite;
   protected readonly toneEcheance = toneEcheance;

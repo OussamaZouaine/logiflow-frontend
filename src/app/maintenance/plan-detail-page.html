@@ -78,7 +78,7 @@
         {{ plan.value().seuilAlerteJours }} jours avant
       </app-fiche-field>
       <app-fiche-field label="Durée / coût estimés">
-        {{ plan.value().dureeEstimeeMin }} min · {{ formatEur(plan.value().coutEstime) }}
+        {{ plan.value().dureeEstimeeMin }} min · {{ formatMontant(plan.value().coutEstime) }}
       </app-fiche-field>
       <app-fiche-field label="Prestataire habituel">
         {{ lookups.prestataireLibelle(plan.value().prestataireId) }}
@@ -98,7 +98,7 @@
         </a>
         <span class="text-muted">{{ formatDateHeure(ot.finReelle ?? ot.debutPlanifie) }}</span>
         <span class="text-xs">{{ formatKm(ot.kilometrage) }}</span>
-        <span class="font-mono text-xs">{{ formatEur(ot.totalTtc) }}</span>
+        <span class="font-mono text-xs">{{ formatMontant(ot.totalTtc) }}</span>
         <app-statut-chip [label]="libelle(ot.statut)" [tone]="toneStatutOT(ot.statut)" />
       </li>
       }

@@ -9,7 +9,7 @@ import {
   formatDate,
   formatDateHeure,
   formatEcheance,
-  formatEur,
+  formatMontant,
   formatPeriodicite,
   libelle,
   type OrdreTravail,
@@ -35,7 +35,7 @@ export class EnginMaintenanceSection {
   protected readonly formatDate = formatDate;
   protected readonly formatDateHeure = formatDateHeure;
   protected readonly formatEcheance = formatEcheance;
-  protected readonly formatEur = formatEur;
+  protected readonly formatMontant = formatMontant;
   protected readonly formatPeriodicite = formatPeriodicite;
   protected readonly toneEcheance = toneEcheance;
   protected readonly toneStatutOT = toneStatutOT;

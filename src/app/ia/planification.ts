@@ -1,3 +1,4 @@
+import { formatAmountDh } from "../core/api/money";
 import type {
   Affectation,
   Portee,
@@ -118,8 +119,9 @@ export function formatPourcentage(taux: number): string {
   return `${Math.round(taux * 100)} %`;
 }
 
-export function formatEuros(montant: number): string {
-  return `${Math.round(montant).toLocaleString("fr-FR")} €`;
+/** Montant arrondi dans la devise de l'application (DH). */
+export function formatMontantArrondi(montant: number): string {
+  return formatAmountDh(Math.round(montant));
 }
 
 export function formatHeure(iso: string): string {

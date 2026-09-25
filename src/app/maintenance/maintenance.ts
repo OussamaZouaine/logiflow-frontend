@@ -1,3 +1,4 @@
+import { formatAmountDh } from "../core/api/money";
 import { isFieldSelectNone } from "../shared/ui/field-select";
 import type { ApercuTone } from "../tableau/apercu";
 
@@ -518,13 +519,15 @@ export function libelleTransitionOT(cible: StatutOT, depuis: StatutOT): string {
 
 // ─── Calculs et mise en forme ────────────────────────────────────────────────
 
-const EUR = new Intl.NumberFormat("fr-FR", {
-  currency: "EUR",
-  style: "currency",
-});
-
-export function formatEur(montant: number | null | undefined): string {
-  return montant === null || montant === undefined ? "—" : EUR.format(montant);
+/** Montant dans la devise de l'application (dirham, « 1 234,50 DH ») ; « — » si absent. */
+export function formatMontant(montant: number | null | undefined): string {
+  if (montant === null || montant === undefined) {
+    return "—";
+  }
+  return formatAmountDh(montant, {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
+  });
 }
 
 export function formatKm(km: number | null | undefined): string {

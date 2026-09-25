@@ -4,7 +4,7 @@ import {
   FieldSelectComponent,
 } from "../shared/ui/field-select";
 import {
-  formatEur,
+  formatMontant,
   type LigneCout,
   libelle,
   ligneVide,
@@ -103,11 +103,11 @@ import {
             <td class="px-2 py-2 text-ink">{{ ligne.designation }}</td>
             <td class="px-2 py-2 font-mono text-xs">{{ ligne.referencePiece ?? "—" }}</td>
             <td class="px-2 py-2 tabular-nums">{{ ligne.quantite }}</td>
-            <td class="px-2 py-2 tabular-nums">{{ formatEur(ligne.prixUnitaireHt) }}</td>
+            <td class="px-2 py-2 tabular-nums">{{ formatMontant(ligne.prixUnitaireHt) }}</td>
             <td class="px-2 py-2 tabular-nums">{{ ligne.tauxTva ?? 20 }}</td>
             }
             <td class="px-2 py-2 text-right font-mono text-xs tabular-nums">
-              {{ formatEur(totalHtLigne(ligne)) }}
+              {{ formatMontant(totalHtLigne(ligne)) }}
             </td>
             @if (editable()) {
             <td class="px-2 py-1.5">
@@ -131,16 +131,16 @@ import {
         <tfoot class="text-sm">
           <tr>
             <td class="px-2 pt-3 text-right text-muted" colspan="6">Total HT</td>
-            <td class="px-2 pt-3 text-right font-mono tabular-nums">{{ formatEur(totaux().ht) }}</td>
+            <td class="px-2 pt-3 text-right font-mono tabular-nums">{{ formatMontant(totaux().ht) }}</td>
           </tr>
           <tr>
             <td class="px-2 text-right text-muted" colspan="6">TVA</td>
-            <td class="px-2 text-right font-mono tabular-nums">{{ formatEur(totaux().tva) }}</td>
+            <td class="px-2 text-right font-mono tabular-nums">{{ formatMontant(totaux().tva) }}</td>
           </tr>
           <tr>
             <td class="px-2 text-right font-medium text-ink" colspan="6">Total TTC</td>
             <td class="px-2 text-right font-mono font-medium tabular-nums text-ink">
-              {{ formatEur(totaux().ttc) }}
+              {{ formatMontant(totaux().ttc) }}
             </td>
           </tr>
         </tfoot>
@@ -163,7 +163,7 @@ export class LignesCoutEditor {
   readonly lignesChange = output<LigneCout[]>();
 
   protected readonly typeOptions = enumToSelectOptions(TYPES_LIGNE, libelle);
-  protected readonly formatEur = formatEur;
+  protected readonly formatMontant = formatMontant;
   protected readonly libelle = libelle;
   protected readonly totalHtLigne = totalHtLigne;
   protected readonly totaux = computed(() => totauxLignes(this.lignes()));

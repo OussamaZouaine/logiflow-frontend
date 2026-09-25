@@ -16,7 +16,7 @@ import { ListTableSkeleton } from "../shared/ui/list-table-skeleton";
 import { StatutChip } from "../shared/ui/statut-chip";
 import {
   formatDateHeure,
-  formatEur,
+  formatMontant,
   libelle,
   parametresRequete,
   type Sinistre,
@@ -45,7 +45,7 @@ import { MaintenanceTabs } from "./maintenance-tabs";
 export class SinistresPage {
   protected readonly lookups = creerLookupsMaintenance();
   protected readonly libelle = libelle;
-  protected readonly formatEur = formatEur;
+  protected readonly formatMontant = formatMontant;
   protected readonly formatDateHeure = formatDateHeure;
   protected readonly toneStatutSinistre = toneStatutSinistre;
 

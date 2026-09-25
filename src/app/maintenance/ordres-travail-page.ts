@@ -25,7 +25,7 @@ import { ListTableSkeleton } from "../shared/ui/list-table-skeleton";
 import { StatutChip } from "../shared/ui/statut-chip";
 import {
   formatDateHeure,
-  formatEur,
+  formatMontant,
   libelle,
   libelleEngin,
   NATURES,
@@ -61,7 +61,7 @@ export class OrdresTravailPage {
   protected readonly lookups = creerLookupsMaintenance();
   protected readonly libelle = libelle;
   protected readonly libelleEngin = libelleEngin;
-  protected readonly formatEur = formatEur;
+  protected readonly formatMontant = formatMontant;
   protected readonly formatDateHeure = formatDateHeure;
   protected readonly toneStatutOT = toneStatutOT;
 

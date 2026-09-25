@@ -60,7 +60,7 @@
           <span class="text-ink">{{ ot.titre }}</span>
           <app-statut-chip [label]="libelle(ot.statut)" [tone]="toneStatutOT(ot.statut)" />
           <span class="font-mono text-xs tabular-nums text-muted">
-            {{ formatDateHeure(ot.finReelle ?? ot.debutPlanifie) }} · {{ formatEur(ot.totalHt) }} HT
+            {{ formatDateHeure(ot.finReelle ?? ot.debutPlanifie) }} · {{ formatMontant(ot.totalHt) }} HT
           </span>
         </a>
       </li>
@@ -91,7 +91,7 @@
           <span class="text-ink">{{ libelle(s.type) }}</span>
           <app-statut-chip [label]="libelle(s.statut)" [tone]="toneStatutSinistre(s.statut)" />
           <span class="font-mono text-xs tabular-nums text-muted">
-            {{ formatDate(s.dateSurvenance) }} · coût net {{ formatEur(s.couts?.coutNet) }}
+            {{ formatDate(s.dateSurvenance) }} · coût net {{ formatMontant(s.couts?.coutNet) }}
           </span>
         </a>
       </li>

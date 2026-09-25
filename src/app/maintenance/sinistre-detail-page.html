@@ -61,20 +61,20 @@
   <section aria-label="Coût du sinistre" class="grid gap-3 sm:grid-cols-4">
     <div class="rounded-xl border border-line bg-surface p-4">
       <p class="text-xs text-muted">Réparations (HT)</p>
-      <p class="mt-1 font-mono text-lg tabular-nums">{{ formatEur(couts.reparationsHt) }}</p>
+      <p class="mt-1 font-mono text-lg tabular-nums">{{ formatMontant(couts.reparationsHt) }}</p>
       <p class="text-xs text-muted">{{ couts.ordresTravail }} OT · {{ couts.ordresOuverts }} ouvert(s)</p>
     </div>
     <div class="rounded-xl border border-line bg-surface p-4">
       <p class="text-xs text-muted">Franchise</p>
-      <p class="mt-1 font-mono text-lg tabular-nums">{{ formatEur(couts.franchise) }}</p>
+      <p class="mt-1 font-mono text-lg tabular-nums">{{ formatMontant(couts.franchise) }}</p>
     </div>
     <div class="rounded-xl border border-line bg-surface p-4">
       <p class="text-xs text-muted">Indemnité perçue</p>
-      <p class="mt-1 font-mono text-lg tabular-nums text-pine">{{ formatEur(couts.indemnite) }}</p>
+      <p class="mt-1 font-mono text-lg tabular-nums text-pine">{{ formatMontant(couts.indemnite) }}</p>
     </div>
     <div class="rounded-xl border border-pine/40 bg-pine/5 p-4">
       <p class="text-xs text-muted">Coût net pour l'entreprise</p>
-      <p class="mt-1 font-mono text-lg font-semibold tabular-nums">{{ formatEur(couts.coutNet) }}</p>
+      <p class="mt-1 font-mono text-lg font-semibold tabular-nums">{{ formatMontant(couts.coutNet) }}</p>
     </div>
   </section>
   }
@@ -139,7 +139,7 @@
         {{ sinistre.value().expertId ? lookups.prestataireLibelle(sinistre.value().expertId) : "—" }}
       </app-fiche-field>
       <app-fiche-field label="Date d'expertise">{{ formatDate(sinistre.value().dateExpertise) }}</app-fiche-field>
-      <app-fiche-field label="Estimation des dommages">{{ formatEur(sinistre.value().estimationDommages) }}</app-fiche-field>
+      <app-fiche-field label="Estimation des dommages">{{ formatMontant(sinistre.value().estimationDommages) }}</app-fiche-field>
       @if (sinistre.value().dateCloture) {
       <app-fiche-field label="Clôturé le">{{ formatDate(sinistre.value().dateCloture) }}</app-fiche-field>
       }
@@ -174,7 +174,7 @@
         </a>
         <span class="min-w-0 flex-1 truncate">{{ ot.titre }}</span>
         <span class="text-xs text-muted">{{ lookups.prestataireLibelle(ot.prestataireId) }}</span>
-        <span class="font-mono text-xs">{{ formatEur(ot.totalTtc) }}</span>
+        <span class="font-mono text-xs">{{ formatMontant(ot.totalTtc) }}</span>
         <app-statut-chip [label]="libelle(ot.statut)" [tone]="toneStatutOT(ot.statut)" />
       </li>
       }

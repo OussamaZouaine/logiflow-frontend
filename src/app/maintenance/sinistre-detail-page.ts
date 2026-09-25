@@ -11,7 +11,7 @@ import {
   type ContratAssurance,
   formatDate,
   formatDateHeure,
-  formatEur,
+  formatMontant,
   libelle,
   type OrdreTravail,
   type Sinistre,
@@ -55,7 +55,7 @@ export class SinistreDetailPage {
   protected readonly libelle = libelle;
   protected readonly formatDate = formatDate;
   protected readonly formatDateHeure = formatDateHeure;
-  protected readonly formatEur = formatEur;
+  protected readonly formatMontant = formatMontant;
   protected readonly toneStatutSinistre = toneStatutSinistre;
   protected readonly toneStatutOT = toneStatutOT;
 

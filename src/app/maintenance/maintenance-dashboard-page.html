@@ -34,7 +34,7 @@
     </a>
     <a class="rounded-xl border border-line bg-surface p-4 hover:border-pine" routerLink="/maintenance/couts">
       <p class="text-xs text-muted">Coûts du mois (HT)</p>
-      <p class="mt-1 font-mono text-xl font-semibold tabular-nums">{{ formatEur(coutsMois.value()?.totalHt) }}</p>
+      <p class="mt-1 font-mono text-xl font-semibold tabular-nums">{{ formatMontant(coutsMois.value()?.totalHt) }}</p>
       <p class="text-xs text-muted">{{ coutsMois.value()?.nombreOrdres ?? 0 }} OT terminé(s)</p>
     </a>
   </section>
@@ -107,7 +107,7 @@
             <span class="font-mono text-xs">{{ s.reference }}</span>
             <span class="ml-2 text-ink">{{ libelle(s.type) }}</span>
             <span class="block text-xs text-muted">
-              {{ enginLibelle(s) }} · {{ formatDate(s.dateSurvenance) }} · coût net {{ formatEur(s.couts?.coutNet) }}
+              {{ enginLibelle(s) }} · {{ formatDate(s.dateSurvenance) }} · coût net {{ formatMontant(s.couts?.coutNet) }}
             </span>
             @if (s.declarationEnRetard) {
             <span class="block text-xs text-brake">Déclaration assureur en retard</span>

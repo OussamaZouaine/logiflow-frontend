@@ -35,9 +35,9 @@
   <section aria-label="Indicateurs" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
     <div class="rounded-xl border border-line bg-surface p-4">
       <p class="text-xs text-muted">Maintenance (HT)</p>
-      <p class="mt-1 font-mono text-xl tabular-nums">{{ formatEur(couts.value().totalHt) }}</p>
+      <p class="mt-1 font-mono text-xl tabular-nums">{{ formatMontant(couts.value().totalHt) }}</p>
       <p class="text-xs text-muted">
-        {{ couts.value().nombreOrdres }} OT terminé(s) · {{ formatEur(couts.value().totalTtc) }} TTC
+        {{ couts.value().nombreOrdres }} OT terminé(s) · {{ formatMontant(couts.value().totalTtc) }} TTC
       </p>
     </div>
     <div class="rounded-xl border border-line bg-surface p-4">
@@ -49,19 +49,19 @@
       >
         {{ ecartLibelle() }}
       </p>
-      <p class="text-xs text-muted">Budget : {{ formatEur(couts.value().budgetEstime) }}</p>
+      <p class="text-xs text-muted">Budget : {{ formatMontant(couts.value().budgetEstime) }}</p>
     </div>
     <div class="rounded-xl border border-line bg-surface p-4">
       <p class="text-xs text-muted">Sinistres</p>
-      <p class="mt-1 font-mono text-xl tabular-nums">{{ formatEur(couts.value().coutNetSinistres) }}</p>
+      <p class="mt-1 font-mono text-xl tabular-nums">{{ formatMontant(couts.value().coutNetSinistres) }}</p>
       <p class="text-xs text-muted">
-        {{ couts.value().nombreSinistres }} sinistre(s) · {{ formatEur(couts.value().indemnitesPercues) }}
+        {{ couts.value().nombreSinistres }} sinistre(s) · {{ formatMontant(couts.value().indemnitesPercues) }}
         d'indemnités
       </p>
     </div>
     <div class="rounded-xl border border-pine/40 bg-pine/5 p-4">
       <p class="text-xs text-muted">Coût global</p>
-      <p class="mt-1 font-mono text-xl font-semibold tabular-nums">{{ formatEur(coutGlobal()) }}</p>
+      <p class="mt-1 font-mono text-xl font-semibold tabular-nums">{{ formatMontant(coutGlobal()) }}</p>
       <p class="text-xs text-muted">Maintenance + coût net des sinistres</p>
     </div>
   </section>
@@ -82,7 +82,7 @@
         <li class="text-sm">
           <div class="flex justify-between gap-2">
             <span>{{ l.libelle }} <span class="text-xs text-muted">({{ l.nombre }})</span></span>
-            <span class="font-mono text-xs tabular-nums">{{ formatEur(l.totalHt) }}</span>
+            <span class="font-mono text-xs tabular-nums">{{ formatMontant(l.totalHt) }}</span>
           </div>
           <div aria-hidden="true" class="mt-1 h-1.5 rounded-full bg-line/60">
             <div [style.width.%]="l.part" class="h-1.5 rounded-full bg-pine"></div>
@@ -111,7 +111,7 @@
               {{ l.libelle }}
             </a>
             <span class="font-mono text-xs tabular-nums">
-              {{ formatEur(l.totalHt) }} <span class="text-muted">· {{ l.nombre }} OT</span>
+              {{ formatMontant(l.totalHt) }} <span class="text-muted">· {{ l.nombre }} OT</span>
             </span>
           </div>
           <div aria-hidden="true" class="mt-1 h-1.5 rounded-full bg-line/60">

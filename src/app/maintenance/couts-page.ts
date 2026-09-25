@@ -11,7 +11,7 @@ import { ListTableSkeleton } from "../shared/ui/list-table-skeleton";
 import {
   type CoutsMaintenance,
   formatDate,
-  formatEur,
+  formatMontant,
   libelle,
   parametresRequete,
   type Repartition,
@@ -78,7 +78,7 @@ export function avecParts(
 })
 export class CoutsPage {
   protected readonly libelle = libelle;
-  protected readonly formatEur = formatEur;
+  protected readonly formatMontant = formatMontant;
   protected readonly formatDate = formatDate;
   protected readonly periodeOptions = PERIODES;
   protected readonly typeEnginOptions = withNoneSelectOption(
@@ -121,7 +121,7 @@ export class CoutsPage {
     if (ecart === null) {
       return "—";
     }
-    return `${ecart > 0 ? "+" : ""}${formatEur(ecart)}`;
+    return `${ecart > 0 ? "+" : ""}${formatMontant(ecart)}`;
   });
   /** Coût total pour l'entreprise : maintenance (HT) + coût net des sinistres. */
   protected readonly coutGlobal = computed(() => {

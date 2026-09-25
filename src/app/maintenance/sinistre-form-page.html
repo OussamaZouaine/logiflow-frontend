@@ -50,7 +50,7 @@
     @if (contratApplicable.value(); as contrat) {
     <p class="text-sm text-muted" role="status">
       Couvert par le contrat {{ contrat.numeroPolice }} — franchise
-      {{ contrat.franchise ?? 0 }} € (reprise automatiquement).
+      {{ contrat.franchise ?? 0 }} DH (reprise automatiquement).
     </p>
     } @else if (contratApplicable.hasValue()) {
     <p class="text-sm text-amber" role="status">Aucun contrat d'assurance ne couvre cet engin à cette date.</p>
@@ -158,21 +158,21 @@
       <app-form-field
         [error]="showFieldError(sinistreForm.estimationDommages()) ? firstFieldError(sinistreForm.estimationDommages().errors()) : null"
         inputId="estimationDommages"
-        label="Estimation des dommages (€)"
+        label="Estimation des dommages (DH)"
       >
         <input [class]="fieldClasses(sinistreForm.estimationDommages())" [formField]="sinistreForm.estimationDommages" id="estimationDommages" inputmode="decimal" type="text">
       </app-form-field>
       <app-form-field
         [error]="showFieldError(sinistreForm.franchise()) ? firstFieldError(sinistreForm.franchise().errors()) : null"
         inputId="franchise"
-        label="Franchise (€)"
+        label="Franchise (DH)"
       >
         <input [class]="fieldClasses(sinistreForm.franchise())" [formField]="sinistreForm.franchise" id="franchise" inputmode="decimal" placeholder="Reprise du contrat" type="text">
       </app-form-field>
       <app-form-field
         [error]="showFieldError(sinistreForm.indemnite()) ? firstFieldError(sinistreForm.indemnite().errors()) : null"
         inputId="indemnite"
-        label="Indemnité perçue (€)"
+        label="Indemnité perçue (DH)"
       >
         <input [class]="fieldClasses(sinistreForm.indemnite())" [formField]="sinistreForm.indemnite" id="indemnite" inputmode="decimal" type="text">
       </app-form-field>

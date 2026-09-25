@@ -11,8 +11,8 @@ import {
 } from "@ng-icons/lucide";
 import { ZardButtonComponent } from "@/shared/components/button";
 import {
-  formatEuros,
   formatHeure,
+  formatMontantArrondi,
   formatPourcentage,
   libelle,
   meilleuresValeurs,
@@ -52,7 +52,7 @@ export class VoyagePropositions {
   readonly choisir = output<OptionVoyage>();
 
   protected readonly formatDureeMin = formatDureeMin;
-  protected readonly formatEuros = formatEuros;
+  protected readonly formatMontantArrondi = formatMontantArrondi;
   protected readonly formatHeure = formatHeure;
   protected readonly formatPourcentage = formatPourcentage;
   protected readonly libelle = libelle;
