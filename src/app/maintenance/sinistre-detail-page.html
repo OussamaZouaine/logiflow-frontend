@@ -1,0 +1,191 @@
+<div class="fiche-page">
+  <app-maintenance-tabs />
+  <app-fiche-header listLabel="Sinistres" listLink="/maintenance/sinistres">
+    @if (sinistre.isLoading() && !sinistre.hasValue()) {
+    <p class="fiche-load-hint" role="status">Chargement…</p>
+    } @else if (sinistre.error()) {
+    <app-fiche-error (retry)="sinistre.reload()" message="Sinistre introuvable." />
+    } @else if (sinistre.hasValue()) {
+    <app-fiche-title-row [title]="sinistre.value().reference + ' — ' + libelle(sinistre.value().type)">
+      <app-statut-chip
+        [label]="libelle(sinistre.value().statut)"
+        [tone]="toneStatutSinistre(sinistre.value().statut)"
+      />
+      @if (sinistre.value().enginImmobilise && ouvert()) {
+      <app-statut-chip label="Engin immobilisé" tone="brake" />
+      }
+      @if (sinistre.value().declarationEnRetard) {
+      <app-statut-chip label="Déclaration assureur en retard" tone="brake" />
+      }
+    </app-fiche-title-row>
+    <p class="fiche-meta">
+      {{ formatDateHeure(sinistre.value().dateSurvenance) }}
+      @if (sinistre.value().lieu) {
+      · {{ sinistre.value().lieu }}
+      }
+      · {{ libelle(sinistre.value().gravite) }}
+    </p>
+    }
+  </app-fiche-header>
+
+  @if (sinistre.hasValue()) {
+  <div class="flex flex-wrap items-center gap-2">
+    @for (cible of transitions(); track cible) {
+    <button
+      (click)="changerStatut(cible)"
+      [class.text-muted]="cible === 'CLASSE_SANS_SUITE'"
+      [disabled]="enCours()"
+      [class.btn-primary]="cible === 'CLOS'"
+      [class.btn-outline]="cible !== 'CLOS'"
+      class="pressable min-h-10 px-4"
+      type="button"
+    >
+      {{ libelleTransition(cible) }}
+    </button>
+    }
+    @if (ouvert()) {
+    <a
+      [routerLink]="['/maintenance/sinistres', sinistre.value().id, 'modifier']"
+      class="btn-outline pressable ml-auto min-h-10 px-4"
+    >
+      Modifier
+    </a>
+    }
+  </div>
+
+  @if (actionError()) {
+  <div class="alert-panel" role="alert">{{ actionError() }}</div>
+  }
+
+  @if (sinistre.value().couts; as couts) {
+  <section aria-label="Coût du sinistre" class="grid gap-3 sm:grid-cols-4">
+    <div class="rounded-xl border border-line bg-surface p-4">
+      <p class="text-xs text-muted">Réparations (HT)</p>
+      <p class="mt-1 font-mono text-lg tabular-nums">{{ formatEur(couts.reparationsHt) }}</p>
+      <p class="text-xs text-muted">{{ couts.ordresTravail }} OT · {{ couts.ordresOuverts }} ouvert(s)</p>
+    </div>
+    <div class="rounded-xl border border-line bg-surface p-4">
+      <p class="text-xs text-muted">Franchise</p>
+      <p class="mt-1 font-mono text-lg tabular-nums">{{ formatEur(couts.franchise) }}</p>
+    </div>
+    <div class="rounded-xl border border-line bg-surface p-4">
+      <p class="text-xs text-muted">Indemnité perçue</p>
+      <p class="mt-1 font-mono text-lg tabular-nums text-pine">{{ formatEur(couts.indemnite) }}</p>
+    </div>
+    <div class="rounded-xl border border-pine/40 bg-pine/5 p-4">
+      <p class="text-xs text-muted">Coût net pour l'entreprise</p>
+      <p class="mt-1 font-mono text-lg font-semibold tabular-nums">{{ formatEur(couts.coutNet) }}</p>
+    </div>
+  </section>
+  }
+
+  <app-form-section title="Circonstances">
+    <app-fiche-field-grid>
+      <app-fiche-field label="Engins">
+        @for (e of engins(); track e.id) {
+        <a [routerLink]="e.lien" class="mr-2 font-mono text-pine hover:underline">{{ e.immatriculation }}</a>
+        } @empty {
+        —
+        }
+      </app-fiche-field>
+      <app-fiche-field label="Chauffeur">
+        @if (sinistre.value().chauffeurId; as chauffeurId) {
+        <a [routerLink]="['/chauffeurs', chauffeurId]" class="text-pine hover:underline">Voir la fiche</a>
+        } @else {
+        Non renseigné
+        }
+      </app-fiche-field>
+      <app-fiche-field label="Voyage">
+        @if (sinistre.value().voyageId; as voyageId) {
+        <a [routerLink]="['/voyages', voyageId]" class="text-pine hover:underline">Voir le voyage</a>
+        } @else {
+        —
+        }
+      </app-fiche-field>
+      <app-fiche-field label="Responsabilité">{{ libelle(sinistre.value().responsabilite) }}</app-fiche-field>
+      <app-fiche-field label="Constat amiable">{{ sinistre.value().constatAmiable ? "Oui" : "Non" }}</app-fiche-field>
+      <app-fiche-field label="Rapport de police">{{ sinistre.value().rapportPolice ? "Oui" : "Non" }}</app-fiche-field>
+      <app-fiche-field label="Blessés">{{ sinistre.value().blesses ? "Oui" : "Non" }}</app-fiche-field>
+      <app-fiche-field label="Tiers">
+        @if (sinistre.value().tiers; as tiers) {
+        {{ tiers.nom }}
+        @if (tiers.immatriculation) {
+        · <span class="font-mono">{{ tiers.immatriculation }}</span>
+        }
+        @if (tiers.assureur) {
+        <span class="block text-xs text-muted">Assuré chez {{ tiers.assureur }} {{ tiers.numeroPolice ?? "" }}</span>
+        }
+        } @else {
+        Aucun
+        }
+      </app-fiche-field>
+    </app-fiche-field-grid>
+    <p class="mt-3 whitespace-pre-line text-sm text-ink">{{ sinistre.value().description }}</p>
+  </app-form-section>
+
+  <app-form-section title="Suivi assurance">
+    <app-fiche-field-grid>
+      <app-fiche-field label="Contrat">
+        @if (contrat.value(); as c) {
+        <a [routerLink]="['/maintenance/contrats', c.id]" class="font-mono text-pine hover:underline">{{ c.numeroPolice }}</a>
+        <span class="block text-xs text-muted">{{ lookups.prestataireLibelle(c.assureurId) }}</span>
+        } @else {
+        <span class="text-amber">Aucun contrat applicable</span>
+        }
+      </app-fiche-field>
+      <app-fiche-field label="N° de dossier assureur">{{ sinistre.value().numeroDossierAssureur ?? "—" }}</app-fiche-field>
+      <app-fiche-field label="Déclaré à l'assureur le">{{ formatDate(sinistre.value().dateDeclarationAssureur) }}</app-fiche-field>
+      <app-fiche-field label="Expert">
+        {{ sinistre.value().expertId ? lookups.prestataireLibelle(sinistre.value().expertId) : "—" }}
+      </app-fiche-field>
+      <app-fiche-field label="Date d'expertise">{{ formatDate(sinistre.value().dateExpertise) }}</app-fiche-field>
+      <app-fiche-field label="Estimation des dommages">{{ formatEur(sinistre.value().estimationDommages) }}</app-fiche-field>
+      @if (sinistre.value().dateCloture) {
+      <app-fiche-field label="Clôturé le">{{ formatDate(sinistre.value().dateCloture) }}</app-fiche-field>
+      }
+    </app-fiche-field-grid>
+  </app-form-section>
+
+  <app-form-section
+    description="Les coûts des OT liés alimentent le coût net du sinistre. Le dossier ne peut être clos qu'une fois les réparations terminées ou annulées."
+    title="Réparations"
+  >
+    @if (ouvert()) {
+    <div class="mb-3 flex flex-wrap gap-2">
+      @for (e of engins(); track e.id) {
+      <a
+        [queryParams]="e.reparation"
+        class="btn-outline pressable min-h-10 px-4"
+        routerLink="/maintenance/ordres-travail/nouveau"
+      >
+        Créer l'OT de réparation — {{ e.immatriculation }}
+      </a>
+      }
+    </div>
+    }
+    @if (reparations.hasValue() && reparations.value().length === 0) {
+    <p class="text-sm text-muted">Aucun ordre de travail lié.</p>
+    } @else if (reparations.hasValue()) {
+    <ul class="flex flex-col gap-2">
+      @for (ot of reparations.value(); track ot.id) {
+      <li class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line/80 bg-canvas px-3 py-2 text-sm">
+        <a [routerLink]="['/maintenance/ordres-travail', ot.id]" class="font-mono text-xs text-pine hover:underline">
+          {{ ot.reference }}
+        </a>
+        <span class="min-w-0 flex-1 truncate">{{ ot.titre }}</span>
+        <span class="text-xs text-muted">{{ lookups.prestataireLibelle(ot.prestataireId) }}</span>
+        <span class="font-mono text-xs">{{ formatEur(ot.totalTtc) }}</span>
+        <app-statut-chip [label]="libelle(ot.statut)" [tone]="toneStatutOT(ot.statut)" />
+      </li>
+      }
+    </ul>
+    }
+  </app-form-section>
+
+  <app-documents-section
+    [entiteId]="sinistre.value().id"
+    description="Constat amiable, rapport de police, rapport d'expertise, photos, déclaration."
+    typeEntite="SINISTRE"
+  />
+  }
+</div>

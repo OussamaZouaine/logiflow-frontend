@@ -100,7 +100,7 @@ describe("TableauDeBordPage", () => {
     flushUrl(http, "/api/v1/commandes", pageOf([]));
     flushUrl(http, "/api/v1/dossiers", pageOf([]));
     flushUrl(http, "/api/v1/voyages", pageOf([]));
-    flushUrl(http, "/api/v1/ordres-travail", pageOf([], 2));
+    flushUrl(http, "/api/v1/maintenance/ordres-travail", pageOf([], 2));
     flushUrl(http, "/api/v1/utilisateurs", pageOf([]));
     flushUrl(http, "/api/v1/prises-carburant", pageOf([]));
 
@@ -123,7 +123,7 @@ describe("TableauDeBordPage", () => {
     fixture.detectChanges();
 
     const http = TestBed.inject(HttpTestingController);
-    flushUrl(http, "/api/v1/ordres-travail", pageOf([]));
+    flushUrl(http, "/api/v1/maintenance/ordres-travail", pageOf([]));
     flushUrl(
       http,
       "/api/v1/vehicules",
@@ -172,7 +172,7 @@ describe("TableauDeBordPage", () => {
     fixture.detectChanges();
 
     const http = TestBed.inject(HttpTestingController);
-    flushUrl(http, "/api/v1/ordres-travail", pageOf([]));
+    flushUrl(http, "/api/v1/maintenance/ordres-travail", pageOf([]));
     flushUrl(
       http,
       "/api/v1/vehicules",

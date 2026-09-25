@@ -1,0 +1,109 @@
+<div class="fiche-page">
+  <app-maintenance-tabs />
+  <app-fiche-header listLabel="Plans d'entretien" listLink="/maintenance/plans">
+    @if (plan.isLoading() && !plan.hasValue()) {
+    <p class="fiche-load-hint" role="status">Chargement…</p>
+    } @else if (plan.error()) {
+    <app-fiche-error (retry)="plan.reload()" message="Plan introuvable." />
+    } @else if (plan.hasValue()) {
+    <app-fiche-title-row [title]="plan.value().libelle">
+      <app-statut-chip
+        [label]="libelle(plan.value().echeance?.etat ?? null)"
+        [tone]="toneEcheance(plan.value().echeance?.etat)"
+      />
+      @if (!plan.value().actif) {
+      <app-statut-chip label="Inactif" tone="muted" />
+      }
+    </app-fiche-title-row>
+    <p class="fiche-meta">
+      {{ libelle(plan.value().type) }} · {{ formatPeriodicite(plan.value()) }}
+    </p>
+    }
+  </app-fiche-header>
+
+  @if (plan.hasValue()) {
+  <div class="flex flex-wrap items-center gap-2">
+    @if (otOuvert(); as ot) {
+    <p class="text-sm text-muted">
+      Intervention déjà planifiée :
+      <a [routerLink]="['/maintenance/ordres-travail', ot.id]" class="font-mono text-pine hover:underline">
+        {{ ot.reference }}
+      </a>
+    </p>
+    } @else if (planifier(); as params) {
+    <a
+      [queryParams]="params"
+      class="btn-primary pressable min-h-10 px-4"
+      routerLink="/maintenance/ordres-travail/nouveau"
+    >
+      Planifier l'intervention
+    </a>
+    }
+    <a
+      [routerLink]="['/maintenance/plans', plan.value().id, 'modifier']"
+      class="btn-outline pressable ml-auto min-h-10 px-4"
+    >
+      Modifier
+    </a>
+  </div>
+
+  <app-form-section title="Prochaine échéance">
+    <app-fiche-field-grid>
+      <app-fiche-field label="Échéance">{{ formatEcheance(plan.value().echeance) }}</app-fiche-field>
+      <app-fiche-field label="Engin">
+        @if (lienEngin(); as lien) {
+        <a [routerLink]="lien" class="font-mono text-pine hover:underline">
+          {{ plan.value().echeance?.immatriculation ?? lookups.engins().get(plan.value().engin.id)?.immatriculation ?? "…" }}
+        </a>
+        }
+        <span class="text-xs text-muted"> ({{ libelle(plan.value().engin.type) }})</span>
+      </app-fiche-field>
+      <app-fiche-field label="Compteur actuel">
+        {{ formatKm(plan.value().echeance?.kilometrageActuel) }}
+      </app-fiche-field>
+      <app-fiche-field label="Usage moyen">
+        {{ plan.value().echeance?.kmParJour ?? "—" }} km/jour
+      </app-fiche-field>
+      <app-fiche-field label="Dernière réalisation">
+        {{ formatDate(plan.value().derniereDate) }}
+        @if (plan.value().derniereKm !== null) {
+        · {{ formatKm(plan.value().derniereKm) }}
+        }
+        @if (plan.value().derniereHeures !== null) {
+        · {{ plan.value().derniereHeures }} h
+        }
+      </app-fiche-field>
+      <app-fiche-field label="Alertes">
+        {{ plan.value().seuilAlerteKm.toLocaleString("fr-FR") }} km ·
+        {{ plan.value().seuilAlerteJours }} jours avant
+      </app-fiche-field>
+      <app-fiche-field label="Durée / coût estimés">
+        {{ plan.value().dureeEstimeeMin }} min · {{ formatEur(plan.value().coutEstime) }}
+      </app-fiche-field>
+      <app-fiche-field label="Prestataire habituel">
+        {{ lookups.prestataireLibelle(plan.value().prestataireId) }}
+      </app-fiche-field>
+    </app-fiche-field-grid>
+  </app-form-section>
+
+  <app-form-section title="Historique des interventions">
+    @if (historique.hasValue() && historique.value().length === 0) {
+    <p class="text-sm text-muted">Aucune intervention rattachée à ce plan.</p>
+    } @else if (historique.hasValue()) {
+    <ul class="flex flex-col gap-2">
+      @for (ot of historique.value(); track ot.id) {
+      <li class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line/80 bg-canvas px-3 py-2 text-sm">
+        <a [routerLink]="['/maintenance/ordres-travail', ot.id]" class="font-mono text-xs text-pine hover:underline">
+          {{ ot.reference }}
+        </a>
+        <span class="text-muted">{{ formatDateHeure(ot.finReelle ?? ot.debutPlanifie) }}</span>
+        <span class="text-xs">{{ formatKm(ot.kilometrage) }}</span>
+        <span class="font-mono text-xs">{{ formatEur(ot.totalTtc) }}</span>
+        <app-statut-chip [label]="libelle(ot.statut)" [tone]="toneStatutOT(ot.statut)" />
+      </li>
+      }
+    </ul>
+    }
+  </app-form-section>
+  }
+</div>

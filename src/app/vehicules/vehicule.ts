@@ -331,3 +331,17 @@ export function formatVehiculeDate(isoDate: string | null): string {
   const [year, month, day] = parts;
   return `${day}/${month}/${year}`;
 }
+
+/** Véhicule réduit à son immatriculation (listes de choix, libellés). */
+export interface VehiculeLookup {
+  id: string;
+  immatriculation: string;
+}
+
+export function vehiculeLabel(
+  vehiculeId: string,
+  lookups: readonly VehiculeLookup[]
+): string {
+  const match = lookups.find((entry) => entry.id === vehiculeId);
+  return match?.immatriculation ?? vehiculeId;
+}

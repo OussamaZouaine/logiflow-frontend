@@ -1,0 +1,146 @@
+<div class="flex flex-col gap-6">
+  <app-maintenance-tabs />
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <h1 class="module-page-title">Ordres de travail</h1>
+      <p class="mt-1 text-sm text-muted">
+        Interventions préventives, correctives et réglementaires sur les véhicules et remorques.
+      </p>
+    </div>
+    <a class="btn-primary pressable" routerLink="/maintenance/ordres-travail/nouveau">
+      Nouvel ordre de travail
+    </a>
+  </div>
+
+  @if (enginId(); as filtreEngin) {
+  <p class="flex flex-wrap items-center gap-2 text-sm" role="status">
+    Filtré sur l'engin
+    <span class="font-mono">{{ lookups.engins().get(filtreEngin)?.immatriculation ?? "…" }}</span>
+    <a class="text-pine underline" routerLink="/maintenance/ordres-travail">Retirer le filtre</a>
+  </p>
+  }
+
+  <div class="flex flex-col gap-3 lg:flex-row lg:items-end">
+    <div class="min-w-0 flex-1">
+      <app-list-search-bar
+        [(draft)]="searchDraft"
+        [(query)]="search"
+        inputId="ot-search"
+        placeholder="Référence ou titre…"
+      />
+    </div>
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:w-2xl">
+      <app-field-select
+        (selectValueChange)="statut.set($event)"
+        [options]="statutOptions"
+        [selectValue]="statut() || '__none__'"
+        inputId="ot-statut"
+      />
+      <app-field-select
+        (selectValueChange)="type.set($event)"
+        [options]="typeOptions"
+        [selectValue]="type() || '__none__'"
+        inputId="ot-type"
+      />
+      <app-field-select
+        (selectValueChange)="nature.set($event)"
+        [options]="natureOptions"
+        [selectValue]="nature() || '__none__'"
+        inputId="ot-nature"
+      />
+      <app-field-select
+        (selectValueChange)="typeEngin.set($event)"
+        [options]="enginTypeOptions"
+        [selectValue]="typeEngin() || '__none__'"
+        inputId="ot-engin"
+      />
+    </div>
+  </div>
+
+  @if (ordres.isLoading() && !ordres.hasValue()) {
+  <app-list-table-skeleton label="Chargement des ordres de travail" />
+  } @else if (ordres.error()) {
+  <div class="alert-panel" role="alert">
+    <p>{{ errorMessage() }}</p>
+    <button (click)="ordres.reload()" class="pressable mt-2 font-medium underline" type="button">
+      Réessayer
+    </button>
+  </div>
+  } @else if (ordres.hasValue() && ordres.value().content.length === 0) {
+  @if (filtresActifs()) {
+  <app-list-empty-state
+    (action)="reinitialiser()"
+    actionLabel="Réinitialiser les filtres"
+    description="Aucun ordre de travail ne correspond à ces critères."
+    title="Aucun résultat"
+  />
+  } @else {
+  <app-list-empty-state
+    actionLabel="Nouvel ordre de travail"
+    actionLink="/maintenance/ordres-travail/nouveau"
+    description="Planifiez la première intervention."
+    title="Aucun ordre de travail"
+  />
+  }
+  } @else if (ordres.hasValue()) {
+  <div class="list-table-panel">
+    <table class="w-full min-w-3xl text-left text-sm">
+      <thead class="list-table-head">
+        <tr>
+          <th class="px-4 py-3 font-medium" scope="col">Référence</th>
+          <th class="px-4 py-3 font-medium" scope="col">Engin</th>
+          <th class="px-4 py-3 font-medium" scope="col">Intervention</th>
+          <th class="px-4 py-3 font-medium" scope="col">Statut</th>
+          <th class="px-4 py-3 font-medium" scope="col">Début</th>
+          <th class="px-4 py-3 font-medium" scope="col">Réalisé par</th>
+          <th class="px-4 py-3 text-right font-medium" scope="col">Total TTC</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (ot of ordres.value().content; track ot.id) {
+        <tr class="list-row border-b border-line last:border-0 hover:bg-canvas">
+          <td class="px-4 py-3">
+            <a
+              [routerLink]="['/maintenance/ordres-travail', ot.id]"
+              class="font-mono text-xs font-medium text-pine underline-offset-2 hover:underline"
+            >
+              {{ ot.reference }}
+            </a>
+          </td>
+          <td class="px-4 py-3">
+            <span class="font-mono text-xs">{{ libelleEngin(ot.engin, lookups.engins()) }}</span>
+            <span class="block text-xs text-muted">{{ libelle(ot.engin.type) }}</span>
+          </td>
+          <td class="px-4 py-3">
+            <span class="text-ink">{{ ot.titre }}</span>
+            <span class="block text-xs text-muted">
+              {{ libelle(ot.type) }} · {{ libelle(ot.nature) }}
+            </span>
+          </td>
+          <td class="px-4 py-3">
+            <app-statut-chip [label]="libelle(ot.statut)" [tone]="toneStatutOT(ot.statut)" />
+          </td>
+          <td class="px-4 py-3 font-mono text-xs tabular-nums text-muted">
+            {{ formatDateHeure(ot.debutPlanifie) }}
+          </td>
+          <td class="px-4 py-3 text-xs text-muted">
+            {{ lookups.prestataireLibelle(ot.prestataireId) }}
+          </td>
+          <td class="px-4 py-3 text-right font-mono text-xs tabular-nums">
+            {{ formatEur(ot.totalTtc) }}
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <app-list-pagination
+    (pageSizeChange)="changerTaillePage($event)"
+    [(page)]="page"
+    [pageSize]="pageSize()"
+    [totalElements]="ordres.value().totalElements"
+    [totalPages]="ordres.value().totalPages"
+    itemLabel="ordre de travail"
+  />
+  }
+</div>

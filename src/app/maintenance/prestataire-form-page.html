@@ -1,0 +1,94 @@
+<app-form-page-header
+  [description]="edition() ? 'Coordonnées, statut et pièces du prestataire.' : 'Le code court identifie le prestataire dans les listes (ex. GAR-LYON).'"
+  [title]="edition() ? draft().raisonSociale || 'Prestataire' : 'Nouveau prestataire'"
+  listLabel="Prestataires"
+  listLink="/maintenance/prestataires"
+/>
+
+@if (chargement()) {
+<p class="text-sm text-muted" role="status">Chargement…</p>
+} @else {
+<form (submit)="onSubmit($event)" class="form-page" novalidate>
+  <app-form-validation-summary [show]="prestataireForm().touched() && prestataireForm().invalid()" />
+
+  <app-form-section title="Identification">
+    <div class="form-page__coords">
+      <app-form-field
+        [error]="showFieldError(prestataireForm.raisonSociale()) ? firstFieldError(prestataireForm.raisonSociale().errors()) : null"
+        inputId="raisonSociale"
+        label="Raison sociale *"
+      >
+        <input [class]="fieldClasses(prestataireForm.raisonSociale())" [formField]="prestataireForm.raisonSociale" id="raisonSociale" type="text">
+      </app-form-field>
+      <app-form-field inputId="type" label="Métier *">
+        <app-field-select [formField]="prestataireForm.type" [options]="typeOptions" inputId="type" />
+      </app-form-field>
+    </div>
+    <div class="form-page__coords">
+      <app-form-field
+        [error]="showFieldError(prestataireForm.code()) ? firstFieldError(prestataireForm.code().errors()) : null"
+        inputId="code"
+        label="Code *"
+      >
+        @if (edition()) {
+        <p class="field flex items-center font-mono text-muted" id="code">{{ draft().code }}</p>
+        } @else {
+        <input [class]="fieldClasses(prestataireForm.code())" [formField]="prestataireForm.code" id="code" type="text">
+        }
+      </app-form-field>
+      <app-form-field inputId="siret" label="SIRET">
+        <input [class]="fieldClasses(prestataireForm.siret())" [formField]="prestataireForm.siret" id="siret" inputmode="numeric" type="text">
+      </app-form-field>
+    </div>
+    <label class="flex items-center gap-2 text-sm">
+      <input (change)="basculerActif()" [checked]="draft().actif" type="checkbox">
+      Actif (proposé dans les ordres de travail et les sinistres)
+    </label>
+  </app-form-section>
+
+  <app-form-section title="Contact">
+    <div class="form-page__coords">
+      <app-form-field inputId="contactNom" label="Interlocuteur">
+        <input [class]="fieldClasses(prestataireForm.contactNom())" [formField]="prestataireForm.contactNom" id="contactNom" type="text">
+      </app-form-field>
+      <app-form-field inputId="telephone" label="Téléphone">
+        <input [class]="fieldClasses(prestataireForm.telephone())" [formField]="prestataireForm.telephone" id="telephone" type="tel">
+      </app-form-field>
+    </div>
+    <app-form-field
+      [error]="showFieldError(prestataireForm.email()) ? firstFieldError(prestataireForm.email().errors()) : null"
+      inputId="email"
+      label="E-mail"
+    >
+      <input [class]="fieldClasses(prestataireForm.email())" [formField]="prestataireForm.email" id="email" type="email">
+    </app-form-field>
+    <app-form-field inputId="adresse" label="Adresse">
+      <textarea [class]="fieldClasses(prestataireForm.adresse())" [formField]="prestataireForm.adresse" id="adresse" rows="2"></textarea>
+    </app-form-field>
+    <app-form-field inputId="notes" label="Notes">
+      <textarea [class]="fieldClasses(prestataireForm.notes())" [formField]="prestataireForm.notes" id="notes" rows="2"></textarea>
+    </app-form-field>
+  </app-form-section>
+
+  @if (formError()) {
+  <div class="alert-panel" role="alert">{{ formError() }}</div>
+  }
+
+  <app-form-actions>
+    <button class="btn-primary pressable min-h-11 px-5" type="submit">
+      {{ edition() ? "Enregistrer" : "Créer le prestataire" }}
+    </button>
+    <a class="btn-outline pressable min-h-11 px-5" routerLink="/maintenance/prestataires">Retour</a>
+  </app-form-actions>
+</form>
+
+@if (id(); as prestataireId) {
+<div class="mt-6">
+  <app-documents-section
+    [entiteId]="prestataireId"
+    description="Contrat cadre, grille tarifaire, attestation d'assurance, Kbis."
+    typeEntite="PRESTATAIRE"
+  />
+</div>
+}
+}

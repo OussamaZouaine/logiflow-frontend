@@ -1,0 +1,80 @@
+<div class="flex flex-col gap-6">
+  <app-maintenance-tabs />
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <h1 class="module-page-title">Contrats d'assurance</h1>
+      <p class="mt-1 text-sm text-muted">
+        Le contrat en vigueur couvrant l'engin est rattaché automatiquement à chaque sinistre, avec
+        sa franchise.
+      </p>
+    </div>
+    <a class="btn-primary pressable" routerLink="/maintenance/contrats/nouveau">Nouveau contrat</a>
+  </div>
+
+  @if (contrats.isLoading() && !contrats.hasValue()) {
+  <app-list-table-skeleton label="Chargement des contrats" />
+  } @else if (contrats.error()) {
+  <div class="alert-panel" role="alert">{{ erreur() }}</div>
+  } @else if (contrats.hasValue() && contrats.value().content.length === 0) {
+  <app-list-empty-state
+    actionLabel="Nouveau contrat"
+    actionLink="/maintenance/contrats/nouveau"
+    description="Enregistrez vos polices pour suivre franchises et indemnisations."
+    title="Aucun contrat"
+  />
+  } @else if (contrats.hasValue()) {
+  <div class="list-table-panel">
+    <table class="w-full min-w-3xl text-left text-sm">
+      <thead class="list-table-head">
+        <tr>
+          <th class="px-4 py-3 font-medium" scope="col">Police</th>
+          <th class="px-4 py-3 font-medium" scope="col">Assureur</th>
+          <th class="px-4 py-3 font-medium" scope="col">Couverture</th>
+          <th class="px-4 py-3 font-medium" scope="col">Période</th>
+          <th class="px-4 py-3 text-right font-medium" scope="col">Franchise</th>
+          <th class="px-4 py-3 text-right font-medium" scope="col">Prime annuelle</th>
+          <th class="px-4 py-3 font-medium" scope="col">Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of contrats.value().content; track c.id) {
+        <tr class="list-row border-b border-line last:border-0 hover:bg-canvas">
+          <td class="px-4 py-3">
+            <a
+              [routerLink]="['/maintenance/contrats', c.id]"
+              class="font-mono text-xs font-medium text-pine underline-offset-2 hover:underline"
+            >
+              {{ c.numeroPolice }}
+            </a>
+          </td>
+          <td class="px-4 py-3">{{ lookups.prestataireLibelle(c.assureurId) }}</td>
+          <td class="px-4 py-3">
+            <span class="text-ink">{{ libelle(c.type) }}</span>
+            <span class="block max-w-xs truncate font-mono text-xs text-muted">{{ couverture(c) }}</span>
+          </td>
+          <td class="px-4 py-3 font-mono text-xs tabular-nums text-muted">
+            {{ formatDate(c.dateEffet) }} → {{ formatDate(c.dateEcheance) }}
+          </td>
+          <td class="px-4 py-3 text-right font-mono text-xs tabular-nums">{{ formatEur(c.franchise) }}</td>
+          <td class="px-4 py-3 text-right font-mono text-xs tabular-nums">{{ formatEur(c.primeAnnuelle) }}</td>
+          <td class="px-4 py-3">
+            @if (c.enVigueur) {
+            <app-statut-chip label="En vigueur" tone="pine" />
+            } @else {
+            <app-statut-chip [label]="c.actif ? 'Hors période' : 'Inactif'" tone="muted" />
+            }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <app-list-pagination
+    [(page)]="page"
+    [pageSize]="20"
+    [totalElements]="contrats.value().totalElements"
+    [totalPages]="contrats.value().totalPages"
+    itemLabel="contrat"
+  />
+  }
+</div>

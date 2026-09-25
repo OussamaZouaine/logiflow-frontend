@@ -1,32 +1,32 @@
 import {
+  type PriseCarburant,
+  STATUT_PRISES,
+  type StatutPrise,
+  statutPriseLabel,
+} from "../carburant/prise-carburant";
+import {
   type Commande,
   STATUT_COMMANDES,
   type StatutCommande,
   statutCommandeLabel,
 } from "../commandes/commande";
-import {
-  STATUT_DOSSIERS,
-  type Dossier,
-  type StatutDossier,
-  statutDossierLabel,
-} from "../dossiers/dossier";
 import type { PageResponse } from "../core/api/page-response";
 import type {
   WorkDestination,
   WorkDestinationId,
 } from "../core/nav/work-destination";
 import {
+  type Dossier,
+  STATUT_DOSSIERS,
+  type StatutDossier,
+  statutDossierLabel,
+} from "../dossiers/dossier";
+import {
   statutLabel,
   VEHICULE_STATUTS,
   type Vehicule,
   type VehiculeStatut,
 } from "../vehicules/vehicule";
-import {
-  STATUT_PRISES,
-  type PriseCarburant,
-  type StatutPrise,
-  statutPriseLabel,
-} from "../carburant/prise-carburant";
 import {
   STATUT_VOYAGES,
   type StatutVoyage,
@@ -81,7 +81,7 @@ export function apercuDestinations(
 /** List API segment (differs from sidebar path for maintenance). */
 export function apercuApiPath(id: ApercuCountableId): string {
   if (id === "maintenance") {
-    return "ordres-travail";
+    return "maintenance/ordres-travail";
   }
   if (id === "carburant") {
     return "prises-carburant";

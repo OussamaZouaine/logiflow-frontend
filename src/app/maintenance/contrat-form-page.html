@@ -1,0 +1,141 @@
+<app-form-page-header
+  [description]="
+    edition()
+      ? 'Conditions du contrat et pièces (attestation, conditions générales).'
+      : 'Un contrat flotte couvre tous les engins ; un contrat par engin ne couvre que la liste choisie.'
+  "
+  [title]="edition() ? 'Contrat ' + draft().numeroPolice : 'Nouveau contrat d\'assurance'"
+  listLabel="Assurances"
+  listLink="/maintenance/contrats"
+/>
+
+@if (chargement()) {
+<p class="text-sm text-muted" role="status">Chargement…</p>
+} @else {
+<form (submit)="onSubmit($event)" class="form-page" novalidate>
+  <app-form-validation-summary [show]="contratForm().touched() && contratForm().invalid()" />
+
+  <app-form-section title="Police">
+    <div class="form-page__coords">
+      <app-form-field
+        [error]="showFieldError(contratForm.assureurId()) ? firstFieldError(contratForm.assureurId().errors()) : null"
+        inputId="assureurId"
+        label="Assureur *"
+      >
+        <app-field-select
+          [formField]="contratForm.assureurId"
+          [invalid]="showFieldError(contratForm.assureurId())"
+          [options]="assureurOptions()"
+          inputId="assureurId"
+          placeholder="Choisir l'assureur…"
+        />
+      </app-form-field>
+      <app-form-field
+        [error]="showFieldError(contratForm.numeroPolice()) ? firstFieldError(contratForm.numeroPolice().errors()) : null"
+        inputId="numeroPolice"
+        label="N° de police *"
+      >
+        <input [class]="fieldClasses(contratForm.numeroPolice())" [formField]="contratForm.numeroPolice" id="numeroPolice" type="text">
+      </app-form-field>
+    </div>
+    @if (assureurOptions().length === 0) {
+    <p class="text-sm text-amber">
+      Aucun assureur enregistré :
+      <a class="text-pine underline" routerLink="/maintenance/prestataires/nouveau">créez d'abord le prestataire</a>
+      (métier « Assureur »).
+    </p>
+    }
+    <div class="form-page__coords">
+      <app-form-field
+        [error]="showFieldError(contratForm.dateEffet()) ? firstFieldError(contratForm.dateEffet().errors()) : null"
+        inputId="dateEffet"
+        label="Date d'effet *"
+      >
+        <app-iso-date-input [formField]="contratForm.dateEffet" inputId="dateEffet" />
+      </app-form-field>
+      <app-form-field
+        [error]="showFieldError(contratForm.dateEcheance()) ? firstFieldError(contratForm.dateEcheance().errors()) : null"
+        inputId="dateEcheance"
+        label="Date d'échéance *"
+      >
+        <app-iso-date-input [formField]="contratForm.dateEcheance" inputId="dateEcheance" />
+      </app-form-field>
+    </div>
+    <div class="form-page__coords">
+      <app-form-field
+        [error]="showFieldError(contratForm.franchise()) ? firstFieldError(contratForm.franchise().errors()) : null"
+        inputId="franchise"
+        label="Franchise (€)"
+      >
+        <input [class]="fieldClasses(contratForm.franchise())" [formField]="contratForm.franchise" id="franchise" inputmode="decimal" type="text">
+      </app-form-field>
+      <app-form-field
+        [error]="showFieldError(contratForm.primeAnnuelle()) ? firstFieldError(contratForm.primeAnnuelle().errors()) : null"
+        inputId="primeAnnuelle"
+        label="Prime annuelle (€)"
+      >
+        <input [class]="fieldClasses(contratForm.primeAnnuelle())" [formField]="contratForm.primeAnnuelle" id="primeAnnuelle" inputmode="decimal" type="text">
+      </app-form-field>
+    </div>
+    <label class="flex items-center gap-2 text-sm">
+      <input (change)="basculerActif()" [checked]="draft().actif" type="checkbox">
+      Actif
+    </label>
+  </app-form-section>
+
+  <app-form-section title="Garanties">
+    <fieldset class="grid gap-2 sm:grid-cols-3">
+      <legend class="sr-only">Garanties souscrites</legend>
+      @for (g of garantiesDisponibles; track g) {
+      <label class="flex items-center gap-2 text-sm">
+        <input (change)="basculerGarantie(g)" [checked]="garanties().has(g)" type="checkbox">
+        {{ libelle(g) }}
+      </label>
+      }
+    </fieldset>
+  </app-form-section>
+
+  <app-form-section title="Engins couverts">
+    <app-form-field inputId="type" label="Type de contrat *">
+      <app-field-select [formField]="contratForm.type" [options]="typeOptions" inputId="type" />
+    </app-form-field>
+    @if (draft().type === "ENGIN") {
+    @for (t of typesEngin; track t) {
+    <fieldset class="mt-2">
+      <legend class="text-sm font-medium text-ink">{{ t === "VEHICULE" ? "Véhicules" : "Remorques" }}</legend>
+      <div class="mt-1 grid max-h-56 gap-1 overflow-y-auto sm:grid-cols-4">
+        @for (o of lookups.enginOptions(t); track o.value) {
+        <label class="flex items-center gap-2 font-mono text-xs">
+          <input (change)="basculerEngin({ id: o.value, type: t })" [checked]="engins().has(o.value)" type="checkbox">
+          {{ o.label }}
+        </label>
+        }
+      </div>
+    </fieldset>
+    }
+    <p class="text-xs text-muted">{{ engins().size }} engin(s) sélectionné(s).</p>
+    }
+  </app-form-section>
+
+  @if (formError()) {
+  <div class="alert-panel" role="alert">{{ formError() }}</div>
+  }
+
+  <app-form-actions>
+    <button class="btn-primary pressable min-h-11 px-5" type="submit">
+      {{ edition() ? "Enregistrer" : "Enregistrer le contrat" }}
+    </button>
+    <a class="btn-outline pressable min-h-11 px-5" routerLink="/maintenance/contrats">Retour</a>
+  </app-form-actions>
+</form>
+
+@if (id(); as contratId) {
+<div class="mt-6">
+  <app-documents-section
+    [entiteId]="contratId"
+    description="Attestation d'assurance, conditions générales et particulières."
+    typeEntite="CONTRAT_ASSURANCE"
+  />
+</div>
+}
+}

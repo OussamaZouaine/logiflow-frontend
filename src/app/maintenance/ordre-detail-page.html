@@ -1,97 +1,270 @@
 <div class="fiche-page">
-  <app-fiche-header listLabel="Maintenance" listLink="/maintenance">
-    @if (ordre.isLoading()) {
+  <app-maintenance-tabs />
+  <app-fiche-header listLabel="Ordres de travail" listLink="/maintenance/ordres-travail">
+    @if (ordre.isLoading() && !ordre.hasValue()) {
     <p class="fiche-load-hint" role="status">Chargement…</p>
     } @else if (ordre.error()) {
-    <app-fiche-error
-      (retry)="ordre.reload()"
-      [message]="loadError()"
-    />
+    <app-fiche-error (retry)="ordre.reload()" message="Ordre de travail introuvable." />
     } @else if (ordre.hasValue()) {
-    <app-fiche-title-row [title]="typeInterventionLabel(ordre.value().type)">
+    <app-fiche-title-row [title]="ordre.value().reference + ' — ' + ordre.value().titre">
       <app-statut-chip
-        [label]="statutOtLabel(ordre.value().statut)"
-        [tone]="statutOtTone(ordre.value().statut)"
+        [label]="libelle(ordre.value().statut)"
+        [tone]="toneStatutOT(ordre.value().statut)"
       />
+      @if (ordre.value().priorite !== "NORMALE") {
+      <app-statut-chip
+        [label]="'Priorité ' + libelle(ordre.value().priorite).toLowerCase()"
+        [tone]="tonePriorite(ordre.value().priorite)"
+      />
+      }
     </app-fiche-title-row>
-    <p class="fiche-meta font-mono tabular-nums">
-      #{{ formatOrdreShortId(ordre.value().id) }}
-      · planifié le {{ formatDateTime(ordre.value().datePlanifiee) }}
+    <p class="fiche-meta">
+      {{ libelle(ordre.value().type) }} · {{ libelle(ordre.value().nature) }} ·
+      {{ lookups.prestataireLibelle(ordre.value().prestataireId) }}
     </p>
     }
   </app-fiche-header>
 
   @if (ordre.hasValue()) {
-  <app-form-section title="Fiche">
-    <dl class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-      <div>
-        <dt class="text-xs text-muted">Planifié</dt>
-        <dd class="mt-0.5 font-mono tabular-nums text-ink">
-          {{ formatDateTime(ordre.value().datePlanifiee) }}
-        </dd>
-      </div>
-      <div>
-        <dt class="text-xs text-muted">Coût</dt>
-        <dd class="mt-0.5 font-mono tabular-nums text-ink">
-          {{ formatMoney(ordre.value().cout) }}
-        </dd>
-      </div>
-      @if (ordre.value().statut === "TERMINE" && ordre.value().dureeReelleMin > 0) {
-      <div>
-        <dt class="text-xs text-muted">Durée réelle</dt>
-        <dd class="mt-0.5 font-mono tabular-nums text-ink">
-          {{ formatDureeReelleMin(ordre.value().dureeReelleMin) }}
-        </dd>
-      </div>
-      }
-      <div class="sm:col-span-2">
-        <dt class="text-xs text-muted">Véhicule</dt>
-        <dd class="mt-0.5">
-          @if (vehicules.isLoading()) {
-          <span class="text-sm text-muted">Chargement…</span>
-          } @else if (vehicules.error()) {
-          <span class="font-mono text-sm text-muted">
-            {{ vehiculeDisplay().label }}
-          </span>
-          <p class="mt-1 text-xs text-brake" role="alert">
-            {{ vehiculeLoadError() }}
-          </p>
-          } @else {
-          <a
-            [routerLink]="['/vehicules', vehiculeDisplay().id]"
-            class="font-mono text-sm text-pine underline-offset-2 hover:underline"
-          >
-            {{ vehiculeDisplay().label }}
-          </a>
-          }
-        </dd>
-      </div>
-    </dl>
+  <div class="flex flex-wrap items-center gap-2">
+    @for (cible of transitions(); track cible) {
+    <button
+      (click)="changerStatut(cible)"
+      [class.text-brake]="cible === 'ANNULE'"
+      [disabled]="enCours()"
+      class="btn-outline pressable min-h-10 px-4"
+      type="button"
+    >
+      {{ libelleTransitionOT(cible, ordre.value().statut) }}
+    </button>
+    }
+    @if (cloturable()) {
+    <button
+      (click)="clotureOuverte.set(!clotureOuverte())"
+      [attr.aria-expanded]="clotureOuverte()"
+      class="btn-primary pressable min-h-10 px-4"
+      type="button"
+    >
+      Clôturer
+    </button>
+    }
+    @if (modifiable()) {
+    <a
+      [routerLink]="['/maintenance/ordres-travail', ordre.value().id, 'modifier']"
+      class="btn-outline pressable ml-auto min-h-10 px-4"
+    >
+      Modifier
+    </a>
+    }
+  </div>
+
+  @if (actionError()) {
+  <div class="alert-panel" role="alert">{{ actionError() }}</div>
+  }
+
+  @if (clotureOuverte()) {
+  <form
+    (submit)="cloturer($event)"
+    aria-label="Clôture de l'intervention"
+    class="rounded-xl border border-pine/40 bg-pine/5 p-4"
+    novalidate
+  >
+    <h2 class="font-medium text-ink">Clôture de l'intervention</h2>
+    <p class="mt-1 text-sm text-muted">
+      Les compteurs relevés mettent à jour la flotte et, pour un OT issu d'un plan, sa dernière
+      réalisation. L'engin redevient disponible s'il n'est plus retenu.
+    </p>
+    <div class="mt-3 grid gap-3 sm:grid-cols-3">
+      <label class="flex flex-col gap-1 text-sm">
+        Fin réelle *
+        <input
+          (input)="modifierCloture('finReelle', $event)"
+          [value]="cloture().finReelle"
+          class="field"
+          type="datetime-local"
+        >
+      </label>
+      <label class="flex flex-col gap-1 text-sm">
+        Kilométrage relevé {{ ordre.value().engin.type === "VEHICULE" ? "*" : "" }}
+        <input
+          (input)="modifierCloture('kilometrage', $event)"
+          [value]="cloture().kilometrage"
+          class="field tabular-nums"
+          inputmode="numeric"
+          type="text"
+        >
+      </label>
+      <label class="flex flex-col gap-1 text-sm">
+        {{ ordre.value().engin.type === "VEHICULE" ? "Heures moteur" : "Heures groupe froid" }}
+        <input
+          (input)="modifierCloture('heures', $event)"
+          [value]="cloture().heures"
+          class="field tabular-nums"
+          inputmode="numeric"
+          type="text"
+        >
+      </label>
+    </div>
+    <div class="mt-3 grid gap-3 sm:grid-cols-2">
+      <label class="flex flex-col gap-1 text-sm">
+        Diagnostic
+        <textarea
+          (input)="modifierCloture('diagnostic', $event)"
+          [value]="cloture().diagnostic"
+          class="field"
+          rows="2"
+        ></textarea>
+      </label>
+      <label class="flex flex-col gap-1 text-sm">
+        Travaux réalisés
+        <textarea
+          (input)="modifierCloture('travauxRealises', $event)"
+          [value]="cloture().travauxRealises"
+          class="field"
+          rows="2"
+        ></textarea>
+      </label>
+    </div>
+    <div class="mt-3 grid gap-3 sm:grid-cols-3">
+      <label class="flex flex-col gap-1 text-sm">
+        Intervenant
+        <input
+          (input)="modifierCloture('intervenant', $event)"
+          [value]="cloture().intervenant"
+          class="field"
+          type="text"
+        >
+      </label>
+      <label class="flex flex-col gap-1 text-sm">
+        N° de facture
+        <input
+          (input)="modifierCloture('numeroFacture', $event)"
+          [value]="cloture().numeroFacture"
+          class="field"
+          type="text"
+        >
+      </label>
+      <label class="flex flex-col gap-1 text-sm">
+        Date de facture
+        <input
+          (input)="modifierCloture('dateFacture', $event)"
+          [value]="cloture().dateFacture"
+          class="field"
+          type="date"
+        >
+      </label>
+    </div>
+    <button [disabled]="enCours()" class="btn-primary pressable mt-4 min-h-10 px-5" type="submit">
+      Confirmer la clôture
+    </button>
+  </form>
+  }
+
+  <app-form-section title="Intervention">
+    <app-fiche-field-grid>
+      <app-fiche-field label="Engin">
+        @if (lienEngin(); as lien) {
+        <a [routerLink]="lien" class="font-mono text-pine underline-offset-2 hover:underline">
+          {{ lookups.engins().get(ordre.value().engin.id)?.immatriculation ?? "…" }}
+        </a>
+        }
+        <span class="text-xs text-muted"> ({{ libelle(ordre.value().engin.type) }})</span>
+      </app-fiche-field>
+      <app-fiche-field label="Origine">
+        {{ libelle(ordre.value().origine) }}
+        @if (ordre.value().planId) {
+        ·
+        <a [routerLink]="['/maintenance/plans', ordre.value().planId]" class="text-pine hover:underline">
+          voir le plan
+        </a>
+        }
+        @if (ordre.value().sinistreId) {
+        ·
+        <a
+          [routerLink]="['/maintenance/sinistres', ordre.value().sinistreId]"
+          class="text-pine hover:underline"
+        >
+          voir le sinistre
+        </a>
+        }
+      </app-fiche-field>
+      <app-fiche-field label="Planifié">
+        {{ formatDateHeure(ordre.value().debutPlanifie) }}
+        @if (ordre.value().finPlanifiee) {
+        → {{ formatDateHeure(ordre.value().finPlanifiee) }}
+        }
+      </app-fiche-field>
+      <app-fiche-field label="Réalisé">
+        {{ formatDateHeure(ordre.value().debutReel) }}
+        @if (ordre.value().finReelle) {
+        → {{ formatDateHeure(ordre.value().finReelle) }}
+        }
+      </app-fiche-field>
+      <app-fiche-field label="Immobilisation">
+        @if (ordre.value().immobilisationHeures !== null) {
+        {{ ordre.value().immobilisationHeures }} h
+        } @else {
+        {{ ordre.value().immobilisation ? "Oui" : "Non" }}
+        }
+      </app-fiche-field>
+      <app-fiche-field label="Compteurs relevés">
+        {{ formatKm(ordre.value().kilometrage) }}
+        @if (ordre.value().heures !== null) {
+        · {{ ordre.value().heures }} h
+        }
+      </app-fiche-field>
+    </app-fiche-field-grid>
+    @if (ordre.value().description) {
+    <p class="mt-3 whitespace-pre-line text-sm text-ink">{{ ordre.value().description }}</p>
+    }
   </app-form-section>
 
   <app-form-section
-    description="Pas de suppression physique. Annulation = statut Annulé."
-    title="Statut"
+    [description]="
+      'Budget estimé ' + formatEur(ordre.value().budgetEstime) +
+      (ecartBudget() !== null ? ' · écart ' + formatEur(ecartBudget()) : '')
+    "
+    title="Lignes de coût"
   >
-    @if (statutError()) {
-    <div class="alert-panel" role="alert">
-      {{ statutError() }}
-    </div>
-    } @if (nextStatuts(ordre.value().statut).length === 0) {
-    <p class="text-sm text-muted">Aucune transition possible.</p>
-    } @else {
-    <div class="flex flex-wrap gap-2">
-      @for (statut of nextStatuts(ordre.value().statut); track statut) {
-      <button
-        (click)="changerStatut(statut)"
-        class="btn-outline pressable"
-        type="button"
-      >
-        {{ statutOtLabel(statut) }}
-      </button>
-      }
-    </div>
+    <app-lignes-cout-editor
+      (lignesChange)="modifierLignes($event)"
+      [editable]="modifiable()"
+      [lignes]="lignes()"
+    />
+    @if (lignesModifiees()) {
+    <button
+      (click)="enregistrerLignes()"
+      [disabled]="enCours()"
+      class="btn-primary pressable mt-3 min-h-10 px-5"
+      type="button"
+    >
+      Enregistrer les lignes
+    </button>
     }
   </app-form-section>
+
+  @if (ordre.value().statut === "TERMINE") {
+  <app-form-section title="Réalisation">
+    <app-fiche-field-grid>
+      <app-fiche-field label="Diagnostic">{{ ordre.value().diagnostic ?? "—" }}</app-fiche-field>
+      <app-fiche-field label="Travaux réalisés">
+        {{ ordre.value().travauxRealises ?? "—" }}
+      </app-fiche-field>
+      <app-fiche-field label="Intervenant">{{ ordre.value().intervenant ?? "—" }}</app-fiche-field>
+      <app-fiche-field label="Facture">
+        {{ ordre.value().numeroFacture ?? "—" }}
+        @if (ordre.value().dateFacture) {
+        du {{ formatDate(ordre.value().dateFacture) }}
+        }
+      </app-fiche-field>
+    </app-fiche-field-grid>
+  </app-form-section>
+  }
+
+  <app-documents-section
+    [entiteId]="ordre.value().id"
+    description="Devis, facture, rapport d'intervention, photos."
+    typeEntite="ORDRE_TRAVAIL"
+  />
   }
 </div>

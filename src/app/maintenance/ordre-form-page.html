@@ -1,0 +1,224 @@
+<app-form-page-header
+  [description]="
+    edition()
+      ? 'Les lignes de coût, le démarrage et la clôture se gèrent depuis la fiche.'
+      : 'Intervention sur un véhicule ou une remorque, en atelier interne ou chez un prestataire.'
+  "
+  [title]="edition() ? 'Modifier l\'ordre de travail' : 'Nouvel ordre de travail'"
+  listLabel="Ordres de travail"
+  listLink="/maintenance/ordres-travail"
+/>
+
+@if (chargement()) {
+<p class="text-sm text-muted" role="status">Chargement…</p>
+} @else {
+<form (submit)="onSubmit($event)" class="form-page" novalidate>
+  <app-form-validation-summary
+    [show]="ordreForm().touched() && ordreForm().invalid()"
+  />
+
+  @if (!edition() && origine !== "MANUELLE") {
+  <p class="rounded-lg border border-pine/30 bg-pine/5 px-4 py-3 text-sm text-ink" role="status">
+    Origine : {{ libelle(origine) }}
+    @if (plan.hasValue()) {
+    — plan « {{ plan.value().libelle }} »
+    }
+    @if (sinistre.hasValue()) {
+    — sinistre {{ sinistre.value().reference }}
+    }
+    @if (justification) {
+    <span class="mt-1 block text-muted">{{ justification }}</span>
+    }
+  </p>
+  }
+
+  <app-form-section title="Engin et intervention">
+    <div class="form-page__coords">
+      <app-form-field inputId="typeEngin" label="Type d'engin *">
+        @if (edition() || planId || sinistreId) {
+        <p class="field flex items-center text-muted" id="typeEngin">
+          {{ libelle(draft().typeEngin) }}
+        </p>
+        } @else {
+        <app-field-select
+          (selectValueChange)="onTypeEngin($event)"
+          [options]="typeEnginOptions"
+          [selectValue]="draft().typeEngin"
+          inputId="typeEngin"
+        />
+        }
+      </app-form-field>
+      <app-form-field
+        [error]="
+          showFieldError(ordreForm.enginId())
+            ? firstFieldError(ordreForm.enginId().errors())
+            : null
+        "
+        inputId="enginId"
+        label="Engin *"
+      >
+        @if (edition() || planId) {
+        <p class="field flex items-center font-mono text-muted" id="enginId">
+          {{ lookups.engins().get(draft().enginId)?.immatriculation ?? "…" }}
+        </p>
+        } @else {
+        <app-field-select
+          [formField]="ordreForm.enginId"
+          [invalid]="showFieldError(ordreForm.enginId())"
+          [options]="enginOptions()"
+          inputId="enginId"
+          placeholder="Choisir l'engin…"
+        />
+        }
+      </app-form-field>
+    </div>
+    <div class="form-page__coords">
+      <app-form-field inputId="type" label="Type d'intervention *">
+        <app-field-select
+          (selectValueChange)="onType($event)"
+          [options]="typeOptions"
+          [selectValue]="draft().type"
+          inputId="type"
+        />
+      </app-form-field>
+      <app-form-field inputId="nature" label="Nature *">
+        <app-field-select
+          [formField]="ordreForm.nature"
+          [options]="natureOptions"
+          inputId="nature"
+        />
+      </app-form-field>
+    </div>
+    <app-form-field
+      [error]="
+        showFieldError(ordreForm.titre())
+          ? firstFieldError(ordreForm.titre().errors())
+          : null
+      "
+      inputId="titre"
+      label="Titre *"
+    >
+      <input
+        [attr.aria-invalid]="showFieldError(ordreForm.titre()) || null"
+        [class]="fieldClasses(ordreForm.titre())"
+        [formField]="ordreForm.titre"
+        id="titre"
+        placeholder="Révision 40 000 km, remplacement plaquettes…"
+        type="text"
+      >
+    </app-form-field>
+    <app-form-field inputId="description" label="Description / symptômes">
+      <textarea
+        [class]="fieldClasses(ordreForm.description())"
+        [formField]="ordreForm.description"
+        id="description"
+        rows="3"
+      ></textarea>
+    </app-form-field>
+  </app-form-section>
+
+  <app-form-section title="Planification">
+    <div class="form-page__coords">
+      <app-form-field inputId="priorite" label="Priorité">
+        <app-field-select
+          [formField]="ordreForm.priorite"
+          [options]="prioriteOptions"
+          inputId="priorite"
+        />
+      </app-form-field>
+      <app-form-field inputId="prestataireId" label="Réalisé par">
+        <app-field-select
+          [formField]="ordreForm.prestataireId"
+          [options]="prestataireOptions()"
+          inputId="prestataireId"
+          placeholder="Atelier interne"
+        />
+      </app-form-field>
+    </div>
+    <div class="form-page__coords">
+      <app-form-field
+        [error]="
+          showFieldError(ordreForm.debutPlanifie())
+            ? firstFieldError(ordreForm.debutPlanifie().errors())
+            : null
+        "
+        inputId="debutPlanifie"
+        label="Début planifié *"
+      >
+        <app-iso-datetime-input
+          [formField]="ordreForm.debutPlanifie"
+          inputId="debutPlanifie"
+          timeAriaLabel="Heure de début planifiée"
+        />
+      </app-form-field>
+      <app-form-field
+        [error]="
+          showFieldError(ordreForm.finPlanifiee())
+            ? firstFieldError(ordreForm.finPlanifiee().errors())
+            : null
+        "
+        inputId="finPlanifiee"
+        label="Fin prévue"
+      >
+        <app-iso-datetime-input
+          [formField]="ordreForm.finPlanifiee"
+          inputId="finPlanifiee"
+          timeAriaLabel="Heure de fin prévue"
+        />
+      </app-form-field>
+    </div>
+    <div class="form-page__coords">
+      <app-form-field
+        [error]="
+          showFieldError(ordreForm.budgetEstime())
+            ? firstFieldError(ordreForm.budgetEstime().errors())
+            : null
+        "
+        inputId="budgetEstime"
+        label="Budget estimé (€ HT)"
+      >
+        <input
+          [class]="fieldClasses(ordreForm.budgetEstime())"
+          [formField]="ordreForm.budgetEstime"
+          id="budgetEstime"
+          inputmode="decimal"
+          type="text"
+        >
+      </app-form-field>
+      <label class="flex min-h-11 items-center gap-2 self-end text-sm text-ink">
+        <input
+          (change)="basculerImmobilisation()"
+          [checked]="draft().immobilisation"
+          type="checkbox"
+        >
+        Immobilise l'engin (indisponible pour les voyages)
+      </label>
+    </div>
+  </app-form-section>
+
+  @if (!edition()) {
+  <app-form-section
+    description="Devis ou estimation : facultatif, modifiable jusqu'à la clôture."
+    title="Lignes de coût"
+  >
+    <app-lignes-cout-editor (lignesChange)="lignes.set($event)" [lignes]="lignes()" />
+  </app-form-section>
+  }
+
+  @if (formError()) {
+  <div class="alert-panel" role="alert">{{ formError() }}</div>
+  }
+
+  <app-form-actions>
+    <button class="btn-primary pressable min-h-11 px-5" type="submit">
+      {{ edition() ? "Enregistrer" : "Créer l'ordre de travail" }}
+    </button>
+    <a
+      [routerLink]="edition() ? ['/maintenance/ordres-travail', id()] : ['/maintenance/ordres-travail']"
+      class="btn-outline pressable min-h-11 px-5"
+    >
+      Annuler
+    </a>
+  </app-form-actions>
+</form>
+}

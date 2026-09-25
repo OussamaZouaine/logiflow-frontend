@@ -98,7 +98,7 @@ const CREATE_ACTIONS: readonly PaletteActionDef[] = [
     icon: DESTINATION_NAV_ICON.maintenance,
     keywords: ["nouvel", "créer", "ordre", "maintenance", "atelier"],
     label: "Nouvel ordre de travail",
-    path: "/maintenance/nouveau",
+    path: "/maintenance/ordres-travail/nouveau",
     roles: workDestination("maintenance").roles,
   },
   {
@@ -106,6 +106,27 @@ const CREATE_ACTIONS: readonly PaletteActionDef[] = [
     keywords: ["nouveau", "créer", "plan", "entretien", "préventif"],
     label: "Nouveau plan d'entretien",
     path: "/maintenance/plans/nouveau",
+    roles: workDestination("maintenance").roles,
+  },
+  {
+    icon: DESTINATION_NAV_ICON.maintenance,
+    keywords: [
+      "déclarer",
+      "sinistre",
+      "accident",
+      "accrochage",
+      "assurance",
+      "constat",
+    ],
+    label: "Déclarer un sinistre",
+    path: "/maintenance/sinistres/nouveau",
+    roles: workDestination("maintenance").roles,
+  },
+  {
+    icon: DESTINATION_NAV_ICON.maintenance,
+    keywords: ["coûts", "maintenance", "budget", "dépenses", "atelier"],
+    label: "Coûts de maintenance",
+    path: "/maintenance/couts",
     roles: workDestination("maintenance").roles,
   },
   {

@@ -249,8 +249,8 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: workDestination("maintenance").roles },
         loadComponent: () =>
-          import("./maintenance/maintenance-page").then(
-            (module) => module.MaintenancePage
+          import("./maintenance/maintenance-dashboard-page").then(
+            (module) => module.MaintenanceDashboardPage
           ),
         path: "maintenance",
       },
@@ -258,37 +258,28 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: workDestination("maintenance").roles },
         loadComponent: () =>
-          import("./maintenance/ordre-create-page").then(
-            (module) => module.OrdreCreatePage
+          import("./maintenance/ordres-travail-page").then(
+            (module) => module.OrdresTravailPage
           ),
-        path: "maintenance/nouveau",
+        path: "maintenance/ordres-travail",
       },
       {
         canActivate: [roleGuard],
         data: { roles: workDestination("maintenance").roles },
         loadComponent: () =>
-          import("./maintenance/plans-entretien-page").then(
-            (module) => module.PlansEntretienPage
+          import("./maintenance/ordre-form-page").then(
+            (module) => module.OrdreFormPage
           ),
-        path: "maintenance/plans",
+        path: "maintenance/ordres-travail/nouveau",
       },
       {
         canActivate: [roleGuard],
         data: { roles: workDestination("maintenance").roles },
         loadComponent: () =>
-          import("./maintenance/plan-entretien-create-page").then(
-            (module) => module.PlanEntretienCreatePage
+          import("./maintenance/ordre-form-page").then(
+            (module) => module.OrdreFormPage
           ),
-        path: "maintenance/plans/nouveau",
-      },
-      {
-        canActivate: [roleGuard],
-        data: { roles: workDestination("maintenance").roles },
-        loadComponent: () =>
-          import("./maintenance/plan-entretien-detail-page").then(
-            (module) => module.PlanEntretienDetailPage
-          ),
-        path: "maintenance/plans/:id",
+        path: "maintenance/ordres-travail/:id/modifier",
       },
       {
         canActivate: [roleGuard],
@@ -297,7 +288,138 @@ export const routes: Routes = [
           import("./maintenance/ordre-detail-page").then(
             (module) => module.OrdreDetailPage
           ),
-        path: "maintenance/:id",
+        path: "maintenance/ordres-travail/:id",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("maintenance").roles },
+        loadComponent: () =>
+          import("./maintenance/plans-page").then((module) => module.PlansPage),
+        path: "maintenance/plans",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("maintenance").roles },
+        loadComponent: () =>
+          import("./maintenance/plan-form-page").then(
+            (module) => module.PlanFormPage
+          ),
+        path: "maintenance/plans/nouveau",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("maintenance").roles },
+        loadComponent: () =>
+          import("./maintenance/plan-form-page").then(
+            (module) => module.PlanFormPage
+          ),
+        path: "maintenance/plans/:id/modifier",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("maintenance").roles },
+        loadComponent: () =>
+          import("./maintenance/plan-detail-page").then(
+            (module) => module.PlanDetailPage
+          ),
+        path: "maintenance/plans/:id",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("maintenance").roles },
+        loadComponent: () =>
+          import("./maintenance/sinistres-page").then(
+            (module) => module.SinistresPage
+          ),
+        path: "maintenance/sinistres",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("maintenance").roles },
+        loadComponent: () =>
+          import("./maintenance/sinistre-form-page").then(
+            (module) => module.SinistreFormPage
+          ),
+        path: "maintenance/sinistres/nouveau",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("maintenance").roles },
+        loadComponent: () =>
+          import("./maintenance/sinistre-form-page").then(
+            (module) => module.SinistreFormPage
+          ),
+        path: "maintenance/sinistres/:id/modifier",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("maintenance").roles },
+        loadComponent: () =>
+          import("./maintenance/sinistre-detail-page").then(
+            (module) => module.SinistreDetailPage
+          ),
+        path: "maintenance/sinistres/:id",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("maintenance").roles },
+        loadComponent: () =>
+          import("./maintenance/couts-page").then((module) => module.CoutsPage),
+        path: "maintenance/couts",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("maintenance").roles },
+        loadComponent: () =>
+          import("./maintenance/prestataires-page").then(
+            (module) => module.PrestatairesPage
+          ),
+        path: "maintenance/prestataires",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("maintenance").roles },
+        loadComponent: () =>
+          import("./maintenance/prestataire-form-page").then(
+            (module) => module.PrestataireFormPage
+          ),
+        path: "maintenance/prestataires/nouveau",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("maintenance").roles },
+        loadComponent: () =>
+          import("./maintenance/prestataire-form-page").then(
+            (module) => module.PrestataireFormPage
+          ),
+        path: "maintenance/prestataires/:id",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("maintenance").roles },
+        loadComponent: () =>
+          import("./maintenance/contrats-page").then(
+            (module) => module.ContratsPage
+          ),
+        path: "maintenance/contrats",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("maintenance").roles },
+        loadComponent: () =>
+          import("./maintenance/contrat-form-page").then(
+            (module) => module.ContratFormPage
+          ),
+        path: "maintenance/contrats/nouveau",
+      },
+      {
+        canActivate: [roleGuard],
+        data: { roles: workDestination("maintenance").roles },
+        loadComponent: () =>
+          import("./maintenance/contrat-form-page").then(
+            (module) => module.ContratFormPage
+          ),
+        path: "maintenance/contrats/:id",
       },
       {
         canActivate: [roleGuard],

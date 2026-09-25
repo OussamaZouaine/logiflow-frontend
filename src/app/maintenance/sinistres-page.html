@@ -1,0 +1,108 @@
+<div class="flex flex-col gap-6">
+  <app-maintenance-tabs />
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <h1 class="module-page-title">Sinistres</h1>
+      <p class="mt-1 text-sm text-muted">
+        Accidents, dommages, vols : suivi assurance, réparations et coût net pour l'entreprise.
+      </p>
+    </div>
+    <a class="btn-primary pressable" routerLink="/maintenance/sinistres/nouveau">Déclarer un sinistre</a>
+  </div>
+
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+    <div class="min-w-0 flex-1">
+      <app-list-search-bar
+        [(draft)]="searchDraft"
+        [(query)]="search"
+        inputId="sinistre-search"
+        placeholder="Référence ou lieu…"
+      />
+    </div>
+    <div class="grid grid-cols-2 gap-3 sm:w-md">
+      <app-field-select
+        (selectValueChange)="statut.set($event)"
+        [options]="statutOptions"
+        [selectValue]="statut() || '__none__'"
+        inputId="sinistre-statut"
+      />
+      <app-field-select
+        (selectValueChange)="type.set($event)"
+        [options]="typeOptions"
+        [selectValue]="type() || '__none__'"
+        inputId="sinistre-type"
+      />
+    </div>
+  </div>
+
+  @if (sinistres.isLoading() && !sinistres.hasValue()) {
+  <app-list-table-skeleton label="Chargement des sinistres" />
+  } @else if (sinistres.error()) {
+  <div class="alert-panel" role="alert">{{ erreur() }}</div>
+  } @else if (sinistres.hasValue() && sinistres.value().content.length === 0) {
+  <app-list-empty-state
+    actionLabel="Déclarer un sinistre"
+    actionLink="/maintenance/sinistres/nouveau"
+    description="Aucun sinistre ne correspond."
+    title="Aucun sinistre"
+  />
+  } @else if (sinistres.hasValue()) {
+  <div class="list-table-panel">
+    <table class="w-full min-w-3xl text-left text-sm">
+      <thead class="list-table-head">
+        <tr>
+          <th class="px-4 py-3 font-medium" scope="col">Référence</th>
+          <th class="px-4 py-3 font-medium" scope="col">Date</th>
+          <th class="px-4 py-3 font-medium" scope="col">Engins</th>
+          <th class="px-4 py-3 font-medium" scope="col">Nature</th>
+          <th class="px-4 py-3 font-medium" scope="col">Statut</th>
+          <th class="px-4 py-3 text-right font-medium" scope="col">Coût net</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (s of sinistres.value().content; track s.id) {
+        <tr class="list-row border-b border-line last:border-0 hover:bg-canvas">
+          <td class="px-4 py-3">
+            <a
+              [routerLink]="['/maintenance/sinistres', s.id]"
+              class="font-mono text-xs font-medium text-pine underline-offset-2 hover:underline"
+            >
+              {{ s.reference }}
+            </a>
+            @if (s.declarationEnRetard) {
+            <span class="block text-xs text-brake">Déclaration assureur en retard</span>
+            }
+          </td>
+          <td class="px-4 py-3 font-mono text-xs tabular-nums text-muted">
+            {{ formatDateHeure(s.dateSurvenance) }}
+          </td>
+          <td class="px-4 py-3 font-mono text-xs">{{ engins(s) }}</td>
+          <td class="px-4 py-3">
+            <span class="text-ink">{{ libelle(s.type) }}</span>
+            <span class="block text-xs text-muted">
+              {{ libelle(s.gravite) }} · {{ libelle(s.responsabilite) }}
+            </span>
+          </td>
+          <td class="px-4 py-3">
+            <app-statut-chip [label]="libelle(s.statut)" [tone]="toneStatutSinistre(s.statut)" />
+            @if (s.enginImmobilise && s.statut !== "CLOS" && s.statut !== "CLASSE_SANS_SUITE") {
+            <app-statut-chip label="Immobilisé" tone="brake" />
+            }
+          </td>
+          <td class="px-4 py-3 text-right font-mono text-xs tabular-nums">
+            {{ formatEur(s.couts?.coutNet) }}
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <app-list-pagination
+    [(page)]="page"
+    [pageSize]="20"
+    [totalElements]="sinistres.value().totalElements"
+    [totalPages]="sinistres.value().totalPages"
+    itemLabel="sinistre"
+  />
+  }
+</div>

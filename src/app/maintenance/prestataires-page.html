@@ -1,0 +1,91 @@
+<div class="flex flex-col gap-6">
+  <app-maintenance-tabs />
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <h1 class="module-page-title">Prestataires</h1>
+      <p class="mt-1 text-sm text-muted">
+        Garages, carrossiers, dépanneurs, experts et assureurs. Un OT sans prestataire est réalisé par
+        l'atelier interne.
+      </p>
+    </div>
+    <a class="btn-primary pressable" routerLink="/maintenance/prestataires/nouveau">Nouveau prestataire</a>
+  </div>
+
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+    <div class="min-w-0 flex-1">
+      <app-list-search-bar
+        [(draft)]="searchDraft"
+        [(query)]="search"
+        inputId="prestataire-search"
+        placeholder="Code, raison sociale, contact…"
+      />
+    </div>
+    <div class="sm:w-56">
+      <app-field-select
+        (selectValueChange)="type.set($event)"
+        [options]="typeOptions"
+        [selectValue]="type() || '__none__'"
+        inputId="prestataire-type"
+      />
+    </div>
+  </div>
+
+  @if (prestataires.isLoading() && !prestataires.hasValue()) {
+  <app-list-table-skeleton label="Chargement des prestataires" />
+  } @else if (prestataires.error()) {
+  <div class="alert-panel" role="alert">{{ erreur() }}</div>
+  } @else if (prestataires.hasValue() && prestataires.value().content.length === 0) {
+  <app-list-empty-state
+    actionLabel="Nouveau prestataire"
+    actionLink="/maintenance/prestataires/nouveau"
+    description="Aucun prestataire ne correspond."
+    title="Aucun prestataire"
+  />
+  } @else if (prestataires.hasValue()) {
+  <div class="list-table-panel">
+    <table class="w-full min-w-2xl text-left text-sm">
+      <thead class="list-table-head">
+        <tr>
+          <th class="px-4 py-3 font-medium" scope="col">Code</th>
+          <th class="px-4 py-3 font-medium" scope="col">Raison sociale</th>
+          <th class="px-4 py-3 font-medium" scope="col">Métier</th>
+          <th class="px-4 py-3 font-medium" scope="col">Contact</th>
+          <th class="px-4 py-3 font-medium" scope="col">Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of prestataires.value().content; track p.id) {
+        <tr class="list-row border-b border-line last:border-0 hover:bg-canvas">
+          <td class="px-4 py-3">
+            <a
+              [routerLink]="['/maintenance/prestataires', p.id]"
+              class="font-mono text-xs font-medium text-pine underline-offset-2 hover:underline"
+            >
+              {{ p.code }}
+            </a>
+          </td>
+          <td class="px-4 py-3 text-ink">{{ p.raisonSociale }}</td>
+          <td class="px-4 py-3">{{ libelle(p.type) }}</td>
+          <td class="px-4 py-3 text-muted">
+            {{ p.contactNom ?? "—" }}
+            @if (p.telephone) {
+            <span class="block font-mono text-xs">{{ p.telephone }}</span>
+            }
+          </td>
+          <td class="px-4 py-3">
+            <app-statut-chip [label]="p.actif ? 'Actif' : 'Inactif'" [tone]="p.actif ? 'pine' : 'muted'" />
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <app-list-pagination
+    [(page)]="page"
+    [pageSize]="20"
+    [totalElements]="prestataires.value().totalElements"
+    [totalPages]="prestataires.value().totalPages"
+    itemLabel="prestataire"
+  />
+  }
+</div>

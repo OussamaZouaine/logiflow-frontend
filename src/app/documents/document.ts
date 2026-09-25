@@ -3,6 +3,10 @@ export const TYPE_ENTITES_DOCUMENTABLES = [
   "REMORQUE",
   "CHAUFFEUR",
   "PRISE_CARBURANT",
+  "ORDRE_TRAVAIL",
+  "SINISTRE",
+  "CONTRAT_ASSURANCE",
+  "PRESTATAIRE",
 ] as const;
 export type TypeEntiteDocumentable =
   (typeof TYPE_ENTITES_DOCUMENTABLES)[number];
@@ -21,6 +25,15 @@ export const DOCUMENT_TYPES = [
   "PIECE_IDENTITE",
   "PASSEPORT",
   "VISA",
+  "DEVIS",
+  "FACTURE",
+  "RAPPORT_INTERVENTION",
+  "CONSTAT_AMIABLE",
+  "RAPPORT_POLICE",
+  "RAPPORT_EXPERTISE",
+  "DECLARATION_SINISTRE",
+  "ATTESTATION_ASSURANCE",
+  "CONDITIONS_CONTRAT",
   "AUTRE",
 ] as const;
 export type DocumentType = (typeof DOCUMENT_TYPES)[number];
@@ -42,6 +55,9 @@ export const DOCUMENT_TYPES_PAR_ENTITE: Record<
     "PHOTO",
     "AUTRE",
   ],
+  CONTRAT_ASSURANCE: ["CONDITIONS_CONTRAT", "ATTESTATION_ASSURANCE", "AUTRE"],
+  ORDRE_TRAVAIL: ["DEVIS", "FACTURE", "RAPPORT_INTERVENTION", "PHOTO", "AUTRE"],
+  PRESTATAIRE: ["ATTESTATION_ASSURANCE", "AUTRE"],
   PRISE_CARBURANT: ["JUSTIFICATIF_CARBURANT", "PHOTO", "AUTRE"],
   REMORQUE: [
     "CARTE_GRISE",
@@ -49,6 +65,16 @@ export const DOCUMENT_TYPES_PAR_ENTITE: Record<
     "CONTROLE_TECHNIQUE",
     "ADR",
     "PHOTO",
+    "AUTRE",
+  ],
+  SINISTRE: [
+    "CONSTAT_AMIABLE",
+    "PHOTO",
+    "RAPPORT_POLICE",
+    "RAPPORT_EXPERTISE",
+    "DECLARATION_SINISTRE",
+    "DEVIS",
+    "FACTURE",
     "AUTRE",
   ],
   VEHICULE: [
@@ -117,6 +143,24 @@ export function documentTypeLabel(type: DocumentType): string {
       return "Passeport";
     case "VISA":
       return "Visa";
+    case "DEVIS":
+      return "Devis";
+    case "FACTURE":
+      return "Facture";
+    case "RAPPORT_INTERVENTION":
+      return "Rapport d'intervention";
+    case "CONSTAT_AMIABLE":
+      return "Constat amiable";
+    case "RAPPORT_POLICE":
+      return "Rapport de police";
+    case "RAPPORT_EXPERTISE":
+      return "Rapport d'expertise";
+    case "DECLARATION_SINISTRE":
+      return "Déclaration de sinistre";
+    case "ATTESTATION_ASSURANCE":
+      return "Attestation d'assurance";
+    case "CONDITIONS_CONTRAT":
+      return "Conditions du contrat";
     case "AUTRE":
       return "Autre";
     default: {

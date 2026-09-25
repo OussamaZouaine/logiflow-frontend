@@ -15,10 +15,8 @@ import {
   required,
   submit,
 } from "@angular/forms/signals";
-import { RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
-import type { PageResponse } from "../core/api/page-response";
 import { DemoSessionService } from "../core/auth/demo-session";
 import { firstFieldError } from "../core/forms/first-field-error";
 import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
@@ -32,19 +30,7 @@ import {
   isDocumentType,
 } from "../documents/document";
 import { DocumentApi } from "../documents/document-api";
-import {
-  formatDateTime,
-  formatMoney,
-  formatOrdreShortId,
-  type OrdreTravail,
-  statutOtLabel,
-  statutOtTone,
-  typeInterventionLabel,
-} from "../maintenance/ordre-travail";
-import {
-  formatPeriodicite,
-  type PlanEntretien,
-} from "../maintenance/plan-entretien";
+import { EnginMaintenanceSection } from "../maintenance/engin-maintenance-section";
 import {
   draftToWrite,
   emptyScoreSanteDraft,
@@ -55,8 +41,8 @@ import {
   statutSanteTone,
 } from "../maintenance/score-sante";
 import { ScoreSanteApi } from "../maintenance/score-sante-api";
-import { enumToSelectOptions } from "../shared/ui/field-select";
 import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
+import { enumToSelectOptions } from "../shared/ui/field-select";
 import { StatutChip } from "../shared/ui/statut-chip";
 import { ToastService } from "../shared/ui/toast";
 import { vehiculeStatutTone } from "../tableau/apercu";
@@ -72,7 +58,12 @@ import {
 import { VehiculeApi } from "./vehicule-api";
 
 @Component({
-  imports: [FormField, RouterLink, StatutChip, ...FICHE_PAGE_IMPORTS],
+  imports: [
+    EnginMaintenanceSection,
+    FormField,
+    StatutChip,
+    ...FICHE_PAGE_IMPORTS,
+  ],
   selector: "app-vehicule-detail-page",
   templateUrl: "./vehicule-detail-page.html",
 })
@@ -102,13 +93,6 @@ export class VehiculeDetailPage {
   protected readonly statutSanteLabel = statutSanteLabel;
   protected readonly statutSanteTone = statutSanteTone;
   protected readonly formatScoreDate = formatDate;
-  protected readonly formatPeriodicite = formatPeriodicite;
-  protected readonly formatDateTime = formatDateTime;
-  protected readonly formatMoney = formatMoney;
-  protected readonly formatOrdreShortId = formatOrdreShortId;
-  protected readonly typeInterventionLabel = typeInterventionLabel;
-  protected readonly statutOtLabel = statutOtLabel;
-  protected readonly statutOtTone = statutOtTone;
   protected readonly firstFieldError = firstFieldError;
   protected readonly showFieldError = showFieldError;
   protected readonly fieldClasses = fieldClasses;
@@ -137,38 +121,6 @@ export class VehiculeDetailPage {
     url: `${environment.apiBaseUrl}/scores-sante/dernier`,
   }));
 
-  protected readonly plansEntretien = httpResource<
-    PageResponse<PlanEntretien> | undefined
-  >(() => {
-    if (!this.canMaintenance()) {
-      return;
-    }
-    return {
-      params: { page: 0, size: 5, vehiculeId: this.id() },
-      url: `${environment.apiBaseUrl}/plans-entretien`,
-    };
-  });
-
-  protected readonly plansEntretienList = computed(
-    () => this.plansEntretien.value()?.content ?? []
-  );
-
-  protected readonly ordresTravail = httpResource<
-    PageResponse<OrdreTravail> | undefined
-  >(() => {
-    if (!this.canMaintenance()) {
-      return;
-    }
-    return {
-      params: { page: 0, size: 5, vehiculeId: this.id() },
-      url: `${environment.apiBaseUrl}/ordres-travail`,
-    };
-  });
-
-  protected readonly ordresTravailList = computed(
-    () => this.ordresTravail.value()?.content ?? []
-  );
-
   protected readonly loadError = computed(() => {
     const error = this.vehicule.error();
     return error ? httpErrorMessage(error) : null;
@@ -181,16 +133,6 @@ export class VehiculeDetailPage {
 
   protected readonly scoreLoadError = computed(() => {
     const error = this.scoreSante.error();
-    return error ? httpErrorMessage(error) : null;
-  });
-
-  protected readonly plansLoadError = computed(() => {
-    const error = this.plansEntretien.error();
-    return error ? httpErrorMessage(error) : null;
-  });
-
-  protected readonly ordresLoadError = computed(() => {
-    const error = this.ordresTravail.error();
     return error ? httpErrorMessage(error) : null;
   });
 

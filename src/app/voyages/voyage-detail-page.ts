@@ -57,10 +57,6 @@ import {
 } from "../chauffeurs/chauffeur";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
-import {
-  type VehiculeLookup,
-  vehiculeLabel,
-} from "../maintenance/ordre-travail";
 import type { RemorqueListItem } from "../remorques/remorque";
 import { apercuToneToBadgeType } from "../shared/ui/apercu-zard";
 import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
@@ -69,6 +65,7 @@ import { OpsTimeline } from "../shared/ui/ops-timeline";
 import { StatutChip } from "../shared/ui/statut-chip";
 import { ToastService } from "../shared/ui/toast";
 import { voyageStatutTone } from "../tableau/apercu";
+import { type VehiculeLookup, vehiculeLabel } from "../vehicules/vehicule";
 import { type ArretCarte, ItineraireCarte } from "./itineraire-carte";
 import { RemorqueCapacityView } from "./remorque-capacity-view";
 import {

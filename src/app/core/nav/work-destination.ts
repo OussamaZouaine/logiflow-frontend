@@ -89,8 +89,9 @@ export const WORK_DESTINATIONS: Record<WorkDestinationId, WorkDestination> = {
     section: "Exploitation",
   },
   maintenance: {
-    apiHint: "/api/v1/ordres-travail",
-    blurb: "Ordres de travail et plans d'entretien.",
+    apiHint: "/api/v1/maintenance/ordres-travail",
+    blurb:
+      "Ordres de travail, plans d'entretien, sinistres, assurances et coûts.",
     id: "maintenance",
     label: "Maintenance",
     live: true,

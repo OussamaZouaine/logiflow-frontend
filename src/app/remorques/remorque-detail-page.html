@@ -326,5 +326,9 @@
     </details>
     }
   </app-form-section>
+
+  @if (canMaintenance()) {
+  <app-engin-maintenance-section [enginId]="id()" typeEngin="REMORQUE" />
+  }
   }
 </div>
