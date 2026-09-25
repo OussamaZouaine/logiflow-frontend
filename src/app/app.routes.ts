@@ -31,11 +31,11 @@ export const routes: Routes = [
     canActivate: [signedInGuard],
     children: [
       {
+        data: { ...shellBreadcrumb.list("Tableau de bord") },
         loadComponent: () =>
           import("./tableau/tableau-de-bord-page").then(
             (module) => module.TableauDeBordPage
           ),
-        data: { ...shellBreadcrumb.list("Tableau de bord") },
         path: "",
         pathMatch: "full",
       },
@@ -291,11 +291,7 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           roles: CARBURANT_STATIONS_ALLOWED_ROLES,
-          ...shellBreadcrumb.nested(
-            "Carburant",
-            "/carburant",
-            "Stations"
-          ),
+          ...shellBreadcrumb.nested("Carburant", "/carburant", "Stations"),
         },
         loadComponent: () =>
           import("./carburant/stations-page").then(
@@ -355,7 +351,11 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           roles: workDestination("maintenance").roles,
-          ...shellBreadcrumb.nested("Maintenance", "/maintenance", "Ordres de travail"),
+          ...shellBreadcrumb.nested(
+            "Maintenance",
+            "/maintenance",
+            "Ordres de travail"
+          ),
         },
         loadComponent: () =>
           import("./maintenance/ordres-travail-page").then(
@@ -367,7 +367,9 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           roles: workDestination("maintenance").roles,
-          ...shellBreadcrumb.createNested(maintenanceTrail("Ordres de travail", "/maintenance/ordres-travail")),
+          ...shellBreadcrumb.createNested(
+            maintenanceTrail("Ordres de travail", "/maintenance/ordres-travail")
+          ),
         },
         loadComponent: () =>
           import("./maintenance/ordre-form-page").then(
@@ -379,7 +381,9 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           roles: workDestination("maintenance").roles,
-          ...shellBreadcrumb.detailNested(maintenanceTrail("Ordres de travail", "/maintenance/ordres-travail")),
+          ...shellBreadcrumb.detailNested(
+            maintenanceTrail("Ordres de travail", "/maintenance/ordres-travail")
+          ),
         },
         loadComponent: () =>
           import("./maintenance/ordre-form-page").then(
@@ -391,7 +395,9 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           roles: workDestination("maintenance").roles,
-          ...shellBreadcrumb.detailNested(maintenanceTrail("Ordres de travail", "/maintenance/ordres-travail")),
+          ...shellBreadcrumb.detailNested(
+            maintenanceTrail("Ordres de travail", "/maintenance/ordres-travail")
+          ),
         },
         loadComponent: () =>
           import("./maintenance/ordre-detail-page").then(
@@ -403,19 +409,23 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           roles: workDestination("maintenance").roles,
-          ...shellBreadcrumb.nested("Maintenance", "/maintenance", "Plans d'entretien"),
+          ...shellBreadcrumb.nested(
+            "Maintenance",
+            "/maintenance",
+            "Plans d'entretien"
+          ),
         },
         loadComponent: () =>
-          import("./maintenance/plans-page").then(
-            (module) => module.PlansPage
-          ),
+          import("./maintenance/plans-page").then((module) => module.PlansPage),
         path: "maintenance/plans",
       },
       {
         canActivate: [roleGuard],
         data: {
           roles: workDestination("maintenance").roles,
-          ...shellBreadcrumb.createNested(maintenanceTrail("Plans d'entretien", "/maintenance/plans")),
+          ...shellBreadcrumb.createNested(
+            maintenanceTrail("Plans d'entretien", "/maintenance/plans")
+          ),
         },
         loadComponent: () =>
           import("./maintenance/plan-form-page").then(
@@ -427,7 +437,9 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           roles: workDestination("maintenance").roles,
-          ...shellBreadcrumb.detailNested(maintenanceTrail("Plans d'entretien", "/maintenance/plans")),
+          ...shellBreadcrumb.detailNested(
+            maintenanceTrail("Plans d'entretien", "/maintenance/plans")
+          ),
         },
         loadComponent: () =>
           import("./maintenance/plan-form-page").then(
@@ -439,7 +451,9 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           roles: workDestination("maintenance").roles,
-          ...shellBreadcrumb.detailNested(maintenanceTrail("Plans d'entretien", "/maintenance/plans")),
+          ...shellBreadcrumb.detailNested(
+            maintenanceTrail("Plans d'entretien", "/maintenance/plans")
+          ),
         },
         loadComponent: () =>
           import("./maintenance/plan-detail-page").then(
@@ -463,7 +477,9 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           roles: workDestination("maintenance").roles,
-          ...shellBreadcrumb.createNested(maintenanceTrail("Sinistres", "/maintenance/sinistres")),
+          ...shellBreadcrumb.createNested(
+            maintenanceTrail("Sinistres", "/maintenance/sinistres")
+          ),
         },
         loadComponent: () =>
           import("./maintenance/sinistre-form-page").then(
@@ -475,7 +491,9 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           roles: workDestination("maintenance").roles,
-          ...shellBreadcrumb.detailNested(maintenanceTrail("Sinistres", "/maintenance/sinistres")),
+          ...shellBreadcrumb.detailNested(
+            maintenanceTrail("Sinistres", "/maintenance/sinistres")
+          ),
         },
         loadComponent: () =>
           import("./maintenance/sinistre-form-page").then(
@@ -487,7 +505,9 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           roles: workDestination("maintenance").roles,
-          ...shellBreadcrumb.detailNested(maintenanceTrail("Sinistres", "/maintenance/sinistres")),
+          ...shellBreadcrumb.detailNested(
+            maintenanceTrail("Sinistres", "/maintenance/sinistres")
+          ),
         },
         loadComponent: () =>
           import("./maintenance/sinistre-detail-page").then(
@@ -502,16 +522,18 @@ export const routes: Routes = [
           ...shellBreadcrumb.nested("Maintenance", "/maintenance", "Coûts"),
         },
         loadComponent: () =>
-          import("./maintenance/couts-page").then(
-            (module) => module.CoutsPage
-          ),
+          import("./maintenance/couts-page").then((module) => module.CoutsPage),
         path: "maintenance/couts",
       },
       {
         canActivate: [roleGuard],
         data: {
           roles: workDestination("maintenance").roles,
-          ...shellBreadcrumb.nested("Maintenance", "/maintenance", "Prestataires"),
+          ...shellBreadcrumb.nested(
+            "Maintenance",
+            "/maintenance",
+            "Prestataires"
+          ),
         },
         loadComponent: () =>
           import("./maintenance/prestataires-page").then(
@@ -523,7 +545,9 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           roles: workDestination("maintenance").roles,
-          ...shellBreadcrumb.createNested(maintenanceTrail("Prestataires", "/maintenance/prestataires")),
+          ...shellBreadcrumb.createNested(
+            maintenanceTrail("Prestataires", "/maintenance/prestataires")
+          ),
         },
         loadComponent: () =>
           import("./maintenance/prestataire-form-page").then(
@@ -535,7 +559,9 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           roles: workDestination("maintenance").roles,
-          ...shellBreadcrumb.detailNested(maintenanceTrail("Prestataires", "/maintenance/prestataires")),
+          ...shellBreadcrumb.detailNested(
+            maintenanceTrail("Prestataires", "/maintenance/prestataires")
+          ),
         },
         loadComponent: () =>
           import("./maintenance/prestataire-form-page").then(
@@ -547,7 +573,11 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           roles: workDestination("maintenance").roles,
-          ...shellBreadcrumb.nested("Maintenance", "/maintenance", "Assurances"),
+          ...shellBreadcrumb.nested(
+            "Maintenance",
+            "/maintenance",
+            "Assurances"
+          ),
         },
         loadComponent: () =>
           import("./maintenance/contrats-page").then(
@@ -559,7 +589,9 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           roles: workDestination("maintenance").roles,
-          ...shellBreadcrumb.createNested(maintenanceTrail("Assurances", "/maintenance/contrats")),
+          ...shellBreadcrumb.createNested(
+            maintenanceTrail("Assurances", "/maintenance/contrats")
+          ),
         },
         loadComponent: () =>
           import("./maintenance/contrat-form-page").then(
@@ -571,7 +603,9 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           roles: workDestination("maintenance").roles,
-          ...shellBreadcrumb.detailNested(maintenanceTrail("Assurances", "/maintenance/contrats")),
+          ...shellBreadcrumb.detailNested(
+            maintenanceTrail("Assurances", "/maintenance/contrats")
+          ),
         },
         loadComponent: () =>
           import("./maintenance/contrat-form-page").then(

@@ -19,8 +19,8 @@ describe("apercu-charts", () => {
 			{ statut: "EN_VOYAGE", count: 1 },
 		]);
 		const config = zardConfigFromSlices(slices);
-		expect(config.DISPONIBLE?.label).toBe("Disponible");
-		expect(config.DISPONIBLE?.color).toBe("var(--chart-1)");
+		expect(config["DISPONIBLE"]?.label).toBe("Disponible");
+		expect(config["DISPONIBLE"]?.color).toBe("var(--chart-1)");
 	});
 
 	it("picks side panel tile by module priority", () => {

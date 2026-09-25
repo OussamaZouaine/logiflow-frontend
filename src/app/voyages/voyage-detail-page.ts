@@ -10,7 +10,6 @@ import {
   signal,
   viewChild,
 } from "@angular/core";
-import { bindShellBreadcrumbLeaf } from "../core/nav/shell-breadcrumb-leaf";
 import { RouterLink } from "@angular/router";
 import { NgIcon, provideIcons } from "@ng-icons/core";
 import {
@@ -60,9 +59,6 @@ import {
   ZardTabGroupComponent,
 } from "@/shared/components/tabs";
 import { environment } from "../../environments/environment";
-import type { Dossier } from "../dossiers/dossier";
-import { canCalculerItineraire } from "../ia/itineraire";
-import { ItineraireApi } from "../ia/itineraire-api";
 import {
   formatLitres,
   formatMontantTtc,
@@ -77,21 +73,22 @@ import {
 } from "../chauffeurs/chauffeur";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
+import { bindShellBreadcrumbLeaf } from "../core/nav/shell-breadcrumb-leaf";
+import type { Dossier } from "../dossiers/dossier";
+import { canCalculerItineraire } from "../ia/itineraire";
+import { ItineraireApi } from "../ia/itineraire-api";
 import type { RemorqueListItem } from "../remorques/remorque";
-import { apercuToneToBadgeType } from "../shared/ui/apercu-zard";
 import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
-import { enumToSelectOptions } from "../shared/ui/field-select";
-import type { Site } from "../sites/site";
 import {
   type GeoMapPathPoint,
   GeoMarkersMap,
 } from "../shared/ui/geo-markers-map";
-import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
 import { voyageStatutIcon } from "../shared/ui/list-statut-icons";
-import type { StatutTone } from "../shared/ui/statut-chip";
 import { OpsTimeline } from "../shared/ui/ops-timeline";
+import type { StatutTone } from "../shared/ui/statut-chip";
 import { StatutChip } from "../shared/ui/statut-chip";
 import { ToastService } from "../shared/ui/toast";
+import type { Site } from "../sites/site";
 import { voyageStatutTone } from "../tableau/apercu";
 import { type VehiculeLookup, vehiculeLabel } from "../vehicules/vehicule";
 import { type ArretCarte, ItineraireCarte } from "./itineraire-carte";
@@ -107,10 +104,11 @@ import {
   formatInstant,
   type GeoPoint,
   isTypeEvenement,
+  lifecycleStepPhase,
   maxDatetimeLocal,
   minEvenementHorodatageLocal,
-  lifecycleStepPhase,
   nextStatuts,
+  type Portee,
   porteeLabel,
   primaryVoyageTransition,
   remplissageLabel,
@@ -120,16 +118,15 @@ import {
   TYPE_EVENEMENTS,
   type TypeEtape,
   type TypeEvenement,
+  type TypeVoyage,
   toDatetimeLocal,
   typeEtapeLabel,
   typeEvenementIcon,
   typeEvenementLabel,
-  type Portee,
-  type TypeVoyage,
   typeVoyageLabel,
-  voyageStatutActionLabel,
   VOYAGE_LIFECYCLE_STEPS,
   type Voyage,
+  voyageStatutActionLabel,
 } from "./voyage";
 import { VoyageAjouterDossierForm } from "./voyage-ajouter-dossier-form";
 import { VoyageApi } from "./voyage-api";
@@ -139,14 +136,14 @@ import {
 } from "./voyage-capacite";
 import type { ArretVoyage } from "./voyage-planification";
 import {
-  voyageActualTimelineEntries,
-  voyagePlannedTimelineEntries,
-} from "./voyage-timeline";
-import {
   voyageItinerairePath,
   voyageItinerairePoints,
   voyageSiteMarkers,
 } from "./voyage-sites-map-markers";
+import {
+  voyageActualTimelineEntries,
+  voyagePlannedTimelineEntries,
+} from "./voyage-timeline";
 
 const LOOKUP_PAGE_SIZE = 100;
 const CARTE_TAB_INDEX = 0;

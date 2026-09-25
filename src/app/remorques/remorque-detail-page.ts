@@ -8,13 +8,15 @@ import {
   input,
   signal,
 } from "@angular/core";
-import { bindShellBreadcrumbLeaf } from "../core/nav/shell-breadcrumb-leaf";
 import { FormField, form, min, required, submit } from "@angular/forms/signals";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import { lucideCheck } from "@ng-icons/lucide";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import { DemoSessionService } from "../core/auth/demo-session";
 import { firstFieldError } from "../core/forms/first-field-error";
 import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
+import { bindShellBreadcrumbLeaf } from "../core/nav/shell-breadcrumb-leaf";
 import { WORK_DESTINATIONS } from "../core/nav/work-destination";
 import {
   DOCUMENT_TYPES,
@@ -26,16 +28,13 @@ import {
 } from "../documents/document";
 import { DocumentApi } from "../documents/document-api";
 import { EnginMaintenanceSection } from "../maintenance/engin-maintenance-section";
-import { enumToSelectOptions } from "../shared/ui/field-select";
-import { statutOptionsFrom } from "../shared/ui/list-filter";
-import { vehiculeStatutIcon } from "../shared/ui/list-statut-icons";
-import { statutIconForValue } from "../shared/ui/list-statut-filter";
 import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
 import { enumToSelectOptions } from "../shared/ui/field-select";
+import { statutOptionsFrom } from "../shared/ui/list-filter";
+import { statutIconForValue } from "../shared/ui/list-statut-filter";
+import { vehiculeStatutIcon } from "../shared/ui/list-statut-icons";
 import { StatutChip } from "../shared/ui/statut-chip";
 import { ToastService } from "../shared/ui/toast";
-import { NgIcon, provideIcons } from "@ng-icons/core";
-import { lucideCheck } from "@ng-icons/lucide";
 import {
   carrosserieDisplay,
   formatMarqueModele,
@@ -45,7 +44,6 @@ import {
   remorqueStatutTone,
   typeRemorqueDisplay,
   VEHICULE_STATUTS,
-  type Remorque,
 } from "./remorque";
 import { RemorqueApi } from "./remorque-api";
 
@@ -147,9 +145,7 @@ export class RemorqueDetailPage {
     bindShellBreadcrumbLeaf(
       this.destroyRef,
       computed(() =>
-        this.remorque.hasValue()
-          ? this.remorque.value().immatriculation
-          : null
+        this.remorque.hasValue() ? this.remorque.value().immatriculation : null
       )
     );
 

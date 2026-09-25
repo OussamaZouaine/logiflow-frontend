@@ -25,7 +25,7 @@ import {
 import type { StatutPrise } from "../../carburant/prise-carburant";
 import type { StatutCommande } from "../../commandes/commande";
 import type { StatutDossier } from "../../dossiers/dossier";
-import type { StatutOT } from "../../maintenance/ordre-travail";
+import type { StatutOT } from "../../maintenance/maintenance";
 import type { VehiculeStatut } from "../../vehicules/vehicule";
 import type { StatutVoyage } from "../../voyages/voyage";
 
@@ -123,6 +123,8 @@ export function ordreTravailStatutIcon(statut: StatutOT): string {
       return "lucideCalendarClock";
     case "EN_COURS":
       return "lucidePlay";
+    case "EN_ATTENTE_PIECES":
+      return "lucidePackage";
     case "TERMINE":
       return "lucideCircleCheck";
     case "ANNULE":

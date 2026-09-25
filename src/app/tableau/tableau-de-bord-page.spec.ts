@@ -57,7 +57,7 @@ describe("TableauDeBordPage", () => {
     flushUrl(http, "/api/v1/commandes", pageOf([]));
     flushUrl(http, "/api/v1/dossiers", pageOf([]));
     flushUrl(http, "/api/v1/voyages", pageOf([]));
-    flushUrl(http, "/api/v1/ordres-travail", pageOf([]));
+    flushUrl(http, "/api/v1/maintenance/ordres-travail", pageOf([]));
     flushUrl(http, "/api/v1/utilisateurs", pageOf([]));
     flushUrl(http, "/api/v1/prises-carburant", pageOf([]));
 
@@ -70,7 +70,7 @@ describe("TableauDeBordPage", () => {
     expect(apercu).not.toBeNull();
     expect(fileDuJour).not.toBeNull();
     expect(
-      apercu?.compareDocumentPosition(fileDuJour!) &
+      (apercu?.compareDocumentPosition(fileDuJour as Node) ?? 0) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     http.verify();
