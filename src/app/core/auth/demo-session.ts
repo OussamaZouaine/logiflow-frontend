@@ -1,6 +1,8 @@
 import { computed, Service, signal } from "@angular/core";
 import { DEMO_PASSWORD, findDemoIdentity } from "./demo-identity";
+import { clearAuthSessionStorage } from "./auth-storage";
 import { isRole, type Role } from "./role";
+import { SessionUtilisateur, type UtilisateurConnecte } from "./session";
 
 export const DEMO_SESSION_STORAGE_KEY = "logiflow.demo-session";
 
@@ -10,9 +12,25 @@ export interface DemoSession {
 }
 
 @Service()
-export class DemoSessionService {
-  readonly session = signal<DemoSession | null>(readStoredSession());
-  readonly isSignedIn = computed(() => this.session() !== null);
+export class DemoSessionService extends SessionUtilisateur {
+  private readonly sessionState = signal<DemoSession | null>(readStoredSession());
+
+  readonly isSignedIn = computed(() => this.sessionState() !== null);
+
+  readonly utilisateur = computed<UtilisateurConnecte | null>(() => {
+    const session = this.sessionState();
+    if (!session) {
+      return null;
+    }
+    return {
+      login: session.login,
+      nom: null,
+      roles: session.roles,
+    };
+  });
+
+  /** État brut démo (tests et persistance). */
+  readonly session = this.sessionState;
 
   signIn(login: string, password: string): boolean {
     const identity = findDemoIdentity(login);
@@ -25,17 +43,29 @@ export class DemoSessionService {
       roles: [identity.role],
     };
     persistSession(session);
-    this.session.set(session);
+    this.sessionState.set(session);
     return true;
   }
 
-  signOut(): void {
-    clearStoredSession();
-    this.session.set(null);
+  async connecter(_retour = "/"): Promise<void> {
+    // En mode démo, la page /connexion appelle signIn() directement.
   }
 
-  hasAnyRole(roles: readonly Role[]): boolean {
-    const current = this.session();
+  async deconnecter(): Promise<void> {
+    this.signOut();
+  }
+
+  signOut(): void {
+    clearAuthSessionStorage();
+    this.sessionState.set(null);
+  }
+
+  async jetonAcces(): Promise<string | null> {
+    return null;
+  }
+
+  override hasAnyRole(roles: readonly Role[]): boolean {
+    const current = this.sessionState();
     if (!current) {
       return false;
     }
@@ -61,25 +91,25 @@ function readStoredSession(): DemoSession | null {
       !("login" in parsed) ||
       !("roles" in parsed)
     ) {
-      clearStoredSession();
+      clearAuthSessionStorage();
       return null;
     }
 
     const { login, roles } = parsed;
     if (typeof login !== "string" || !Array.isArray(roles)) {
-      clearStoredSession();
+      clearAuthSessionStorage();
       return null;
     }
 
     const validRoles = roles.filter(isRole);
     if (validRoles.length === 0) {
-      clearStoredSession();
+      clearAuthSessionStorage();
       return null;
     }
 
     return { login, roles: validRoles };
   } catch {
-    clearStoredSession();
+    clearAuthSessionStorage();
     return null;
   }
 }
@@ -89,11 +119,4 @@ function persistSession(session: DemoSession): void {
     return;
   }
   sessionStorage.setItem(DEMO_SESSION_STORAGE_KEY, JSON.stringify(session));
-}
-
-function clearStoredSession(): void {
-  if (typeof sessionStorage === "undefined") {
-    return;
-  }
-  sessionStorage.removeItem(DEMO_SESSION_STORAGE_KEY);
 }

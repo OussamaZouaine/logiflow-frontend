@@ -33,7 +33,7 @@ import {
 } from "../shared/ui/list-table-row-icons";
 import { environment } from "../../environments/environment";
 import type { PageResponse } from "../core/api/page-response";
-import { DemoSessionService } from "../core/auth/demo-session";
+import { SessionUtilisateur } from "../core/auth/session";
 import { roleLabel } from "../core/auth/role";
 import { destinationsForRoles } from "../core/nav/work-destination";
 import type { OrdreTravail } from "../maintenance/ordre-travail";
@@ -101,7 +101,7 @@ export interface ApercuTile {
 	templateUrl: "./tableau-de-bord-page.html",
 })
 export class TableauDeBordPage {
-	private readonly session = inject(DemoSessionService);
+	private readonly session = inject(SessionUtilisateur);
 	private readonly fileDuJourStore = inject(FileDuJourStore);
 
 	protected readonly apercuToneBorderClass = apercuToneBorderClass;
@@ -112,11 +112,11 @@ export class TableauDeBordPage {
 	protected readonly pieSeriesKeys = [APERCU_PIE_VALUE_KEY] as const;
 
 	protected readonly login = computed(
-		() => this.session.session()?.login ?? "",
+		() => this.session.utilisateur()?.login ?? "",
 	);
 
 	protected readonly roleName = computed(() => {
-		const role = this.session.session()?.roles[0];
+		const role = this.session.utilisateur()?.roles[0];
 		return role ? roleLabel(role) : "";
 	});
 
@@ -135,7 +135,7 @@ export class TableauDeBordPage {
 	protected readonly fileInboxSkeletonRows = [0, 1, 2] as const;
 
 	protected readonly destinations = computed(() =>
-		destinationsForRoles(this.session.session()?.roles ?? []),
+		destinationsForRoles(this.session.utilisateur()?.roles ?? []),
 	);
 
 	protected readonly countableDestinations = computed(() =>

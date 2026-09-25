@@ -5,6 +5,7 @@ import {
 } from "@angular/common/http/testing";
 import { TestBed } from "@angular/core/testing";
 import { provideRouter } from "@angular/router";
+import { AUTH_DEMO_TEST_PROVIDERS } from "../core/auth/auth-test-providers";
 import { DossiersPage } from "./dossiers-page";
 
 describe("DossiersPage", () => {
@@ -15,6 +16,7 @@ describe("DossiersPage", () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([]),
+        ...AUTH_DEMO_TEST_PROVIDERS,
       ],
     }).compileComponents();
   });

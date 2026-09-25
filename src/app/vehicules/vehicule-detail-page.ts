@@ -21,7 +21,7 @@ import { RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
-import { DemoSessionService } from "../core/auth/demo-session";
+import { SessionUtilisateur } from "../core/auth/session";
 import { firstFieldError } from "../core/forms/first-field-error";
 import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
 import { WORK_DESTINATIONS } from "../core/nav/work-destination";
@@ -89,7 +89,7 @@ export class VehiculeDetailPage {
   private readonly api = inject(VehiculeApi);
   private readonly documentApi = inject(DocumentApi);
   private readonly scoreApi = inject(ScoreSanteApi);
-  private readonly session = inject(DemoSessionService);
+  private readonly session = inject(SessionUtilisateur);
   private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
 

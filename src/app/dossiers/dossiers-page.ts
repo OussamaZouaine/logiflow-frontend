@@ -11,7 +11,7 @@ import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
-import { DemoSessionService } from "../core/auth/demo-session";
+import { SessionUtilisateur } from "../core/auth/session";
 import { DOSSIERS_PLAN_ROLES } from "../core/auth/role";
 import { filterByStatut, statutOptionsFrom } from "../shared/ui/list-filter";
 import { dossierStatutIcon } from "../shared/ui/list-statut-icons";
@@ -69,7 +69,7 @@ import {
   viewProviders: [LIST_TABLE_ROW_ICON_PROVIDERS],
 })
 export class DossiersPage {
-  private readonly session = inject(DemoSessionService);
+  private readonly session = inject(SessionUtilisateur);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);

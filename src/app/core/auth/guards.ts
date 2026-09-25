@@ -1,19 +1,21 @@
 import { inject } from "@angular/core";
 import { type CanActivateFn, Router } from "@angular/router";
-import { DemoSessionService } from "./demo-session";
+import { SessionUtilisateur } from "./session";
 import { isRole, type Role } from "./role";
 
-export const signedInGuard: CanActivateFn = () => {
-  const session = inject(DemoSessionService);
+export const signedInGuard: CanActivateFn = (_route, state) => {
+  const session = inject(SessionUtilisateur);
   const router = inject(Router);
   if (session.isSignedIn()) {
     return true;
   }
-  return router.parseUrl("/connexion");
+  return router.createUrlTree(["/connexion"], {
+    queryParams: { retour: state.url },
+  });
 };
 
 export const guestGuard: CanActivateFn = () => {
-  const session = inject(DemoSessionService);
+  const session = inject(SessionUtilisateur);
   const router = inject(Router);
   if (!session.isSignedIn()) {
     return true;
@@ -22,7 +24,7 @@ export const guestGuard: CanActivateFn = () => {
 };
 
 export const roleGuard: CanActivateFn = (route) => {
-  const session = inject(DemoSessionService);
+  const session = inject(SessionUtilisateur);
   const router = inject(Router);
   const { roles } = route.data;
   const allowed = readAllowedRoles(roles);

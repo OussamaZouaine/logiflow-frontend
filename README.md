@@ -19,11 +19,19 @@ Open http://localhost:4200. The app reloads on file changes.
 
 `pnpm start` (not a global `ng serve`) is the reliable command: it uses the workspace Node version.
 
+### Keycloak (real login)
+
+1. Backend: `make keycloak` then run Spring with profile **`dev`** and `OAUTH2_ISSUER_URI` / `OAUTH2_JWK_SET_URI` (see [logiflow-backend/docs/security.md](../logiflow-backend/docs/security.md)).
+2. Frontend: `pnpm start:keycloak` — redirects to Keycloak (`http://localhost:8081`), returns to `/connexion/retour`, sends `Authorization: Bearer` on API calls.
+
+Test users match demo logins (`admin`, `exploitant`, …) with password **`demo`**.
+
 ## Scripts
 
 | Command        | What it does                                      |
 | -------------- | ------------------------------------------------- |
-| `pnpm start`   | Dev server at http://localhost:4200               |
+| `pnpm start`   | Demo session (no Keycloak), backend profile `local` |
+| `pnpm start:keycloak` | OIDC login against local Keycloak, JWT on `/api/` |
 | `pnpm build`   | Production build → `dist/`                        |
 | `pnpm test`    | Unit tests (Vitest)                               |
 | `pnpm check`   | Lint + format check (Ultracite / Biome)           |

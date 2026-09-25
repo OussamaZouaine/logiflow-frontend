@@ -15,7 +15,7 @@ import {
   lucideCornerDownLeft,
   lucideSearch,
 } from "@ng-icons/lucide";
-import { DemoSessionService } from "../core/auth/demo-session";
+import { SessionUtilisateur } from "../core/auth/session";
 import { PaletteEntitySearchStore } from "../core/nav/palette-entity-search-store";
 import {
   filterPaletteItems,
@@ -343,7 +343,7 @@ interface PaletteListGroup {
   `,
 })
 export class CommandPaletteDialogComponent implements AfterViewInit {
-  private readonly session = inject(DemoSessionService);
+  private readonly session = inject(SessionUtilisateur);
   private readonly paletteEntitySearch = inject(PaletteEntitySearchStore);
   private readonly router = inject(Router);
   private readonly dialogRef = inject(
@@ -359,7 +359,7 @@ export class CommandPaletteDialogComponent implements AfterViewInit {
   protected readonly activeIndex = signal(0);
 
   protected readonly paletteTargets = computed((): PaletteItem[] =>
-    paletteItemsForRoles(this.session.session()?.roles ?? [])
+    paletteItemsForRoles(this.session.utilisateur()?.roles ?? [])
   );
 
   protected readonly filteredTargets = computed(() => [

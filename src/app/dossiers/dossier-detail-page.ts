@@ -20,7 +20,7 @@ import { dossierStatutTone } from "../tableau/apercu";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
-import { DemoSessionService } from "../core/auth/demo-session";
+import { SessionUtilisateur } from "../core/auth/session";
 import {
   DOSSIERS_PLAN_ROLES,
   VOYAGES_ALLOWED_ROLES,
@@ -70,7 +70,7 @@ interface VoyageLink {
 export class DossierDetailPage {
   private readonly api = inject(DossierApi);
   private readonly toast = inject(ToastService);
-  private readonly session = inject(DemoSessionService);
+  private readonly session = inject(SessionUtilisateur);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly id = input.required<string>();

@@ -4,7 +4,7 @@ import {
   provideHttpClientTesting,
 } from "@angular/common/http/testing";
 import { TestBed } from "@angular/core/testing";
-import { DemoSessionService } from "../auth/demo-session";
+import { SessionUtilisateur } from "../auth/session";
 import {
   paletteEntityQueryReady,
   paletteEntitySourcesForRoles,
@@ -134,9 +134,18 @@ describe("PaletteEntitySearchStore", () => {
         provideHttpClientTesting(),
         PaletteEntitySearchStore,
         {
-          provide: DemoSessionService,
+          provide: SessionUtilisateur,
           useValue: {
-            session: () => ({ login: "admin", roles: ["ADMINISTRATEUR"] }),
+            utilisateur: () => ({
+              login: "admin",
+              nom: null,
+              roles: ["ADMINISTRATEUR"],
+            }),
+            isSignedIn: () => true,
+            connecter: async () => {},
+            deconnecter: async () => {},
+            jetonAcces: async () => null,
+            hasAnyRole: () => true,
           },
         },
       ],

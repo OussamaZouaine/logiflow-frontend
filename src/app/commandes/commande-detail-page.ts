@@ -12,7 +12,7 @@ import { RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
-import { DemoSessionService } from "../core/auth/demo-session";
+import { SessionUtilisateur } from "../core/auth/session";
 import { DOSSIERS_PLAN_ROLES } from "../core/auth/role";
 import { statutDossierLabel, type Dossier } from "../dossiers/dossier";
 import {
@@ -44,7 +44,7 @@ import { CommandeApi } from "./commande-api";
 })
 export class CommandeDetailPage {
   private readonly api = inject(CommandeApi);
-  private readonly session = inject(DemoSessionService);
+  private readonly session = inject(SessionUtilisateur);
   private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
 

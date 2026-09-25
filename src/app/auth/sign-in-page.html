@@ -34,12 +34,43 @@
           <h2 class="text-lg font-semibold tracking-tight text-ink">
             Connexion
           </h2>
+          @if (keycloakMode) {
+          <p class="mt-1 text-sm text-muted">
+            Vous serez redirigé vers la page de connexion sécurisée LogiFlow
+            (mot de passe, puis OTP si requis).
+          </p>
+          } @else {
           <p class="mt-1 text-sm text-muted">
             Comptes démo — mot de passe
             <span class="sign-in-demo-code font-mono text-ink">{{ demoPassword }}</span>
           </p>
+          }
         </div>
 
+        @if (sessionExpiree()) {
+        <div class="sign-in-card__section">
+          <p class="sign-in-alert" role="alert">
+            Votre session a expiré. Veuillez vous reconnecter.
+          </p>
+        </div>
+        }
+
+        @if (keycloakMode) {
+        <div class="sign-in-card__section sign-in-card__section--form flex flex-col gap-5">
+          @if (authError()) {
+          <p class="auth-error sign-in-alert" role="alert">
+            {{ authError() }}
+          </p>
+          }
+          <button
+            (click)="onSso()"
+            class="sign-in-submit pressable"
+            type="button"
+          >
+            Continuer vers la connexion
+          </button>
+        </div>
+        } @else {
         <div class="sign-in-card__section sign-in-card__section--choices">
           <p class="sign-in-section-label">Comptes rapides</p>
           <div class="sign-in-chips">
@@ -114,6 +145,7 @@
             Entrer
           </button>
         </form>
+        }
       </div>
     </div>
   </div>

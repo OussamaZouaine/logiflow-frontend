@@ -4,6 +4,7 @@ import {
   provideRouter,
   type RouterStateSnapshot,
 } from "@angular/router";
+import { AUTH_DEMO_TEST_PROVIDERS } from "./auth-test-providers";
 import { DEMO_PASSWORD } from "./demo-identity";
 import { DemoSessionService } from "./demo-session";
 import { guestGuard, roleGuard, signedInGuard } from "./guards";
@@ -28,7 +29,7 @@ describe("auth guards", () => {
     sessionStorage.clear();
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
-      providers: [provideRouter([])],
+      providers: [provideRouter([]), ...AUTH_DEMO_TEST_PROVIDERS],
     });
   });
 

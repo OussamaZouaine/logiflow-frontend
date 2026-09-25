@@ -37,7 +37,8 @@ import {
   lucideX,
 } from "@ng-icons/lucide";
 import { filter } from "rxjs";
-import { DemoSessionService } from "../core/auth/demo-session";
+import { SessionUtilisateur } from "../core/auth/session";
+import { environment } from "../../environments/environment";
 import { roleLabel } from "../core/auth/role";
 import { DESTINATION_NAV_ICON, TABLEAU_NAV_ICON } from "../core/nav/nav-icon";
 import {
@@ -96,7 +97,7 @@ import { ShellBreadcrumbComponent } from "./shell-breadcrumb";
   templateUrl: "./signed-in-shell.html",
 })
 export class SignedInShell {
-  private readonly session = inject(DemoSessionService);
+  private readonly session = inject(SessionUtilisateur);
   private readonly fileDuJourStore = inject(FileDuJourStore);
   private readonly commandPalette = inject(CommandPaletteService);
   private readonly router = inject(Router);
@@ -111,16 +112,16 @@ export class SignedInShell {
   private readonly mobileViewport = signal(this.readMobileViewport());
 
   protected readonly login = computed(
-    () => this.session.session()?.login ?? ""
+    () => this.session.utilisateur()?.login ?? ""
   );
 
   protected readonly roleName = computed(() => {
-    const role = this.session.session()?.roles[0];
+    const role = this.session.utilisateur()?.roles[0];
     return role ? roleLabel(role) : "";
   });
 
   protected readonly navGroups = computed(() =>
-    destinationNavGroupsForRoles(this.session.session()?.roles ?? []),
+    destinationNavGroupsForRoles(this.session.utilisateur()?.roles ?? []),
   );
 
   protected readonly fileDuJourSectionId = FILE_DU_JOUR_SECTION_ID;
@@ -196,8 +197,10 @@ export class SignedInShell {
   }
 
   protected async signOut(): Promise<void> {
-    this.session.signOut();
-    await this.router.navigateByUrl("/connexion");
+    await this.session.deconnecter();
+    if (environment.auth.mode === "demo") {
+      await this.router.navigateByUrl("/connexion");
+    }
   }
 
   @HostListener("window:resize")

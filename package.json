@@ -8,6 +8,7 @@
     "fix": "ultracite fix",
     "ng": "ng",
     "start": "ng serve",
+    "start:keycloak": "ng serve --configuration keycloak",
     "test": "ng test",
     "watch": "ng build --watch --configuration development"
   },
@@ -24,6 +25,7 @@
     "@ng-icons/core": "^36.0.0",
     "@ng-icons/lucide": "^36.0.0",
     "@tailwindcss/postcss": "^4.3.3",
+    "angular-auth-oidc-client": "^22.0.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "echarts": "^6.1.0",

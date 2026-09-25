@@ -1,4 +1,3 @@
-import { provideHttpClient, withFetch } from "@angular/common/http";
 import {
   type ApplicationConfig,
   inject,
@@ -13,12 +12,13 @@ import {
 } from "@angular/router";
 import { provideZardCharts } from "@/shared/components/chart/chart-echarts.provider";
 import { provideZard } from "@/shared/core/provider/providezard";
+import { provideLogiflowAuth } from "./core/auth/provide-logiflow-auth";
 import { routes } from "./app.routes";
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideHttpClient(withFetch()),
+    provideLogiflowAuth(),
     provideRouter(
       routes,
       withComponentInputBinding(),

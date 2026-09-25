@@ -6,8 +6,10 @@ import {
 import { TestBed } from "@angular/core/testing";
 import { provideRouter } from "@angular/router";
 import type { PageResponse } from "../core/api/page-response";
+import { AUTH_DEMO_TEST_PROVIDERS } from "../core/auth/auth-test-providers";
 import { DEMO_PASSWORD } from "../core/auth/demo-identity";
 import { DemoSessionService } from "../core/auth/demo-session";
+import { provideZardCharts } from "../shared/components/chart/chart-echarts.provider";
 import { TableauDeBordPage } from "./tableau-de-bord-page";
 
 function pageOf<T>(
@@ -42,6 +44,8 @@ describe("TableauDeBordPage", () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([]),
+        ...AUTH_DEMO_TEST_PROVIDERS,
+        provideZardCharts(),
       ],
     }).compileComponents();
   });
@@ -69,8 +73,10 @@ describe("TableauDeBordPage", () => {
     const fileDuJour = root.querySelector("#file-du-jour");
     expect(apercu).not.toBeNull();
     expect(fileDuJour).not.toBeNull();
+    expect(apercu).not.toBeNull();
+    expect(fileDuJour).not.toBeNull();
     expect(
-      apercu?.compareDocumentPosition(fileDuJour!) &
+      apercu!.compareDocumentPosition(fileDuJour!) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     http.verify();

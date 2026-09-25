@@ -3,7 +3,7 @@ import { Injectable, inject, signal } from "@angular/core";
 import { firstValueFrom } from "rxjs";
 import { environment } from "../../../environments/environment";
 import type { PageResponse } from "../api/page-response";
-import { DemoSessionService } from "../auth/demo-session";
+import { SessionUtilisateur } from "../auth/session";
 import type { PaletteItem } from "./palette-items";
 import {
   PALETTE_ENTITY_CLIENT_SCAN_SIZE,
@@ -20,7 +20,7 @@ const PALETTE_ENTITY_DEBOUNCE_MS = 200;
 @Injectable({ providedIn: "root" })
 export class PaletteEntitySearchStore {
   private readonly http = inject(HttpClient);
-  private readonly session = inject(DemoSessionService);
+  private readonly session = inject(SessionUtilisateur);
 
   private searchGeneration = 0;
   private debounceTimer: ReturnType<typeof globalThis.setTimeout> | null = null;
@@ -62,7 +62,7 @@ export class PaletteEntitySearchStore {
   }
 
   private async runSearch(query: string, generation: number): Promise<void> {
-    const roles = this.session.session()?.roles ?? [];
+    const roles = this.session.utilisateur()?.roles ?? [];
     const sources = paletteEntitySourcesForRoles(roles);
 
     try {

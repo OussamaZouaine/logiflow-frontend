@@ -15,7 +15,7 @@ import {
   ZardTabGroupComponent,
 } from "@/shared/components/tabs";
 
-import { DemoSessionService } from "../core/auth/demo-session";
+import { SessionUtilisateur } from "../core/auth/session";
 import { SITES_ALLOWED_ROLES } from "../core/auth/role";
 
 @Component({
@@ -26,11 +26,11 @@ import { SITES_ALLOWED_ROLES } from "../core/auth/role";
 export class CarburantTabs {
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
-  private readonly session = inject(DemoSessionService);
+  private readonly session = inject(SessionUtilisateur);
   private readonly tabGroup = viewChild(ZardTabGroupComponent);
 
   protected readonly showStations = computed(() => {
-    const roles = this.session.session()?.roles ?? [];
+    const roles = this.session.utilisateur()?.roles ?? [];
     return roles.some((role) => SITES_ALLOWED_ROLES.includes(role));
   });
 

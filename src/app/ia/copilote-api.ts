@@ -2,6 +2,8 @@ import { HttpClient } from "@angular/common/http";
 import { inject, Service } from "@angular/core";
 import { firstValueFrom } from "rxjs";
 import { environment } from "../../environments/environment";
+import { KeycloakSessionService } from "../core/auth/keycloak-session";
+import { SessionUtilisateur } from "../core/auth/session";
 import type {
   ConversationCopilote,
   ConversationCopiloteDetail,
@@ -32,6 +34,7 @@ const MESSAGE_INDISPONIBLE =
 @Service()
 export class CopiloteApi {
   private readonly http = inject(HttpClient);
+  private readonly session = inject(SessionUtilisateur);
   private readonly baseUrl = `${environment.apiBaseUrl}/ia/copilote`;
 
   etat(): Promise<EtatCopilote> {
@@ -95,18 +98,11 @@ export class CopiloteApi {
   ): Promise<void> {
     let reponse: Response;
     try {
-      reponse = await fetch(
-        `${this.urlConversation(conversationId)}/messages`,
-        {
-          body: JSON.stringify({ question }),
-          credentials: "same-origin",
-          headers: {
-            Accept: "text/event-stream",
-            "Content-Type": "application/json",
-          },
-          method: "POST",
-          signal,
-        }
+      reponse = await this.fetchFluxMessages(
+        conversationId,
+        question,
+        signal,
+        false
       );
     } catch (error) {
       if (signal?.aborted) {
@@ -117,6 +113,22 @@ export class CopiloteApi {
         status: 0,
       });
     }
+    if (reponse.status === 401 && !signal?.aborted) {
+      const keycloak =
+        this.session instanceof KeycloakSessionService
+          ? this.session
+          : null;
+      if (keycloak) {
+        await keycloak.forcerRenouvellement();
+        reponse = await this.fetchFluxMessages(
+          conversationId,
+          question,
+          signal,
+          true
+        );
+      }
+    }
+
     if (!(reponse.ok && reponse.body)) {
       throw new CopiloteFluxError(await detailErreur(reponse), {
         status: reponse.status,
@@ -144,6 +156,27 @@ export class CopiloteApi {
 
   private urlConversation(id: string): string {
     return `${this.baseUrl}/conversations/${encodeURIComponent(id)}`;
+  }
+
+  private async fetchFluxMessages(
+    conversationId: string,
+    question: string,
+    signal: AbortSignal | undefined,
+    apresRenouvellement: boolean
+  ): Promise<Response> {
+    const jeton = await this.session.jetonAcces();
+    return fetch(`${this.urlConversation(conversationId)}/messages`, {
+      body: JSON.stringify({ question }),
+      credentials: "same-origin",
+      headers: {
+        Accept: "text/event-stream",
+        "Content-Type": "application/json",
+        ...(jeton ? { Authorization: `Bearer ${jeton}` } : {}),
+        ...(apresRenouvellement ? { "X-Logiflow-Auth-Retry": "1" } : {}),
+      },
+      method: "POST",
+      signal,
+    });
   }
 }
 

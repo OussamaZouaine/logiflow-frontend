@@ -2,7 +2,8 @@ import { Component, computed, inject } from "@angular/core";
 import { Router, RouterLink } from "@angular/router";
 import { NgIcon, provideIcons } from "@ng-icons/core";
 import { lucideLayoutDashboard, lucideLogOut } from "@ng-icons/lucide";
-import { DemoSessionService } from "../core/auth/demo-session";
+import { SessionUtilisateur } from "../core/auth/session";
+import { environment } from "../../environments/environment";
 import { roleLabel } from "../core/auth/role";
 
 @Component({
@@ -12,23 +13,25 @@ import { roleLabel } from "../core/auth/role";
   templateUrl: "./acces-refuse-page.html",
 })
 export class AccesRefusePage {
-  private readonly session = inject(DemoSessionService);
+  private readonly session = inject(SessionUtilisateur);
   private readonly router = inject(Router);
 
   protected readonly roleName = computed(() => {
-    const current = this.session.session();
+    const current = this.session.utilisateur();
     const role = current?.roles[0];
     return role ? roleLabel(role) : "inconnu";
   });
 
   protected readonly login = computed(
-    () => this.session.session()?.login ?? ""
+    () => this.session.utilisateur()?.login ?? ""
   );
 
   protected readonly hasSession = computed(() => this.session.isSignedIn());
 
   protected async signOut(): Promise<void> {
-    this.session.signOut();
-    await this.router.navigateByUrl("/connexion");
+    await this.session.deconnecter();
+    if (environment.auth.mode === "demo") {
+      await this.router.navigateByUrl("/connexion");
+    }
   }
 }

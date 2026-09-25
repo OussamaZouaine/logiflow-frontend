@@ -1,6 +1,7 @@
 import { TestBed } from "@angular/core/testing";
 import { provideRouter, Router } from "@angular/router";
 import { DEMO_PASSWORD } from "../core/auth/demo-identity";
+import { AUTH_DEMO_TEST_PROVIDERS } from "../core/auth/auth-test-providers";
 import {
   DEMO_SESSION_STORAGE_KEY,
   DemoSessionService,
@@ -12,7 +13,10 @@ describe("SignInPage", () => {
     sessionStorage.clear();
     await TestBed.configureTestingModule({
       imports: [SignInPage],
-      providers: [provideRouter([{ children: [], path: "" }])],
+      providers: [
+        provideRouter([{ children: [], path: "" }]),
+        ...AUTH_DEMO_TEST_PROVIDERS,
+      ],
     }).compileComponents();
   });
 

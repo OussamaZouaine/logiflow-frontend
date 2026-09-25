@@ -15,7 +15,7 @@ import { RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
-import { DemoSessionService } from "../core/auth/demo-session";
+import { SessionUtilisateur } from "../core/auth/session";
 import { VOYAGES_PLAN_ROLES } from "../core/auth/role";
 import {
   DOCUMENT_TYPES,
@@ -77,7 +77,7 @@ interface PriseEditDraft {
 export class PriseDetailPage {
   private readonly api = inject(PriseCarburantApi);
   private readonly documentApi = inject(DocumentApi);
-  private readonly session = inject(DemoSessionService);
+  private readonly session = inject(SessionUtilisateur);
   private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -145,7 +145,7 @@ export class PriseDetailPage {
   });
 
   protected readonly canValidate = computed(() => {
-    const roles = this.session.session()?.roles ?? [];
+    const roles = this.session.utilisateur()?.roles ?? [];
     return roles.some((role) => VOYAGES_PLAN_ROLES.includes(role));
   });
 

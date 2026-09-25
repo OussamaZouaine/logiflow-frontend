@@ -3,7 +3,7 @@ import { computed, inject, Injectable } from "@angular/core";
 import { environment } from "../../environments/environment";
 import type { Commande } from "../commandes/commande";
 import type { PageResponse } from "../core/api/page-response";
-import { DemoSessionService } from "../core/auth/demo-session";
+import { SessionUtilisateur } from "../core/auth/session";
 import { destinationsForRoles } from "../core/nav/work-destination";
 import type { Dossier } from "../dossiers/dossier";
 import type { Vehicule } from "../vehicules/vehicule";
@@ -27,10 +27,10 @@ type FileDuJourModuleId =
 /** Shared file-du-jour data for the Tableau de bord and App Shell badge. */
 @Injectable({ providedIn: "root" })
 export class FileDuJourStore {
-  private readonly session = inject(DemoSessionService);
+  private readonly session = inject(SessionUtilisateur);
 
   private readonly destinations = computed(() =>
-    destinationsForRoles(this.session.session()?.roles ?? [])
+    destinationsForRoles(this.session.utilisateur()?.roles ?? [])
   );
 
   readonly allowedIds = computed(

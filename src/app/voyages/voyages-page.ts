@@ -41,7 +41,7 @@ import {
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
-import { DemoSessionService } from "../core/auth/demo-session";
+import { SessionUtilisateur } from "../core/auth/session";
 import { VOYAGES_PLAN_ROLES } from "../core/auth/role";
 import type { Dossier } from "../dossiers/dossier";
 import { filterByStatut, statutOptionsFrom } from "../shared/ui/list-filter";
@@ -139,7 +139,7 @@ const LOOKUP_PAGE_SIZE = 100;
   ],
 })
 export class VoyagesPage {
-  private readonly session = inject(DemoSessionService);
+  private readonly session = inject(SessionUtilisateur);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);

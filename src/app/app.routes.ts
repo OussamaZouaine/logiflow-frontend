@@ -19,6 +19,13 @@ const carburantStationsTrail = [
 
 export const routes: Routes = [
   {
+    loadComponent: () =>
+      import("./auth/sign-in-callback-page").then(
+        (module) => module.SignInCallbackPage
+      ),
+    path: "connexion/retour",
+  },
+  {
     canActivate: [guestGuard],
     loadComponent: () =>
       import("./auth/sign-in-page").then((module) => module.SignInPage),
