@@ -97,6 +97,19 @@ describe("copilote helpers", () => {
       })
     ).toBe("/voyages/nouveau");
     expect(
+      routeSource({ id: "s-1", reference: "SIN-2026-000001", type: "SINISTRE" })
+    ).toBe("/maintenance/sinistres/s-1");
+    expect(
+      routeSource({
+        id: "o-1",
+        reference: "OT-2026-000001",
+        type: "ORDRE_TRAVAIL",
+      })
+    ).toBe("/maintenance/ordres-travail/o-1");
+    expect(
+      routeSource({ id: null, reference: "Coûts", type: "COUTS_MAINTENANCE" })
+    ).toBe("/maintenance/couts");
+    expect(
       routeSource({ id: null, reference: "VOY-1", type: "VOYAGE" })
     ).toBeNull();
   });

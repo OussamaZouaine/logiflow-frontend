@@ -146,7 +146,10 @@
       @if (v.statut !== "BON" || v.recommandations.length > 0) {
       <li class="rounded-lg border border-line bg-surface p-3">
         <div class="flex flex-wrap items-center gap-2">
-          <a [routerLink]="['/vehicules', v.vehiculeId]" class="font-mono text-sm text-pine hover:underline">{{ v.immatriculation }}</a>
+          <a [routerLink]="lienFiche(v)" class="font-mono text-sm text-pine hover:underline">{{ v.immatriculation }}</a>
+          @if (v.typeEngin === "REMORQUE") {
+          <span class="text-xs text-muted">remorque</span>
+          }
           <app-statut-chip [label]="libelle(v.statut)" [tone]="toneStatutIA(v.statut)" />
           <span class="text-xs text-muted">score {{ v.score }} / 100 · {{ v.kmParJour }} km/jour</span>
         </div>

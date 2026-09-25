@@ -48,6 +48,8 @@ export interface AnalyseVehiculeIA {
   recommandations: RecommandationIA[];
   score: number;
   statut: string;
+  /** VEHICULE ou REMORQUE (absent : ancien contrat, véhicule). */
+  typeEngin?: "VEHICULE" | "REMORQUE";
   vehiculeId: string;
 }
 
@@ -67,11 +69,11 @@ export interface ParametresOtIA {
   priorite?: string;
   titre: string;
   type: string;
-  typeEngin: "VEHICULE";
+  typeEngin: "VEHICULE" | "REMORQUE";
 }
 
 export function parametresOtDepuisRecommandation(
-  vehicule: Pick<AnalyseVehiculeIA, "vehiculeId">,
+  vehicule: Pick<AnalyseVehiculeIA, "typeEngin" | "vehiculeId">,
   r: RecommandationIA
 ): ParametresOtIA {
   const type = (TYPES_INTERVENTION as readonly string[]).includes(r.type)
@@ -84,7 +86,7 @@ export function parametresOtDepuisRecommandation(
     origine: "AGENT_IA",
     titre: r.libelle,
     type,
-    typeEngin: "VEHICULE",
+    typeEngin: vehicule.typeEngin ?? "VEHICULE",
     ...(prioriteConnue ? { priorite: r.priorite } : {}),
     ...(r.creneauDebut ? { debut: r.creneauDebut } : {}),
     ...(r.creneauFin ? { fin: r.creneauFin } : {}),
@@ -201,6 +203,13 @@ export class MaintenanceDashboardPage {
     } finally {
       this.analyseEnCours.set(false);
     }
+  }
+
+  protected lienFiche(v: AnalyseVehiculeIA): string[] {
+    return [
+      v.typeEngin === "REMORQUE" ? "/remorques" : "/vehicules",
+      v.vehiculeId,
+    ];
   }
 
   protected enginLibelle(sinistre: Sinistre): string {

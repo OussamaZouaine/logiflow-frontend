@@ -49,6 +49,15 @@ describe("MaintenanceDashboardPage helpers", () => {
     expect(params.debut).toBeUndefined();
   });
 
+  it("pré-remplit un OT de remorque", () => {
+    expect(
+      parametresOtDepuisRecommandation(
+        { typeEngin: "REMORQUE", vehiculeId: "r1" },
+        recommandation
+      ).typeEngin
+    ).toBe("REMORQUE");
+  });
+
   it("colore les statuts de l'agent", () => {
     expect(toneStatutIA("CRITIQUE")).toBe("brake");
     expect(toneStatutIA("A_PLANIFIER")).toBe("amber");
