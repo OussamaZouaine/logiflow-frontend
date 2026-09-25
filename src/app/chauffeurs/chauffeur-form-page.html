@@ -1,18 +1,18 @@
-<app-form-page-header
-  [description]="
-    edition()
-      ? 'Profil, permis, habilitations. Le matricule ne se modifie pas.'
-      : 'Seuls matricule, nom et prénom sont obligatoires ; le reste aide à proposer les bons chauffeurs.'
-  "
-  [title]="edition() ? 'Modifier le chauffeur' : 'Nouveau chauffeur'"
-  listLabel="Chauffeurs"
-  listLink="/chauffeurs"
-/>
+<div class="inner-page fiche-page--wide">
+  <app-form-page-header
+    [description]="
+      edition()
+        ? 'Profil, permis, habilitations. Le matricule ne se modifie pas.'
+        : 'Seuls matricule, nom et prénom sont obligatoires ; le reste aide à proposer les bons chauffeurs.'
+    "
+    [title]="edition() ? 'Modifier le chauffeur' : 'Nouveau chauffeur'"
+    icon="lucideIdCard"
+  />
 
-@if (chargement()) {
-<p class="text-sm text-muted" role="status">Chargement…</p>
-} @else {
-<form (submit)="onSubmit($event)" class="form-page" novalidate>
+  @if (chargement()) {
+  <p class="fiche-load-hint" role="status">Chargement…</p>
+  } @else {
+  <form (submit)="onSubmit($event)" class="form-page" novalidate>
   <app-form-validation-summary
     [show]="chauffeurForm().touched() && chauffeurForm().invalid()"
   />
@@ -284,10 +284,11 @@
     <div>
       <button
         (click)="ajouterHabilitation()"
-        class="btn-outline pressable min-h-11 px-4 text-sm"
+        class="btn-outline pressable inline-flex items-center gap-2"
         type="button"
       >
-        + Ajouter une habilitation
+        <ng-icon aria-hidden="true" class="size-3.75" name="lucidePlus" />
+        <span>Ajouter une habilitation</span>
       </button>
     </div>
   </app-form-section>
@@ -489,16 +490,18 @@
   <div class="alert-panel" role="alert">{{ formError() }}</div>
   }
 
-  <app-form-actions>
-    <button class="btn-primary pressable min-h-11 px-5" type="submit">
-      Enregistrer
+  <app-form-actions [inline]="true">
+    <button class="btn-toolbar pressable" type="submit">
+      <ng-icon aria-hidden="true" class="btn-toolbar__icon" name="lucideCheck" />
+      <span>Enregistrer</span>
     </button>
     <a
       [routerLink]="edition() ? ['/chauffeurs', id()] : ['/chauffeurs']"
-      class="btn-outline pressable min-h-11 px-5"
+      class="btn-outline pressable"
     >
       Annuler
     </a>
   </app-form-actions>
 </form>
-}
+  }
+</div>

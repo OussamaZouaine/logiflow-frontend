@@ -18,6 +18,8 @@ import {
   validate,
 } from "@angular/forms/signals";
 import { Router, RouterLink } from "@angular/router";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import { lucideCheck, lucidePlus } from "@ng-icons/lucide";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
@@ -51,9 +53,10 @@ import { ChauffeurApi } from "./chauffeur-api";
 const MATRICULE_PATTERN = /^[A-Za-z0-9-]{2,30}$/;
 
 @Component({
-  imports: [FormField, RouterLink, ...FORM_PAGE_IMPORTS],
+  imports: [FormField, NgIcon, RouterLink, ...FORM_PAGE_IMPORTS],
   selector: "app-chauffeur-form-page",
   templateUrl: "./chauffeur-form-page.html",
+  viewProviders: [provideIcons({ lucideCheck, lucidePlus })],
 })
 export class ChauffeurFormPage {
   private readonly api = inject(ChauffeurApi);

@@ -1,15 +1,25 @@
 import { httpResource } from "@angular/common/http";
 import { Component, computed, inject, input, signal } from "@angular/core";
 import { RouterLink } from "@angular/router";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import { lucidePencil, lucideTriangleAlert } from "@ng-icons/lucide";
+import { ZardTableImports } from "@/shared/components/table/table.imports";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
 import { DocumentsSection } from "../shared/ui/documents-section";
-import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
 import { enumToSelectOptions } from "../shared/ui/field-select";
+import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
+import { statutOptionsFrom } from "../shared/ui/list-filter";
+import { statutIconForValue } from "../shared/ui/list-statut-filter";
+import {
+  chauffeurDisponibiliteIcon,
+  chauffeurStatutIcon,
+} from "../shared/ui/list-statut-icons";
 import { StatutChip } from "../shared/ui/statut-chip";
 import { ToastService } from "../shared/ui/toast";
 import type { Site } from "../sites/site";
+import { voyageStatutTone } from "../tableau/apercu";
 import {
   affectationRoleLabel,
   formatInstant,
@@ -38,9 +48,17 @@ import {
 import { ChauffeurApi } from "./chauffeur-api";
 
 @Component({
-  imports: [RouterLink, StatutChip, DocumentsSection, ...FICHE_PAGE_IMPORTS],
+  imports: [
+    NgIcon,
+    RouterLink,
+    StatutChip,
+    DocumentsSection,
+    ...FICHE_PAGE_IMPORTS,
+    ...ZardTableImports,
+  ],
   selector: "app-chauffeur-detail-page",
   templateUrl: "./chauffeur-detail-page.html",
+  viewProviders: [provideIcons({ lucidePencil, lucideTriangleAlert })],
 })
 export class ChauffeurDetailPage {
   private readonly api = inject(ChauffeurApi);
@@ -60,6 +78,7 @@ export class ChauffeurDetailPage {
   protected readonly etatValiditeTone = etatValiditeTone;
   protected readonly formatInstant = formatInstant;
   protected readonly statutVoyageLabel = statutVoyageLabel;
+  protected readonly voyageStatutTone = voyageStatutTone;
   protected readonly affectationRoleLabel = affectationRoleLabel;
 
   protected readonly statutOptions = enumToSelectOptions(
@@ -69,6 +88,16 @@ export class ChauffeurDetailPage {
   protected readonly disponibiliteOptions = enumToSelectOptions(
     CHAUFFEUR_DISPONIBILITES,
     chauffeurDisponibiliteLabel
+  );
+  private readonly disponibiliteChipOptions = statutOptionsFrom(
+    CHAUFFEUR_DISPONIBILITES,
+    chauffeurDisponibiliteLabel,
+    chauffeurDisponibiliteIcon
+  );
+  private readonly statutChipOptions = statutOptionsFrom(
+    CHAUFFEUR_STATUTS,
+    chauffeurStatutLabel,
+    chauffeurStatutIcon
   );
 
   protected readonly aujourdhui = new Date();
@@ -101,6 +130,14 @@ export class ChauffeurDetailPage {
 
   protected etat(dateExpiration: string | null) {
     return etatValidite(dateExpiration, this.aujourdhui);
+  }
+
+  protected disponibiliteChipIcon(disponibilite: string): string | null {
+    return statutIconForValue(this.disponibiliteChipOptions, disponibilite);
+  }
+
+  protected statutChipIcon(statut: string): string | null {
+    return statutIconForValue(this.statutChipOptions, statut);
   }
 
   protected roleDans(voyage: Voyage): string {

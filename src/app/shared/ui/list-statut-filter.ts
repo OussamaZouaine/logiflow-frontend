@@ -108,7 +108,7 @@ export function statutIconForValue(
             class="list-filter-menu__icon"
             name="lucideListFilter"
           />
-          <span class="list-filter-menu__text">Tous</span>
+          <span class="list-filter-menu__text">{{ allLabel() }}</span>
           @if (selected() === null) {
           <ng-icon
             aria-hidden="true"

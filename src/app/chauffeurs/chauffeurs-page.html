@@ -1,47 +1,32 @@
 <div class="flex flex-col gap-6">
-  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-    <div>
-      <h1 class="module-page-title">Chauffeurs</h1>
-      <p class="mt-1 text-sm text-muted">
-        Disponibilité, permis, habilitations et temps de conduite — utilisés pour
-        proposer les chauffeurs des voyages.
-      </p>
-    </div>
-    <a class="btn-primary pressable" routerLink="/chauffeurs/nouveau">
-      Nouveau chauffeur
-    </a>
-  </div>
-
-  <div class="flex flex-col gap-3">
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
-      <div class="min-w-0 flex-1">
-        <app-list-search-bar
-          [(draft)]="searchDraft"
-          [(query)]="search"
-          inputId="chauffeur-search"
-          placeholder="Nom, prénom ou matricule…"
-        />
-      </div>
-      <div class="sm:w-56">
-        <label class="sr-only" for="chauffeur-statut">Statut administratif</label>
-        <app-field-select
-          (selectValueChange)="onStatut($event)"
-          [options]="statutOptions"
-          [selectValue]="statutFilter() || '__none__'"
-          inputId="chauffeur-statut"
-          placeholder="Tous les statuts"
-        />
-      </div>
-    </div>
+  <div class="list-toolbar">
+    <app-list-search-bar
+      [(draft)]="searchDraft"
+      [(query)]="search"
+      inputId="chauffeur-search"
+      placeholder="Nom, prénom ou matricule…"
+    />
     <app-list-statut-filter
       [(selected)]="disponibiliteFilter"
+      allLabel="Disponibilité"
       [options]="disponibiliteOptions"
       ariaLabel="Filtrer par disponibilité"
+    />
+    <app-list-statut-filter
+      [(selected)]="statutFilter"
+      (selectedChange)="page.set(0)"
+      allLabel="Statut"
+      [options]="statutOptions"
+      ariaLabel="Filtrer par statut administratif"
+    />
+    <app-list-toolbar-cta
+      label="Nouveau chauffeur"
+      link="/chauffeurs/nouveau"
     />
   </div>
 
   @if (chauffeurs.isLoading()) {
-  <app-list-table-skeleton label="Chargement des chauffeurs" />
+  <app-list-table-skeleton [columns]="6" label="Chargement des chauffeurs" />
   } @else if (chauffeurs.error()) {
   <div class="alert-panel" role="alert">
     <p>{{ errorMessage() }}</p>
@@ -53,7 +38,7 @@
       Réessayer
     </button>
   </div>
-  } @else if (chauffeurs.hasValue() && lignes().length === 0) {
+  } @else if (chauffeurs.hasValue() && chauffeurs.value().content.length === 0) {
   @if (filtresActifs()) {
   <app-list-empty-state
     (action)="clearFilters()"
@@ -70,107 +55,131 @@
   />
   }
   } @else if (chauffeurs.hasValue()) {
-  <div
-    appListRowKeyboard
-    [(activeId)]="activeRowId"
-    [rows]="keyboardRows()"
-    aria-label="Liste des chauffeurs — flèches pour naviguer, Entrée pour ouvrir"
-    class="list-table-panel"
-  >
-    <table class="w-full min-w-2xl text-left text-sm">
-      <thead class="list-table-head">
-        <tr>
-          <th class="px-4 py-3 font-medium" scope="col">Chauffeur</th>
-          <th class="px-4 py-3 font-medium" scope="col">Disponibilité</th>
-          <th class="px-4 py-3 font-medium" scope="col">Permis</th>
-          <th class="px-4 py-3 font-medium" scope="col">Habilitations</th>
-          <th class="px-4 py-3 font-medium" scope="col">Conduite restante</th>
-          <th class="px-4 py-3 font-medium" scope="col">
-            <span class="sr-only">Actions</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (ligne of lignes(); track ligne.chauffeur.id) {
-        <tr
-          [attr.aria-selected]="activeRowId() === ligne.chauffeur.id"
-          [class.bg-pine/5]="activeRowId() === ligne.chauffeur.id"
-          class="list-row border-b border-line last:border-0 hover:bg-canvas"
-        >
-          <td class="px-4 py-3">
-            <a
-              [routerLink]="['/chauffeurs', ligne.chauffeur.id]"
-              class="font-medium text-ink underline-offset-2 hover:underline"
-            >
-              {{ ligne.chauffeur.prenom }} {{ ligne.chauffeur.nom }}
-            </a>
-            <p class="font-mono text-xs text-muted">{{ ligne.chauffeur.matricule }}</p>
-          </td>
-          <td class="px-4 py-3">
-            <div class="flex flex-wrap gap-1">
-              <app-statut-chip
-                [label]="chauffeurDisponibiliteLabel(ligne.chauffeur.disponibilite)"
-                [tone]="chauffeurDisponibiliteTone(ligne.chauffeur.disponibilite)"
-              />
-              @if (ligne.chauffeur.statut !== "ACTIF") {
-              <app-statut-chip
-                [label]="chauffeurStatutLabel(ligne.chauffeur.statut)"
-                [tone]="chauffeurStatutTone(ligne.chauffeur.statut)"
-              />
-              }
-            </div>
-          </td>
-          <td class="px-4 py-3 font-mono text-xs text-ink">
-            {{ ligne.chauffeur.categoriesPermis.join(" · ") || "—" }}
-          </td>
-          <td class="px-4 py-3">
-            <div class="flex flex-wrap items-center gap-1">
-              @for (type of ligne.habilitationsCles; track type) {
-              <span class="rounded bg-amber/10 px-1.5 py-0.5 font-mono text-[0.65rem] text-amber">
-                {{ type === "ADR_BASE" ? "ADR" : "ADR citerne" }}
-              </span>
-              }
-              @if (ligne.alertes.length > 0) {
-              <span
-                [class]="
-                  ligne.alertes.some((a) => a.niveau === 'expire')
-                    ? 'text-xs text-brake'
-                    : 'text-xs text-amber'
-                "
-                [title]="ligne.alertes.map((a) => a.libelle).join(', ')"
+  <div class="list-table-stack">
+    <div
+      appListRowKeyboard
+      [(activeId)]="activeRowId"
+      [rows]="keyboardRows()"
+      aria-label="Liste des chauffeurs — flèches pour naviguer, Entrée pour ouvrir"
+      class="list-table-panel"
+    >
+      <table z-table>
+        <thead z-table-header>
+          <tr z-table-row>
+            <th scope="col" z-table-head>Chauffeur</th>
+            <th scope="col" z-table-head>Disponibilité</th>
+            <th scope="col" z-table-head>Permis</th>
+            <th scope="col" z-table-head>Habilitations</th>
+            <th scope="col" z-table-head>Conduite restante</th>
+            <th scope="col" z-table-head class="text-right">
+              <span class="sr-only">Actions</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody z-table-body>
+          @for (ligne of lignes(); track ligne.chauffeur.id) {
+          <tr
+            z-table-row
+            [attr.aria-selected]="activeRowId() === ligne.chauffeur.id"
+            [class.bg-pine/5]="activeRowId() === ligne.chauffeur.id"
+            class="list-row"
+          >
+            <td z-table-cell>
+              <a
+                [routerLink]="['/chauffeurs', ligne.chauffeur.id]"
+                class="font-mono text-xs text-pine underline-offset-2 hover:underline"
               >
-                ⚠ {{ ligne.alertes.length }} à renouveler
-              </span>
-              } @else if (ligne.habilitationsCles.length === 0) {
-              <span class="text-xs text-muted">—</span>
-              }
-            </div>
-          </td>
-          <td class="px-4 py-3 font-mono text-xs tabular-nums text-muted">
-            {{ formatSoldeConduite(ligne.chauffeur.soldeTempsConduiteMinutes) }}
-          </td>
-          <td class="px-4 py-3 text-right">
-            <a
-              [routerLink]="['/chauffeurs', ligne.chauffeur.id]"
-              class="list-row-action text-sm font-medium text-pine underline-offset-2 hover:underline"
-            >
-              Ouvrir
-            </a>
-          </td>
-        </tr>
-        }
-      </tbody>
-    </table>
+                {{ ligne.chauffeur.matricule }}
+              </a>
+              <p class="mt-0.5">
+                <span class="list-cell-with-icon">
+                  <ng-icon
+                    [name]="rowIcon"
+                    aria-hidden="true"
+                    class="list-cell-with-icon__icon"
+                  />
+                  <span class="text-ink">
+                    {{ ligne.chauffeur.prenom }} {{ ligne.chauffeur.nom }}
+                  </span>
+                </span>
+              </p>
+            </td>
+            <td z-table-cell>
+              <div class="flex flex-wrap gap-1">
+                <app-statut-chip
+                  [icon]="disponibiliteChipIcon(ligne.chauffeur.disponibilite)"
+                  [label]="chauffeurDisponibiliteLabel(ligne.chauffeur.disponibilite)"
+                  [tone]="chauffeurDisponibiliteTone(ligne.chauffeur.disponibilite)"
+                />
+                @if (ligne.chauffeur.statut !== "ACTIF") {
+                <app-statut-chip
+                  [icon]="statutChipIcon(ligne.chauffeur.statut)"
+                  [label]="chauffeurStatutLabel(ligne.chauffeur.statut)"
+                  [tone]="chauffeurStatutTone(ligne.chauffeur.statut)"
+                />
+                }
+              </div>
+            </td>
+            <td class="font-mono text-xs text-ink" z-table-cell>
+              {{ ligne.chauffeur.categoriesPermis.join(" · ") || "—" }}
+            </td>
+            <td z-table-cell>
+              <div class="flex flex-wrap items-center gap-1">
+                @for (type of ligne.habilitationsCles; track type) {
+                <span
+                  class="rounded bg-amber/10 px-1.5 py-0.5 font-mono text-[0.65rem] text-amber"
+                >
+                  {{ type === "ADR_BASE" ? "ADR" : "ADR citerne" }}
+                </span>
+                }
+                @if (ligne.alertes.length > 0) {
+                <span
+                  [class]="
+                    ligne.alertes.some((a) => a.niveau === 'expire')
+                      ? 'inline-flex items-center gap-1 text-xs text-brake'
+                      : 'inline-flex items-center gap-1 text-xs text-amber'
+                  "
+                  [title]="ligne.alertes.map((a) => a.libelle).join(', ')"
+                >
+                  <ng-icon
+                    aria-hidden="true"
+                    class="size-3.5 shrink-0"
+                    name="lucideTriangleAlert"
+                  />
+                  {{ ligne.alertes.length }} à renouveler
+                </span>
+                } @else if (ligne.habilitationsCles.length === 0) {
+                <span class="text-xs text-muted">—</span>
+                }
+              </div>
+            </td>
+            <td class="font-mono text-xs tabular-nums text-muted" z-table-cell>
+              {{ formatSoldeConduite(ligne.chauffeur.soldeTempsConduiteMinutes) }}
+            </td>
+            <td class="text-right" z-table-cell>
+              <a
+                [routerLink]="['/chauffeurs', ligne.chauffeur.id]"
+                class="list-row-action list-row-action--with-icon text-sm font-medium text-pine underline-offset-2 hover:underline"
+              >
+                <span>Ouvrir</span>
+                <ng-icon aria-hidden="true" name="lucideArrowRight" />
+              </a>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-list-pagination
+      [(page)]="page"
+      [pageSize]="pageSize()"
+      (pageSizeChange)="pageSize.set($event); page.set(0)"
+      [pageSizeOptions]="pageSizeOptions"
+      [totalElements]="chauffeurs.value().totalElements"
+      [totalPages]="chauffeurs.value().totalPages"
+      [visibleCount]="lignes().length"
+      itemLabel="chauffeur"
+    />
   </div>
-  <app-list-pagination
-    [(page)]="page"
-    [pageSize]="pageSize()"
-    (pageSizeChange)="pageSize.set($event); page.set(0)"
-    [pageSizeOptions]="pageSizeOptions"
-    [totalElements]="chauffeurs.value().totalElements"
-    [totalPages]="chauffeurs.value().totalPages"
-    [visibleCount]="lignes().length"
-    itemLabel="chauffeur"
-  />
   }
 </div>

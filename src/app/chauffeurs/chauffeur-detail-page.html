@@ -1,5 +1,5 @@
-<div class="fiche-page">
-  <app-fiche-header listLabel="Chauffeurs" listLink="/chauffeurs">
+<div class="inner-page fiche-page fiche-page--wide">
+  <app-fiche-header icon="lucideIdCard">
     @if (chauffeur.isLoading() && !chauffeur.hasValue()) {
     <p class="fiche-load-hint" role="status">Chargement…</p>
     } @else if (chauffeur.error()) {
@@ -9,11 +9,13 @@
       [title]="chauffeur.value().prenom + ' ' + chauffeur.value().nom"
     >
       <app-statut-chip
+        [icon]="disponibiliteChipIcon(chauffeur.value().disponibilite)"
         [label]="chauffeurDisponibiliteLabel(chauffeur.value().disponibilite)"
         [tone]="chauffeurDisponibiliteTone(chauffeur.value().disponibilite)"
       />
       @if (chauffeur.value().statut !== "ACTIF") {
       <app-statut-chip
+        [icon]="statutChipIcon(chauffeur.value().statut)"
         [label]="chauffeurStatutLabel(chauffeur.value().statut)"
         [tone]="chauffeurStatutTone(chauffeur.value().statut)"
       />
@@ -31,8 +33,11 @@
   </app-fiche-header>
 
   @if (chauffeur.hasValue()) {
-  <div class="flex flex-wrap items-end gap-3">
-    <div class="w-48">
+  <app-form-section
+    description="Disponibilité opérationnelle et statut administratif."
+    title="État"
+  >
+    <div class="form-page__coords">
       <app-form-field inputId="fiche-disponibilite" label="Disponibilité">
         <app-field-select
           (selectValueChange)="changerDisponibilite($event)"
@@ -41,8 +46,6 @@
           inputId="fiche-disponibilite"
         />
       </app-form-field>
-    </div>
-    <div class="w-48">
       <app-form-field inputId="fiche-statut" label="Statut">
         <app-field-select
           (selectValueChange)="changerStatut($event)"
@@ -52,25 +55,38 @@
         />
       </app-form-field>
     </div>
-    <a
-      [routerLink]="['/chauffeurs', chauffeur.value().id, 'modifier']"
-      class="btn-outline pressable ml-auto min-h-11 px-5"
-    >
-      Modifier la fiche
-    </a>
-  </div>
-
-  @if (actionError()) {
-  <div class="alert-panel" role="alert">{{ actionError() }}</div>
-  }
+    @if (actionError()) {
+    <div class="alert-panel" role="alert">{{ actionError() }}</div>
+    }
+    <app-form-actions [inline]="true">
+      <a
+        [routerLink]="['/chauffeurs', chauffeur.value().id, 'modifier']"
+        class="btn-toolbar pressable"
+      >
+        <ng-icon
+          aria-hidden="true"
+          class="btn-toolbar__icon"
+          name="lucidePencil"
+        />
+        <span>Modifier la fiche</span>
+      </a>
+    </app-form-actions>
+  </app-form-section>
 
   @if (alertes().length > 0) {
   <div
-    class="rounded-lg border border-amber/30 bg-amber/5 px-4 py-3 text-sm"
+    class="rounded-xl border border-amber/30 bg-amber/5 px-4 py-3 text-sm"
     role="status"
   >
-    <p class="font-medium text-ink">À renouveler</p>
-    <ul class="mt-1 list-disc pl-5 text-muted">
+    <p class="list-cell-with-icon font-medium text-ink">
+      <ng-icon
+        aria-hidden="true"
+        class="list-cell-with-icon__icon text-amber"
+        name="lucideTriangleAlert"
+      />
+      <span>À renouveler</span>
+    </p>
+    <ul class="mt-2 list-disc pl-5 text-muted">
       @for (alerte of alertes(); track alerte.libelle) {
       <li [class.text-brake]="alerte.niveau === 'expire'">
         {{ alerte.libelle }} —
@@ -104,7 +120,7 @@
       <app-fiche-field label="E-mail">
         {{ chauffeur.value().email ?? "—" }}
       </app-fiche-field>
-      <app-fiche-field label="Adresse">
+      <app-fiche-field [span]="2" label="Adresse">
         {{ chauffeur.value().adresse ?? "—" }}
       </app-fiche-field>
     </app-fiche-field-grid>
@@ -140,39 +156,43 @@
     title="Habilitations"
   >
     @if (chauffeur.value().habilitations.length === 0) {
-    <p class="text-sm text-muted">Aucune habilitation déclarée.</p>
+    <p class="fiche-meta">Aucune habilitation déclarée.</p>
     } @else {
-    <div class="overflow-x-auto">
-      <table class="w-full min-w-lg text-left text-sm">
-        <thead class="list-table-head">
-          <tr>
-            <th class="px-3 py-2 font-medium" scope="col">Type</th>
-            <th class="px-3 py-2 font-medium" scope="col">Référence</th>
-            <th class="px-3 py-2 font-medium" scope="col">Validité</th>
-            <th class="px-3 py-2 font-medium" scope="col">État</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (habilitation of chauffeur.value().habilitations; track $index) {
-          <tr class="border-b border-line last:border-0">
-            <td class="px-3 py-2 text-ink">
-              {{ habilitationLabel(habilitation.type) }}
-            </td>
-            <td class="px-3 py-2 font-mono text-xs">{{ habilitation.reference }}</td>
-            <td class="px-3 py-2 font-mono text-xs tabular-nums text-muted">
-              {{ formatChauffeurDate(habilitation.dateObtention) }} →
-              {{ formatChauffeurDate(habilitation.dateExpiration) }}
-            </td>
-            <td class="px-3 py-2">
-              <app-statut-chip
-                [label]="etatValiditeLabel(etat(habilitation.dateExpiration))"
-                [tone]="etatValiditeTone(etat(habilitation.dateExpiration))"
-              />
-            </td>
-          </tr>
-          }
-        </tbody>
-      </table>
+    <div class="list-table-stack">
+      <div class="list-table-panel">
+        <table z-table>
+          <thead z-table-header>
+            <tr z-table-row>
+              <th scope="col" z-table-head>Type</th>
+              <th scope="col" z-table-head>Référence</th>
+              <th scope="col" z-table-head>Validité</th>
+              <th scope="col" z-table-head>État</th>
+            </tr>
+          </thead>
+          <tbody z-table-body>
+            @for (habilitation of chauffeur.value().habilitations; track $index) {
+            <tr z-table-row>
+              <td class="text-ink" z-table-cell>
+                {{ habilitationLabel(habilitation.type) }}
+              </td>
+              <td class="font-mono text-xs" z-table-cell>
+                {{ habilitation.reference }}
+              </td>
+              <td class="font-mono text-xs tabular-nums text-muted" z-table-cell>
+                {{ formatChauffeurDate(habilitation.dateObtention) }} →
+                {{ formatChauffeurDate(habilitation.dateExpiration) }}
+              </td>
+              <td z-table-cell>
+                <app-statut-chip
+                  [label]="etatValiditeLabel(etat(habilitation.dateExpiration))"
+                  [tone]="etatValiditeTone(etat(habilitation.dateExpiration))"
+                />
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     </div>
     }
   </app-form-section>
@@ -190,8 +210,12 @@
           {{ formatChauffeurDate(chauffeur.value().dateExpirationPasseport) }}
           @if (chauffeur.value().dateExpirationPasseport) {
           <app-statut-chip
-            [label]="etatValiditeLabel(etat(chauffeur.value().dateExpirationPasseport))"
-            [tone]="etatValiditeTone(etat(chauffeur.value().dateExpirationPasseport))"
+            [label]="
+              etatValiditeLabel(etat(chauffeur.value().dateExpirationPasseport))
+            "
+            [tone]="
+              etatValiditeTone(etat(chauffeur.value().dateExpirationPasseport))
+            "
           />
           }
         </span>
@@ -246,26 +270,30 @@
 
   <app-form-section title="Voyages">
     @if (voyages.isLoading()) {
-    <p class="text-sm text-muted" role="status">Chargement…</p>
+    <p class="fiche-load-hint" role="status">Chargement…</p>
     } @else if (voyages.hasValue() && voyages.value().content.length === 0) {
-    <p class="text-sm text-muted">Aucun voyage affecté.</p>
+    <p class="fiche-meta">Aucun voyage affecté.</p>
     } @else if (voyages.hasValue()) {
     <ul class="flex flex-col gap-2">
       @for (voyage of voyages.value().content; track voyage.id) {
-      <li
-        class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line/80 bg-canvas px-3 py-2 text-sm"
-      >
+      <li>
         <a
           [routerLink]="['/voyages', voyage.id]"
-          class="font-mono text-xs text-pine underline-offset-2 hover:underline"
+          class="fiche-link-card pressable"
         >
-          {{ voyage.reference }}
+          <span class="min-w-0 flex-1">
+            <span class="font-mono text-xs text-pine">{{ voyage.reference }}</span>
+            <span class="mt-1 block text-xs text-muted">
+              {{ formatInstant(voyage.departPrevu) }} →
+              {{ formatInstant(voyage.arriveePrevue) }}
+              · {{ roleDans(voyage) }}
+            </span>
+          </span>
+          <app-statut-chip
+            [label]="statutVoyageLabel(voyage.statut)"
+            [tone]="voyageStatutTone(voyage.statut)"
+          />
         </a>
-        <span class="text-muted">
-          {{ formatInstant(voyage.departPrevu) }} → {{ formatInstant(voyage.arriveePrevue) }}
-        </span>
-        <span class="text-xs text-muted">{{ roleDans(voyage) }}</span>
-        <span class="text-xs text-ink">{{ statutVoyageLabel(voyage.statut) }}</span>
       </li>
       }
     </ul>

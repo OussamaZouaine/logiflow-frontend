@@ -23,6 +23,10 @@ import {
   lucideWrench,
 } from "@ng-icons/lucide";
 import type { StatutPrise } from "../../carburant/prise-carburant";
+import type {
+  ChauffeurDisponibilite,
+  ChauffeurStatut,
+} from "../../chauffeurs/chauffeur";
 import type { StatutCommande } from "../../commandes/commande";
 import type { StatutDossier } from "../../dossiers/dossier";
 import type { StatutOT } from "../../maintenance/ordre-travail";
@@ -110,6 +114,42 @@ export function vehiculeStatutIcon(statut: VehiculeStatut): string {
       return "lucideCirclePause";
     case "HORS_SERVICE":
       return "lucideCircleOff";
+    default: {
+      const _exhaustive: never = statut;
+      return _exhaustive;
+    }
+  }
+}
+
+export function chauffeurDisponibiliteIcon(
+  disponibilite: ChauffeurDisponibilite
+): string {
+  switch (disponibilite) {
+    case "DISPONIBLE":
+      return "lucideCircleCheck";
+    case "EN_VOYAGE":
+      return "lucideRoute";
+    case "EN_REPOS":
+      return "lucideCirclePause";
+    case "EN_CONGE":
+      return "lucideCalendar";
+    case "INDISPONIBLE":
+      return "lucideCircleOff";
+    default: {
+      const _exhaustive: never = disponibilite;
+      return _exhaustive;
+    }
+  }
+}
+
+export function chauffeurStatutIcon(statut: ChauffeurStatut): string {
+  switch (statut) {
+    case "ACTIF":
+      return "lucideCircleCheck";
+    case "INACTIF":
+      return "lucideCircleOff";
+    case "SUSPENDU":
+      return "lucideTriangleAlert";
     default: {
       const _exhaustive: never = statut;
       return _exhaustive;
