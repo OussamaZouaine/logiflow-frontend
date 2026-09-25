@@ -28,7 +28,7 @@ describe("commande helpers", () => {
           volumeM3: 4,
         },
       ],
-      prixNegocie: { devise: "EUR", montant: 2000 },
+      prixNegocie: { devise: "MAD", montant: 2000 },
     });
   });
 

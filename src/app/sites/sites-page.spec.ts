@@ -58,23 +58,25 @@ describe("SitesPage", () => {
     fixture.detectChanges();
 
     const http = TestBed.inject(HttpTestingController);
-    http.expectOne((req) => req.url === "/api/v1/sites").flush({
-      content: [
-        {
-          actif: true,
-          adresse: "Zone industrielle Ain Sebaa, Casablanca 20250",
-          clientId: "11111111-1111-1111-1111-111111111111",
-          code: "SITE-DEMO-CASA",
-          id: "22222222-2222-2222-2222-222222222222",
-          libelle: "Hub Casablanca Ain Sebaa",
-          localisation: { latitude: 33.5731, longitude: -7.5898 },
-        },
-      ],
-      pageNumber: 0,
-      pageSize: 20,
-      totalElements: 1,
-      totalPages: 1,
-    });
+    http
+      .expectOne((req) => req.url === "/api/v1/sites")
+      .flush({
+        content: [
+          {
+            actif: true,
+            adresse: "Zone industrielle Ain Sebaa, Casablanca 20250",
+            clientId: "11111111-1111-1111-1111-111111111111",
+            code: "SITE-DEMO-CASA",
+            id: "22222222-2222-2222-2222-222222222222",
+            libelle: "Hub Casablanca Ain Sebaa",
+            localisation: { latitude: 33.5731, longitude: -7.5898 },
+          },
+        ],
+        pageNumber: 0,
+        pageSize: 20,
+        totalElements: 1,
+        totalPages: 1,
+      });
 
     await fixture.whenStable();
     fixture.detectChanges();
@@ -123,23 +125,25 @@ describe("SitesPage", () => {
     fixture.detectChanges();
 
     const http = TestBed.inject(HttpTestingController);
-    http.expectOne((req) => req.url === "/api/v1/sites").flush({
-      content: [
-        {
-          actif: true,
-          adresse: null,
-          clientId: null,
-          code: "SITE-A",
-          id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-          libelle: "Site A",
-          localisation: { latitude: 48.8, longitude: 2.3 },
-        },
-      ],
-      pageNumber: 0,
-      pageSize: 20,
-      totalElements: 25,
-      totalPages: 2,
-    });
+    http
+      .expectOne((req) => req.url === "/api/v1/sites")
+      .flush({
+        content: [
+          {
+            actif: true,
+            adresse: null,
+            clientId: null,
+            code: "SITE-A",
+            id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+            libelle: "Site A",
+            localisation: { latitude: 48.8, longitude: 2.3 },
+          },
+        ],
+        pageNumber: 0,
+        pageSize: 20,
+        totalElements: 25,
+        totalPages: 2,
+      });
 
     await fixture.whenStable();
     fixture.detectChanges();
@@ -149,16 +153,16 @@ describe("SitesPage", () => {
     expect(compiled.textContent).toContain("Précédent");
     expect(compiled.textContent).toContain("Suivant");
 
+    // Pagination Zard : un bouton par page (le premier bouton du composant est « Précédent »).
     const next = compiled.querySelector(
-      'nav[aria-label="Pagination"] button:last-of-type'
+      'nav[aria-label="Pagination"] button[aria-label="Page 2"]'
     ) as HTMLButtonElement | null;
     expect(next?.disabled).toBe(false);
     next?.click();
     fixture.detectChanges();
 
     const page2 = http.expectOne(
-      (req) =>
-        req.url === "/api/v1/sites" && req.params.get("page") === "1"
+      (req) => req.url === "/api/v1/sites" && req.params.get("page") === "1"
     );
     page2.flush({
       content: [

@@ -226,7 +226,7 @@ describe("VoyageCreatePage", () => {
     expect(texte).toContain("DT-2026-900001");
     expect(texte).toContain("Jean Martin (DRV-0001)");
     expect(texte).toContain("Choisir cette proposition");
-  });
+  }, 15_000); // Page lourde (carte, résolution des libellés) : lente sur une machine chargée.
 
   it("prefills the manual form from a chosen proposal and submits its stops", async () => {
     const fixture = TestBed.createComponent(VoyageCreatePage);

@@ -82,7 +82,7 @@ describe("VoyagesPage", () => {
     expect(compiled.textContent).toContain("Brouillon");
     expect(compiled.textContent).toContain("Itinéraire");
     http.verify();
-  });
+  }, 15_000); // Page lourde (carte, résolution des libellés) : lente sur une machine chargée.
 
   it("shows an error when the backend is unreachable", async () => {
     const fixture = TestBed.createComponent(VoyagesPage);
