@@ -14,11 +14,13 @@ export function filterByStatut<T>(
 
 export function statutOptionsFrom<T extends string>(
   values: readonly T[],
-  labelOf: (value: T) => string
+  labelOf: (value: T) => string,
+  iconOf?: (value: T) => string
 ): ListStatutOption[] {
   return values.map((value) => ({
     label: labelOf(value),
     value,
+    ...(iconOf ? { icon: iconOf(value) } : {}),
   }));
 }
 

@@ -3,36 +3,49 @@ import { httpResource } from "@angular/common/http";
 import {
   Component,
   computed,
+  DestroyRef,
   effect,
   inject,
   input,
   signal,
   viewChild,
 } from "@angular/core";
+import { bindShellBreadcrumbLeaf } from "../core/nav/shell-breadcrumb-leaf";
 import { RouterLink } from "@angular/router";
 import { NgIcon, provideIcons } from "@ng-icons/core";
 import {
-  lucideArrowRight,
+  lucideArchive,
   lucideCalendarCheck,
   lucideCalendarClock,
   lucideChevronRight,
   lucideCircleAlert,
   lucideCircleCheck,
+  lucideCircleX,
+  lucideClipboardPen,
   lucideContainer,
+  lucideFlag,
   lucideFolderOpen,
   lucideFuel,
-  lucideGauge,
+  lucideGlobe,
   lucideHistory,
+  lucideInbox,
+  lucideLocateFixed,
+  lucideMap,
   lucideMapPin,
   lucidePackage,
+  lucidePackageCheck,
+  lucidePencil,
+  lucidePlay,
+  lucideRepeat,
   lucideRoute,
+  lucideShare2,
+  lucideTriangleAlert,
   lucideTruck,
+  lucideUserCheck,
   lucideUsers,
-  lucideZap,
 } from "@ng-icons/lucide";
 import { ZardAlertComponent } from "@/shared/components/alert";
 import { ZardBadgeComponent } from "@/shared/components/badge";
-import type { ZardBadgeTypeVariants } from "@/shared/components/badge/badge.variants";
 import { ZardButtonComponent } from "@/shared/components/button";
 import {
   ZardCardComponent,
@@ -42,7 +55,14 @@ import {
   ZardCardTitleComponent,
 } from "@/shared/components/card/card.component";
 import { ZardInputComponent } from "@/shared/components/input";
+import {
+  ZardTabComponent,
+  ZardTabGroupComponent,
+} from "@/shared/components/tabs";
 import { environment } from "../../environments/environment";
+import type { Dossier } from "../dossiers/dossier";
+import { canCalculerItineraire } from "../ia/itineraire";
+import { ItineraireApi } from "../ia/itineraire-api";
 import {
   formatLitres,
   formatMontantTtc,
@@ -61,6 +81,14 @@ import type { RemorqueListItem } from "../remorques/remorque";
 import { apercuToneToBadgeType } from "../shared/ui/apercu-zard";
 import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
 import { enumToSelectOptions } from "../shared/ui/field-select";
+import type { Site } from "../sites/site";
+import {
+  type GeoMapPathPoint,
+  GeoMarkersMap,
+} from "../shared/ui/geo-markers-map";
+import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
+import { voyageStatutIcon } from "../shared/ui/list-statut-icons";
+import type { StatutTone } from "../shared/ui/statut-chip";
 import { OpsTimeline } from "../shared/ui/ops-timeline";
 import { StatutChip } from "../shared/ui/statut-chip";
 import { ToastService } from "../shared/ui/toast";
@@ -81,8 +109,10 @@ import {
   isTypeEvenement,
   maxDatetimeLocal,
   minEvenementHorodatageLocal,
+  lifecycleStepPhase,
   nextStatuts,
   porteeLabel,
+  primaryVoyageTransition,
   remplissageLabel,
   type StatutVoyage,
   statutVoyageLabel,
@@ -92,8 +122,13 @@ import {
   type TypeEvenement,
   toDatetimeLocal,
   typeEtapeLabel,
+  typeEvenementIcon,
   typeEvenementLabel,
+  type Portee,
+  type TypeVoyage,
   typeVoyageLabel,
+  voyageStatutActionLabel,
+  VOYAGE_LIFECYCLE_STEPS,
   type Voyage,
 } from "./voyage";
 import { VoyageAjouterDossierForm } from "./voyage-ajouter-dossier-form";
@@ -107,11 +142,14 @@ import {
   voyageActualTimelineEntries,
   voyagePlannedTimelineEntries,
 } from "./voyage-timeline";
+import {
+  voyageItinerairePath,
+  voyageItinerairePoints,
+  voyageSiteMarkers,
+} from "./voyage-sites-map-markers";
 
-interface DossierLink {
-  id: string;
-  reference: string;
-}
+const LOOKUP_PAGE_SIZE = 100;
+const CARTE_TAB_INDEX = 0;
 
 const ETAPE_DOT_CLASS: Record<TypeEtape, string> = {
   CARBURANT: "bg-amber",
@@ -137,32 +175,47 @@ const ETAPE_DOT_CLASS: Record<TypeEtape, string> = {
     RemorqueCapacityView,
     ItineraireCarte,
     VoyageAjouterDossierForm,
+    GeoMarkersMap,
     ZardCardComponent,
     ZardCardContentComponent,
     ZardCardDescriptionComponent,
     ZardCardHeaderComponent,
     ZardCardTitleComponent,
+    ZardTabComponent,
+    ZardTabGroupComponent,
     ...FICHE_PAGE_IMPORTS,
   ],
   providers: [
     provideIcons({
-      lucideArrowRight,
+      lucideArchive,
       lucideCalendarCheck,
       lucideCalendarClock,
       lucideChevronRight,
       lucideCircleAlert,
       lucideCircleCheck,
+      lucideCircleX,
+      lucideClipboardPen,
       lucideContainer,
+      lucideFlag,
       lucideFolderOpen,
       lucideFuel,
-      lucideGauge,
+      lucideGlobe,
       lucideHistory,
+      lucideInbox,
+      lucideLocateFixed,
+      lucideMap,
       lucideMapPin,
       lucidePackage,
+      lucidePackageCheck,
+      lucidePencil,
+      lucidePlay,
+      lucideRepeat,
       lucideRoute,
+      lucideShare2,
+      lucideTriangleAlert,
       lucideTruck,
+      lucideUserCheck,
       lucideUsers,
-      lucideZap,
     }),
   ],
   selector: "app-voyage-detail-page",
@@ -171,12 +224,22 @@ const ETAPE_DOT_CLASS: Record<TypeEtape, string> = {
 })
 export class VoyageDetailPage {
   private readonly api = inject(VoyageApi);
+  private readonly itineraireApi = inject(ItineraireApi);
   private readonly toast = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly capacityView = viewChild(RemorqueCapacityView);
+  private readonly detailMap = viewChild(GeoMarkersMap);
 
   readonly id = input.required<string>();
 
   constructor() {
+    bindShellBreadcrumbLeaf(
+      this.destroyRef,
+      computed(() =>
+        this.voyage.hasValue() ? this.voyage.value().reference : null
+      )
+    );
+
     effect(() => {
       const suggested = suggestedEvenementHorodatageLocal(
         this.evenements.value() ?? []
@@ -191,6 +254,45 @@ export class VoyageDetailPage {
         this.eventHorodatage.set(suggested);
       }
     });
+
+    effect((onCleanup) => {
+      const stops = this.mapStops();
+      this.mapRoadPath.set([]);
+      this.mapRoadPathUnavailable.set(false);
+
+      if (!canCalculerItineraire(stops)) {
+        this.mapRoadPathLoading.set(false);
+        return;
+      }
+
+      let cancelled = false;
+      onCleanup(() => {
+        cancelled = true;
+      });
+
+      this.mapRoadPathLoading.set(true);
+      void this.itineraireApi
+        .calculerGeometrie(stops)
+        .then((result) => {
+          if (cancelled) {
+            return;
+          }
+          this.mapRoadPath.set(result.geometrie);
+          this.mapRoadPathUnavailable.set(result.geometrie.length < 2);
+        })
+        .catch(() => {
+          if (cancelled) {
+            return;
+          }
+          this.mapRoadPath.set([]);
+          this.mapRoadPathUnavailable.set(true);
+        })
+        .finally(() => {
+          if (!cancelled) {
+            this.mapRoadPathLoading.set(false);
+          }
+        });
+    });
   }
 
   protected readonly affectationRoleLabel = affectationRoleLabel;
@@ -202,15 +304,18 @@ export class VoyageDetailPage {
   protected readonly porteeLabel = porteeLabel;
   protected readonly remplissageLabel = remplissageLabel;
   protected readonly statutVoyageLabel = statutVoyageLabel;
+  protected readonly voyageStatutActionLabel = voyageStatutActionLabel;
   protected readonly voyageStatutTone = voyageStatutTone;
   protected readonly typeEtapeLabel = typeEtapeLabel;
   protected readonly typeEvenementLabel = typeEvenementLabel;
   protected readonly typeVoyageLabel = typeVoyageLabel;
   protected readonly eventTypes = TYPE_EVENEMENTS;
-  protected readonly eventTypeOptions = enumToSelectOptions(
-    TYPE_EVENEMENTS,
-    typeEvenementLabel
-  );
+  protected readonly lifecycleSteps = VOYAGE_LIFECYCLE_STEPS;
+  protected readonly eventTypeOptions = TYPE_EVENEMENTS.map((type) => ({
+    icon: typeEvenementIcon(type),
+    label: typeEvenementLabel(type),
+    value: type,
+  }));
 
   protected readonly statutError = signal<string | null>(null);
   protected readonly eventError = signal<string | null>(null);
@@ -219,6 +324,14 @@ export class VoyageDetailPage {
   protected readonly eventComment = signal("");
   protected readonly eventLatitude = signal("");
   protected readonly eventLongitude = signal("");
+  protected readonly activeDetailTabIndex = signal(CARTE_TAB_INDEX);
+  protected readonly mapRoadPath = signal<readonly GeoMapPathPoint[]>([]);
+  protected readonly mapRoadPathLoading = signal(false);
+  protected readonly mapRoadPathUnavailable = signal(false);
+
+  protected readonly isCarteTabActive = computed(
+    () => this.activeDetailTabIndex() === CARTE_TAB_INDEX
+  );
 
   protected readonly voyage = httpResource<Voyage>(() => ({
     url: `${environment.apiBaseUrl}/voyages/${this.id()}`,
@@ -277,17 +390,82 @@ export class VoyageDetailPage {
     return map;
   });
 
-  protected readonly dossiers = httpResource<PageResponse<DossierLink>>(() => ({
-    params: { page: 0, size: 50 },
+  protected readonly dossiers = httpResource<PageResponse<Dossier>>(() => ({
+    params: { page: 0, size: LOOKUP_PAGE_SIZE },
     url: `${environment.apiBaseUrl}/dossiers`,
   }));
 
+  protected readonly sites = httpResource<PageResponse<Site>>(() => ({
+    params: { page: 0, size: LOOKUP_PAGE_SIZE },
+    url: `${environment.apiBaseUrl}/sites`,
+  }));
+
   protected readonly dossiersById = computed(() => {
-    const map = new Map<string, DossierLink>();
+    const map = new Map<string, Dossier>();
     for (const dossier of this.dossiers.value()?.content ?? []) {
       map.set(dossier.id, dossier);
     }
     return map;
+  });
+
+  protected readonly mapMarkers = computed(() => {
+    const lookup = this.voyageMapLookup();
+    if (!lookup) {
+      return [];
+    }
+    return voyageSiteMarkers(
+      this.voyage.value(),
+      lookup.dossiersById,
+      lookup.sitesById
+    );
+  });
+
+  protected readonly mapStops = computed(() => {
+    const lookup = this.voyageMapLookup();
+    if (!lookup) {
+      return [];
+    }
+    return voyageItinerairePoints(
+      this.voyage.value(),
+      lookup.dossiersById,
+      lookup.sitesById
+    );
+  });
+
+  protected readonly mapPath = computed(() => {
+    const road = this.mapRoadPath();
+    if (road.length >= 2) {
+      return road;
+    }
+    const lookup = this.voyageMapLookup();
+    if (!lookup) {
+      return [];
+    }
+    return voyageItinerairePath(
+      this.voyage.value(),
+      lookup.dossiersById,
+      lookup.sitesById
+    );
+  });
+
+  protected readonly mapHint = computed(() => {
+    const stopCount = this.mapMarkers().length;
+    if (stopCount === 0) {
+      return "Aucun arrêt géolocalisé pour ce voyage.";
+    }
+    if (stopCount === 1) {
+      return "1 arrêt — ajoutez un second dossier pour tracer l'itinéraire.";
+    }
+    if (this.mapRoadPathLoading()) {
+      return `${stopCount} arrêt(s) — calcul de l'itinéraire routier…`;
+    }
+    if (this.mapRoadPath().length >= 2) {
+      return `${stopCount} arrêt(s) — itinéraire routier (OSRM).`;
+    }
+    if (this.mapRoadPathUnavailable()) {
+      return `${stopCount} arrêt(s) — routage indisponible, tracé direct affiché.`;
+    }
+    return `${stopCount} arrêt(s) sur le trajet.`;
   });
 
   protected readonly evenements = httpResource<EvenementVoyage[]>(() => ({
@@ -339,6 +517,13 @@ export class VoyageDetailPage {
     const error = this.evenements.error();
     return error ? httpErrorMessage(error) : null;
   });
+
+  protected onDetailTabChange(event: { index: number }): void {
+    this.activeDetailTabIndex.set(event.index);
+    if (event.index === CARTE_TAB_INDEX) {
+      queueMicrotask(() => this.detailMap()?.refreshLayout());
+    }
+  }
 
   protected dossierLabel(dossierId: string): string {
     return this.dossiersById().get(dossierId)?.reference ?? dossierId;
@@ -404,8 +589,131 @@ export class VoyageDetailPage {
     return parts.join(" · ");
   }
 
-  protected statutBadgeType(statut: StatutVoyage): ZardBadgeTypeVariants {
-    return apercuToneToBadgeType(voyageStatutTone(statut));
+  protected statutChipIcon(statut: StatutVoyage): string {
+    return voyageStatutIcon(statut);
+  }
+
+  protected statutChipTone(statut: StatutVoyage): StatutTone {
+    return voyageStatutTone(statut);
+  }
+
+  protected lifecycleIconWellClass(statut: StatutVoyage): string {
+    const base =
+      "flex size-8 shrink-0 items-center justify-center rounded-md [&_ng-icon]:size-4";
+    switch (voyageStatutTone(statut)) {
+      case "pine":
+        return `${base} bg-pine/10 text-pine`;
+      case "amber":
+        return `${base} bg-amber/10 text-amber`;
+      case "ink":
+        return `${base} bg-ink/5 text-ink`;
+      case "brake":
+        return `${base} bg-brake/10 text-brake`;
+      case "muted":
+        return `${base} bg-canvas text-muted`;
+    }
+  }
+
+  protected isCancelTransition(statut: StatutVoyage): boolean {
+    return statut === "ANNULE";
+  }
+
+  protected isPrimaryTransition(
+    target: StatutVoyage,
+    current: StatutVoyage
+  ): boolean {
+    return primaryVoyageTransition(nextStatuts(current)) === target;
+  }
+
+  protected lifecycleStepMarkerClass(
+    step: StatutVoyage,
+    current: StatutVoyage
+  ): string {
+    const base =
+      "flex size-7 items-center justify-center rounded-full [&_ng-icon]:size-3.5";
+    switch (lifecycleStepPhase(step, current)) {
+      case "past":
+        return `${base} bg-pine/15 text-pine`;
+      case "current":
+        return `${base} bg-primary text-primary-foreground shadow-[0_1px_2px_oklch(0_0_0/0.08),0_4px_12px_color-mix(in_oklch,var(--color-pine)_25%,transparent)]`;
+      case "future":
+        return `${base} border border-line/80 bg-canvas text-muted`;
+    }
+  }
+
+  protected lifecycleStepConnectorClass(
+    step: StatutVoyage,
+    current: StatutVoyage
+  ): string {
+    const base = "mx-0.5 mt-3.5 h-px w-3 shrink-0 sm:w-4";
+    const phase = lifecycleStepPhase(step, current);
+    if (phase === "past") {
+      return `${base} bg-pine/35`;
+    }
+    return `${base} bg-line/70`;
+  }
+
+  protected lifecycleActionRowClass(
+    target: StatutVoyage,
+    current: StatutVoyage
+  ): string {
+    const base =
+      "pressable flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-[border-color,box-shadow,transform,background-color] duration-150 ease-out active:scale-[0.96] motion-reduce:transition-none motion-reduce:active:transform-none";
+    if (this.isPrimaryTransition(target, current)) {
+      return `${base} border border-primary/35 bg-primary text-primary-foreground shadow-[0_1px_2px_oklch(0_0_0/0.06),0_4px_12px_color-mix(in_oklch,var(--color-pine)_22%,transparent)] hover:border-primary/50`;
+    }
+    return `${base} border border-line/75 bg-canvas hover:border-pine/30 hover:shadow-[0_1px_2px_oklch(0_0_0/0.03)]`;
+  }
+
+  protected lifecycleActionLabelClass(
+    target: StatutVoyage,
+    current: StatutVoyage
+  ): string {
+    return this.isPrimaryTransition(target, current)
+      ? "text-sm font-medium text-primary-foreground"
+      : "text-sm font-medium text-ink";
+  }
+
+  protected lifecycleActionMetaClass(
+    target: StatutVoyage,
+    current: StatutVoyage
+  ): string {
+    return this.isPrimaryTransition(target, current)
+      ? "text-xs text-primary-foreground/80"
+      : "text-xs text-muted";
+  }
+
+  protected lifecycleActionIconWellClass(
+    target: StatutVoyage,
+    current: StatutVoyage
+  ): string {
+    if (this.isPrimaryTransition(target, current)) {
+      return "flex size-8 shrink-0 items-center justify-center rounded-md bg-primary-foreground/15 text-primary-foreground [&_ng-icon]:size-4";
+    }
+    return this.lifecycleIconWellClass(target);
+  }
+
+  protected typeVoyageIcon(type: TypeVoyage): string {
+    switch (type) {
+      case "SIMPLE":
+        return "lucideTruck";
+      case "GROUPAGE":
+        return "lucidePackage";
+      case "RAMASSE":
+        return "lucideInbox";
+      case "DISTRIBUTION":
+        return "lucideShare2";
+      case "NAVETTE":
+        return "lucideRepeat";
+      default: {
+        const _exhaustive: never = type;
+        return _exhaustive;
+      }
+    }
+  }
+
+  protected porteeIcon(portee: Portee): string {
+    return portee === "INTERNATIONAL" ? "lucideGlobe" : "lucideMapPin";
   }
 
   protected onEventType(value: string): void {
@@ -500,6 +808,25 @@ export class VoyageDetailPage {
     } catch (error) {
       this.eventError.set(httpErrorMessage(error));
     }
+  }
+
+  private voyageMapLookup(): {
+    dossiersById: Map<string, Dossier>;
+    sitesById: Map<string, Site>;
+  } | null {
+    if (!(this.dossiers.hasValue() && this.sites.hasValue())) {
+      return null;
+    }
+    return {
+      dossiersById: new Map(
+        this.dossiers
+          .value()
+          .content.map((dossier) => [dossier.id, dossier] as const)
+      ),
+      sitesById: new Map(
+        this.sites.value().content.map((site) => [site.id, site] as const)
+      ),
+    };
   }
 
   private parseEventPosition(): GeoPoint | null | undefined {

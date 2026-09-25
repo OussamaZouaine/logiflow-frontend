@@ -27,6 +27,7 @@ import {
   lucideTruck,
   lucideX,
 } from "@ng-icons/lucide";
+import { ZardTableImports } from "@/shared/components/table/table.imports";
 import { ZardAlertComponent } from "@/shared/components/alert";
 import { ZardBadgeComponent } from "@/shared/components/badge";
 import type { ZardBadgeTypeVariants } from "@/shared/components/badge/badge.variants";
@@ -44,6 +45,7 @@ import { DemoSessionService } from "../core/auth/demo-session";
 import { VOYAGES_PLAN_ROLES } from "../core/auth/role";
 import type { Dossier } from "../dossiers/dossier";
 import { filterByStatut, statutOptionsFrom } from "../shared/ui/list-filter";
+import { voyageStatutIcon } from "../shared/ui/list-statut-icons";
 import { ListEmptyState } from "../shared/ui/list-empty-state";
 import {
   ListTableSkeleton,
@@ -63,6 +65,7 @@ import {
 import { ListPagination } from "../shared/ui/list-pagination";
 import { ListSearchBar } from "../shared/ui/list-search-bar";
 import { ListStatutFilter } from "../shared/ui/list-statut-filter";
+import { ListToolbarCta } from "../shared/ui/list-toolbar-cta";
 import type { Site } from "../sites/site";
 import { apercuToneToBadgeType } from "../shared/ui/apercu-zard";
 import { voyageStatutTone } from "../tableau/apercu";
@@ -102,12 +105,14 @@ const LOOKUP_PAGE_SIZE = 100;
     ZardCardTitleComponent,
     ListSearchBar,
     ListStatutFilter,
+    ListToolbarCta,
     ListPagination,
     ListEmptyState,
     ListRowKeyboard,
     ListTableSkeleton,
     MapAsideSkeleton,
     GeoMarkersMap,
+    ...ZardTableImports,
   ],
   selector: "app-voyages-page",
   templateUrl: "./voyages-page.html",
@@ -147,7 +152,8 @@ export class VoyagesPage {
   protected readonly voyageStatutTone = voyageStatutTone;
   protected readonly statutOptions = statutOptionsFrom(
     STATUT_VOYAGES,
-    statutVoyageLabel
+    statutVoyageLabel,
+    voyageStatutIcon
   );
   protected readonly pageSizeOptions = LIST_PAGE_SIZE_OPTIONS;
   protected readonly pageSize = signal(DEFAULT_LIST_PAGE_SIZE);

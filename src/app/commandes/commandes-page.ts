@@ -12,6 +12,7 @@ import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
 import { filterByStatut, statutOptionsFrom } from "../shared/ui/list-filter";
+import { commandeStatutIcon } from "../shared/ui/list-statut-icons";
 import { ListEmptyState } from "../shared/ui/list-empty-state";
 import { ListTableSkeleton } from "../shared/ui/list-table-skeleton";
 import {
@@ -27,9 +28,19 @@ import {
   ListRowKeyboard,
   syncListKeyboardActiveId,
 } from "../shared/ui/list-row-keyboard";
-import { ListStatutFilter } from "../shared/ui/list-statut-filter";
+import {
+  ListStatutFilter,
+  statutIconForValue,
+} from "../shared/ui/list-statut-filter";
+import { NgIcon } from "@ng-icons/core";
+import {
+  DESTINATION_NAV_ICON,
+  LIST_TABLE_ROW_ICON_PROVIDERS,
+} from "../shared/ui/list-table-row-icons";
+import { ListToolbarCta } from "../shared/ui/list-toolbar-cta";
 import { StatutChip } from "../shared/ui/statut-chip";
 import { commandeStatutTone } from "../tableau/apercu";
+import { ZardTableImports } from "@/shared/components/table/table.imports";
 import {
   type Commande,
   formatDate,
@@ -40,17 +51,21 @@ import {
 
 @Component({
   imports: [
+    NgIcon,
     RouterLink,
     StatutChip,
     ListSearchBar,
     ListStatutFilter,
+    ListToolbarCta,
     ListPagination,
     ListEmptyState,
     ListRowKeyboard,
     ListTableSkeleton,
+    ...ZardTableImports,
   ],
   selector: "app-commandes-page",
   templateUrl: "./commandes-page.html",
+  viewProviders: [LIST_TABLE_ROW_ICON_PROVIDERS],
 })
 export class CommandesPage {
   private readonly route = inject(ActivatedRoute);
@@ -63,8 +78,10 @@ export class CommandesPage {
   protected readonly commandeStatutTone = commandeStatutTone;
   protected readonly statutOptions = statutOptionsFrom(
     STATUT_COMMANDES,
-    statutCommandeLabel
+    statutCommandeLabel,
+    commandeStatutIcon
   );
+  protected readonly rowIcon = DESTINATION_NAV_ICON.commandes;
   protected readonly searchDraft = signal("");
   protected readonly search = signal("");
   protected readonly statutFilter = signal<string | null>(null);
@@ -121,6 +138,10 @@ export class CommandesPage {
     effect(() => {
       syncListKeyboardActiveId(this.keyboardRows(), this.activeRowId);
     });
+  }
+
+  protected statutChipIcon(statut: string): string | null {
+    return statutIconForValue(this.statutOptions, statut);
   }
 
   protected clearFilters(): void {

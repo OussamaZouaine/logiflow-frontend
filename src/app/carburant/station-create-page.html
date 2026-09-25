@@ -1,11 +1,11 @@
-<app-form-page-header
-  description="Le code ne se modifie plus ensuite."
-  listLabel="Stations"
-  listLink="/carburant/stations"
-  title="Nouvelle station"
-/>
+<div class="inner-page fiche-page">
+  <app-form-page-header
+    description="Le code ne se modifie plus ensuite."
+    icon="lucideFuel"
+    title="Nouvelle station"
+  />
 
-<form (submit)="onSubmit($event)" class="form-page max-w-lg" novalidate>
+  <form (submit)="onSubmit($event)" class="form-page max-w-lg" novalidate>
   <app-form-validation-summary
     [show]="createForm().touched() && createForm().invalid()"
   />
@@ -56,12 +56,12 @@
   <div class="alert-panel" role="alert">{{ formError() }}</div>
   }
 
-  <app-form-actions>
-    <button class="btn-primary pressable min-h-11 px-5" type="submit">
-      Enregistrer
-    </button>
-    <a class="btn-outline pressable min-h-11 px-5" routerLink="/carburant/stations">
-      Annuler
-    </a>
-  </app-form-actions>
-</form>
+    <app-form-actions [inline]="true">
+      <button class="btn-toolbar pressable" type="submit">
+        <ng-icon aria-hidden="true" class="btn-toolbar__icon" name="lucideCheck" />
+        <span>Enregistrer</span>
+      </button>
+      <a class="btn-outline pressable" routerLink="/carburant/stations">Annuler</a>
+    </app-form-actions>
+  </form>
+</div>

@@ -1,4 +1,7 @@
-import { destinationsForRoles } from "./work-destination";
+import {
+  destinationNavGroupsForRoles,
+  destinationsForRoles,
+} from "./work-destination";
 
 describe("destinationsForRoles", () => {
   it("gives a chauffeur Voyages and Carburant", () => {
@@ -33,5 +36,21 @@ describe("destinationsForRoles", () => {
       (destination) => destination.id
     );
     expect(ids).not.toContain("dossiers");
+  });
+});
+
+describe("destinationNavGroupsForRoles", () => {
+  it("omits empty sections and preserves display order", () => {
+    const groups = destinationNavGroupsForRoles(["CHAUFFEUR"]);
+    expect(groups.map((g) => g.section)).toEqual(["Flotte"]);
+    expect(groups[0].items.map((d) => d.id)).toEqual(["voyages", "carburant"]);
+  });
+
+  it("groups admin destinations by section without duplicates", () => {
+    const groups = destinationNavGroupsForRoles(["ADMINISTRATEUR"]);
+    const flatIds = groups.flatMap((g) => g.items.map((d) => d.id));
+    expect(flatIds).toHaveLength(11);
+    expect(new Set(flatIds).size).toBe(11);
+    expect(groups[0].section).toBe("Référentiel");
   });
 });

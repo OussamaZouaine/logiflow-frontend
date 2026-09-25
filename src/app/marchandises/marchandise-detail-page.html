@@ -1,5 +1,5 @@
-<div class="fiche-page">
-  <app-fiche-header listLabel="Marchandises" listLink="/marchandises">
+<div class="inner-page fiche-page">
+  <app-fiche-header icon="lucidePackage">
     @if (marchandise.isLoading()) {
     <p class="fiche-load-hint" role="status">Chargement…</p>
     } @else if (marchandise.error()) {
@@ -10,6 +10,7 @@
     } @else if (marchandise.hasValue()) {
     <app-fiche-title-row [mono]="true" [title]="marchandise.value().code">
       <app-statut-chip
+        [icon]="actifIcon(marchandise.value().actif)"
         [label]="actifLabel(marchandise.value().actif)"
         [tone]="actifTone(marchandise.value().actif)"
       />
@@ -52,7 +53,12 @@
       class="btn-danger-outline pressable w-fit"
       type="button"
     >
-      Désactiver
+      <ng-icon
+        aria-hidden="true"
+        class="size-3.75 shrink-0 opacity-90"
+        name="lucideCircleOff"
+      />
+      <span>Désactiver</span>
     </button>
   </app-fiche-danger-zone>
   } @else {

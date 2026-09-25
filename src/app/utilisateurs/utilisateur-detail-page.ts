@@ -2,11 +2,13 @@ import { httpResource } from "@angular/common/http";
 import {
   Component,
   computed,
+  DestroyRef,
   effect,
   inject,
   input,
   signal,
 } from "@angular/core";
+import { bindShellBreadcrumbLeaf } from "../core/nav/shell-breadcrumb-leaf";
 import { FormField, form, required, submit } from "@angular/forms/signals";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
@@ -14,7 +16,10 @@ import { type Role, roleLabel } from "../core/auth/role";
 import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
 import { ToastService } from "../shared/ui/toast";
 import { firstFieldError } from "../core/forms/first-field-error";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import { lucideCheck, lucideCircleOff } from "@ng-icons/lucide";
 import {
+  actifIcon,
   actifLabel,
   actifTone,
   StatutChip,
@@ -31,16 +36,19 @@ import {
 import { UtilisateurApi } from "./utilisateur-api";
 
 @Component({
-  imports: [FormField, StatutChip, ...FICHE_PAGE_IMPORTS],
+  imports: [FormField, NgIcon, StatutChip, ...FICHE_PAGE_IMPORTS],
   selector: "app-utilisateur-detail-page",
   templateUrl: "./utilisateur-detail-page.html",
+  viewProviders: [provideIcons({ lucideCheck, lucideCircleOff })],
 })
 export class UtilisateurDetailPage {
   private readonly api = inject(UtilisateurApi);
   private readonly toast = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly id = input.required<string>();
 
+  protected readonly actifIcon = actifIcon;
   protected readonly actifLabel = actifLabel;
   protected readonly actifTone = actifTone;
   protected readonly roles = UTILISATEUR_ROLES;
@@ -69,6 +77,13 @@ export class UtilisateurDetailPage {
   private seededForId = "";
 
   constructor() {
+    bindShellBreadcrumbLeaf(
+      this.destroyRef,
+      computed(() =>
+        this.utilisateur.hasValue() ? this.utilisateur.value().login : null
+      )
+    );
+
     effect(() => {
       const id = this.id();
       const current = this.utilisateur.value();

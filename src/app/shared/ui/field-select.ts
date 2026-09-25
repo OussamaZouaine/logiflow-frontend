@@ -11,11 +11,12 @@ import {
 } from "@angular/core";
 import { NG_VALUE_ACCESSOR, type ControlValueAccessor } from "@angular/forms";
 import type { ClassValue } from "clsx";
+import { NgIcon } from "@ng-icons/core";
 import {
   ZardSelectItemComponent,
 } from "@/shared/components/select/select-item.component";
 import { ZardSelectComponent } from "@/shared/components/select/select.component";
-import type { ZardSelectPositionVariants } from "@/shared/components/select/select.variants";
+import type { ZardSelectPositionVariants, ZardSelectPreferOverlaySideVariants } from "@/shared/components/select/select.variants";
 import { mergeClasses } from "@/shared/utils/merge-classes";
 
 /** Sentinel for optional selects (Zard rejects empty string item values). */
@@ -23,6 +24,7 @@ export const FIELD_SELECT_NONE = "__none__";
 
 export interface FieldSelectOption {
   disabled?: boolean;
+  icon?: string;
   label: string;
   value: string;
 }
@@ -49,24 +51,39 @@ export function withNoneSelectOption(
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   selector: "app-field-select",
-  imports: [ZardSelectComponent, ZardSelectItemComponent],
+  imports: [NgIcon, ZardSelectComponent, ZardSelectItemComponent],
   template: `
-    <z-select
-      [attr.id]="inputId()"
-      [class]="selectClasses()"
-      [zDisabled]="isDisabled()"
-      [zInvalid]="invalid() ?? false"
-      [zPlaceholder]="placeholder()"
-      [zPosition]="position()"
-      [zValue]="internalValue()"
-      (zValueChange)="onSelectChange($event)"
-    >
-      @for (option of options(); track option.value) {
-        <z-select-item [zDisabled]="option.disabled ?? false" [zValue]="option.value">
-          {{ option.label }}
-        </z-select-item>
+    <div class="relative w-full">
+      @if (selectedOption()?.icon; as iconName) {
+        <ng-icon
+          [name]="iconName"
+          aria-hidden="true"
+          class="pointer-events-none absolute top-1/2 left-3 z-10 size-4 shrink-0 -translate-y-1/2 opacity-80"
+        />
       }
-    </z-select>
+      <z-select
+        [attr.id]="inputId()"
+        [class]="selectClasses()"
+        [zDisabled]="isDisabled()"
+        [zInvalid]="invalid() ?? false"
+        [zPlaceholder]="placeholder()"
+        [zPosition]="position()"
+        [zPreferOverlaySide]="preferOverlaySide()"
+        [zValue]="internalValue()"
+        (zValueChange)="onSelectChange($event)"
+      >
+        @for (option of options(); track option.value) {
+          <z-select-item [zDisabled]="option.disabled ?? false" [zValue]="option.value">
+            <span class="inline-flex items-center gap-2">
+              @if (option.icon) {
+                <ng-icon [name]="option.icon" aria-hidden="true" class="size-4 shrink-0 opacity-80" />
+              }
+              <span>{{ option.label }}</span>
+            </span>
+          </z-select-item>
+        }
+      </z-select>
+    </div>
   `,
   providers: [
     {
@@ -81,6 +98,7 @@ export class FieldSelectComponent implements ControlValueAccessor {
   readonly placeholder = input("Choisir…");
   readonly invalid = input<boolean | null>(null);
   readonly position = input<ZardSelectPositionVariants>("popper");
+  readonly preferOverlaySide = input<ZardSelectPreferOverlaySideVariants>("auto");
   readonly inputClass = input<ClassValue>("");
   readonly options = input<readonly FieldSelectOption[]>([]);
   /** Standalone binding when `[formField]` is not used. */
@@ -93,9 +111,17 @@ export class FieldSelectComponent implements ControlValueAccessor {
   protected readonly selectClasses = computed(() =>
     mergeClasses(
       "w-full [&_[data-slot=select-trigger]]:min-h-11 [&_[data-slot=select-trigger]]:h-auto",
+      this.selectedOption()?.icon
+        ? "[&_[data-slot=select-trigger]]:pl-10"
+        : "",
       this.inputClass()
     )
   );
+
+  protected readonly selectedOption = computed(() => {
+    const value = this.internalValue();
+    return this.options().find((option) => option.value === value);
+  });
 
   private onChange: (value: string) => void = () => undefined;
   private onTouched: () => void = () => undefined;

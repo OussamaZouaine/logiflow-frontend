@@ -1,138 +1,138 @@
-<app-form-page-header
-  description="Le code ne se modifie plus ensuite."
-  listLabel="Sites"
-  listLink="/sites"
-  title="Nouveau site"
-/>
-
-<form (submit)="onSubmit($event)" class="form-page" novalidate>
-  <app-form-validation-summary
-    [show]="createForm().touched() && createForm().invalid()"
+<div class="inner-page fiche-page--wide">
+  <app-form-page-header
+    description="Le code ne se modifie plus ensuite."
+    icon="lucideMapPin"
+    title="Nouveau site"
   />
 
-  <div class="form-page__layout form-page__layout--split">
-    <app-form-section title="Identité">
-      <app-form-field
-        [error]="
-          showFieldError(createForm.code())
-            ? firstFieldError(createForm.code().errors())
-            : null
-        "
-        inputId="code"
-        label="Code"
-      >
-        <input
-          [attr.aria-invalid]="showFieldError(createForm.code()) || null"
-          [class]="fieldClasses(createForm.code())"
-          [formField]="createForm.code"
-          autocomplete="off"
-          id="code"
-          placeholder="SITE-LYON-01"
-          type="text"
-        />
-      </app-form-field>
+  <form (submit)="onSubmit($event)" class="form-page" novalidate>
+    <app-form-validation-summary
+      [show]="createForm().touched() && createForm().invalid()"
+    />
 
-      <app-form-field
-        [error]="
-          showFieldError(createForm.libelle())
-            ? firstFieldError(createForm.libelle().errors())
-            : null
-        "
-        inputId="libelle"
-        label="Libellé"
-      >
-        <input
-          [attr.aria-invalid]="showFieldError(createForm.libelle()) || null"
-          [class]="fieldClasses(createForm.libelle())"
-          [formField]="createForm.libelle"
-          id="libelle"
-          type="text"
-        />
-      </app-form-field>
-
-      <app-form-field inputId="adresse" label="Adresse">
-        <input
-          [formField]="createForm.adresse"
-          class="field"
-          id="adresse"
-          type="text"
-        />
-      </app-form-field>
-
-      <label class="flex items-center gap-2 text-sm text-ink">
-        <input
-          (change)="onPoidsLourd($event)"
-          [checked]="draft().interditPoidsLourd"
-          class="size-4 rounded accent-pine"
-          type="checkbox"
-        >
-        Interdit aux poids lourds
-      </label>
-    </app-form-section>
-
-    <app-form-section
-      description="Cliquez sur la carte ou déplacez le repère. Les coordonnées se mettent à jour automatiquement."
-      title="Localisation"
-    >
-      <app-site-localisation-map
-        (coordinatesChange)="onLocalisationChange($event)"
-        [latitude]="draft().latitude"
-        [longitude]="draft().longitude"
-        [showHeader]="false"
-      />
-
-      <div class="form-page__coords fiche-inset">
+    <div class="form-page__layout form-page__layout--split">
+      <app-form-section title="Identité">
         <app-form-field
           [error]="
-            showFieldError(createForm.latitude())
-              ? firstFieldError(createForm.latitude().errors())
+            showFieldError(createForm.code())
+              ? firstFieldError(createForm.code().errors())
               : null
           "
-          inputId="latitude"
-          label="Latitude"
+          inputId="code"
+          label="Code"
         >
           <input
-            [attr.aria-invalid]="showFieldError(createForm.latitude()) || null"
-            [class]="fieldClasses(createForm.latitude())"
-            [formField]="createForm.latitude"
-            id="latitude"
-            step="0.0001"
-            type="number"
+            [attr.aria-invalid]="showFieldError(createForm.code()) || null"
+            [class]="fieldClasses(createForm.code())"
+            [formField]="createForm.code"
+            autocomplete="off"
+            id="code"
+            placeholder="SITE-LYON-01"
+            type="text"
           />
         </app-form-field>
 
         <app-form-field
           [error]="
-            showFieldError(createForm.longitude())
-              ? firstFieldError(createForm.longitude().errors())
+            showFieldError(createForm.libelle())
+              ? firstFieldError(createForm.libelle().errors())
               : null
           "
-          inputId="longitude"
-          label="Longitude"
+          inputId="libelle"
+          label="Libellé"
         >
           <input
-            [attr.aria-invalid]="showFieldError(createForm.longitude()) || null"
-            [class]="fieldClasses(createForm.longitude())"
-            [formField]="createForm.longitude"
-            id="longitude"
-            step="0.0001"
-            type="number"
+            [attr.aria-invalid]="showFieldError(createForm.libelle()) || null"
+            [class]="fieldClasses(createForm.libelle())"
+            [formField]="createForm.libelle"
+            id="libelle"
+            type="text"
           />
         </app-form-field>
-      </div>
-    </app-form-section>
-  </div>
 
-  @if (formError()) {
-  <div class="alert-panel" role="alert">{{ formError() }}</div>
-  }
+        <app-form-field inputId="adresse" label="Adresse">
+          <input
+            [formField]="createForm.adresse"
+            class="field"
+            id="adresse"
+            type="text"
+          />
+        </app-form-field>
 
-  <app-form-actions>
-    <button class="btn-primary pressable min-h-11 px-5" type="submit">
-      Enregistrer
-    </button>
-    <a class="btn-outline pressable min-h-11 px-5" routerLink="/sites">
-      Annuler
-    </a>
-  </app-form-actions>
-</form>
+        <label class="flex items-center gap-2 text-sm text-ink">
+          <input
+            (change)="onPoidsLourd($event)"
+            [checked]="draft().interditPoidsLourd"
+            class="size-4 rounded accent-pine"
+            type="checkbox"
+          >
+          Interdit aux poids lourds
+        </label>
+      </app-form-section>
+
+      <app-form-section
+        description="Cliquez sur la carte ou déplacez le repère. Les coordonnées se mettent à jour automatiquement."
+        title="Localisation"
+      >
+        <app-site-localisation-map
+          (coordinatesChange)="onLocalisationChange($event)"
+          [latitude]="draft().latitude"
+          [longitude]="draft().longitude"
+          [showHeader]="false"
+        />
+
+        <div class="form-page__coords fiche-inset">
+          <app-form-field
+            [error]="
+              showFieldError(createForm.latitude())
+                ? firstFieldError(createForm.latitude().errors())
+                : null
+            "
+            inputId="latitude"
+            label="Latitude"
+          >
+            <input
+              [attr.aria-invalid]="showFieldError(createForm.latitude()) || null"
+              [class]="fieldClasses(createForm.latitude())"
+              [formField]="createForm.latitude"
+              id="latitude"
+              step="0.0001"
+              type="number"
+            />
+          </app-form-field>
+
+          <app-form-field
+            [error]="
+              showFieldError(createForm.longitude())
+                ? firstFieldError(createForm.longitude().errors())
+                : null
+            "
+            inputId="longitude"
+            label="Longitude"
+          >
+            <input
+              [attr.aria-invalid]="showFieldError(createForm.longitude()) || null"
+              [class]="fieldClasses(createForm.longitude())"
+              [formField]="createForm.longitude"
+              id="longitude"
+              step="0.0001"
+              type="number"
+            />
+          </app-form-field>
+        </div>
+      </app-form-section>
+    </div>
+
+    @if (formError()) {
+    <div class="alert-panel" role="alert">{{ formError() }}</div>
+    }
+
+    <app-form-actions [inline]="true">
+      <button class="btn-toolbar pressable" type="submit">
+        <ng-icon aria-hidden="true" class="btn-toolbar__icon" name="lucideCheck" />
+        <span>Enregistrer</span>
+      </button>
+      <a class="btn-outline pressable" routerLink="/sites">Annuler</a>
+    </app-form-actions>
+  </form>
+</div>

@@ -1,5 +1,7 @@
 import { httpResource } from "@angular/common/http";
 import { Component, computed, inject, signal } from "@angular/core";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import { lucideCheck } from "@ng-icons/lucide";
 import {
   FormField,
   form,
@@ -45,9 +47,10 @@ const marchandisesLookupRequest = {
 };
 
 @Component({
-  imports: [FormField, RouterLink, ...FORM_PAGE_IMPORTS],
+  imports: [FormField, NgIcon, RouterLink, ...FORM_PAGE_IMPORTS],
   selector: "app-commande-create-page",
   templateUrl: "./commande-create-page.html",
+  viewProviders: [provideIcons({ lucideCheck })],
 })
 export class CommandeCreatePage {
   private readonly api = inject(CommandeApi);

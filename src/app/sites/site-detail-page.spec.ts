@@ -32,9 +32,9 @@ describe("SiteDetailPage", () => {
       )
       .flush({
         actif: true,
-        adresse: "10 rue de la Logistique, 75018 Paris",
+        adresse: "Zone industrielle Ain Sebaa, Casablanca 20250",
         clientId: null,
-        code: "SITE-DEMO-PARIS",
+        code: "SITE-DEMO-CASA",
         contraintesAcces: {
           hauteurMaxMetres: null,
           instructions: null,
@@ -42,15 +42,15 @@ describe("SiteDetailPage", () => {
           poidsMaxTonnes: null,
         },
         id: "22222222-2222-2222-2222-222222222222",
-        libelle: "Entrepôt Paris Nord",
-        localisation: { latitude: 48.8566, longitude: 2.3522 },
+        libelle: "Hub Casablanca Ain Sebaa",
+        localisation: { latitude: 33.5731, longitude: -7.5898 },
       });
 
     await fixture.whenStable();
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain("SITE-DEMO-PARIS");
+    expect(compiled.textContent).toContain("SITE-DEMO-CASA");
     expect(compiled.textContent).toContain("Désactiver");
     http.verify();
   });

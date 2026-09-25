@@ -2,21 +2,36 @@ import { httpResource } from "@angular/common/http";
 import { Component, computed, inject } from "@angular/core";
 import { RouterLink } from "@angular/router";
 import { NgIcon, provideIcons } from "@ng-icons/core";
+import { lucideChevronRight, lucideInbox } from "@ng-icons/lucide";
+import { DESTINATION_NAV_ICON } from "../core/nav/nav-icon";
 import {
-  lucideChevronRight,
-  lucideClipboardList,
-  lucideContainer,
-  lucideFolderOpen,
-  lucideInbox,
-  lucideMapPin,
-  lucidePackage,
-  lucideRoute,
-  lucideTruck,
-  lucideUsers,
-  lucideWrench,
-} from "@ng-icons/lucide";
+	ZardCardComponent,
+	ZardCardContentComponent,
+	ZardCardDescriptionComponent,
+	ZardCardHeaderComponent,
+	ZardCardTitleComponent,
+} from "@/shared/components/card/card.component";
+import { ZardChartLegendComponent } from "@/shared/components/chart/chart-legend.component";
+import { ZardChartTooltipComponent } from "@/shared/components/chart/chart-tooltip.component";
+import { ZardChartComponent } from "@/shared/components/chart/chart.component";
+import type { ZardChartConfig, ZardChartDatum } from "@/shared/components/chart/chart.types";
+import { InnerPageHeader } from "../shared/ui/inner-page-header";
+import { StatutChip } from "../shared/ui/statut-chip";
+import {
+	APERCU_BAR_LABEL_KEY,
+	APERCU_PIE_NAME_KEY,
+	APERCU_PIE_VALUE_KEY,
+	apercuBarSeriesKeys,
+	pickSidePanelChartTile,
+	statutSlicesToBarData,
+	statutSlicesToPieData,
+	zardConfigFromSlices,
+} from "./apercu-charts";
+import { LIST_STATUT_FILTER_ICON_PROVIDERS } from "../shared/ui/list-statut-icons";
+import {
+	LIST_TABLE_ROW_ICON_PROVIDERS,
+} from "../shared/ui/list-table-row-icons";
 import { environment } from "../../environments/environment";
-import type { PriseCarburant } from "../carburant/prise-carburant";
 import type { PageResponse } from "../core/api/page-response";
 import { DemoSessionService } from "../core/auth/demo-session";
 import { roleLabel } from "../core/auth/role";
@@ -25,237 +40,306 @@ import type { OrdreTravail } from "../maintenance/maintenance";
 import type { Site } from "../sites/site";
 import type { Utilisateur } from "../utilisateurs/utilisateur";
 import {
-  APERCU_CHART_PAGE_SIZE,
-  APERCU_COUNT_PAGE_SIZE,
-  type ApercuCountableId,
-  apercuApiPath,
-  apercuDestinations,
-  apercuToneBorderClass,
-  apercuToneClass,
-  commandeStatutSlices,
-  dossierStatutSlices,
-  priseStatutSlices,
-  type StatutSlice,
-  shouldShowStatutBreakdown,
-  vehiculeStatutSlices,
-  voyageStatutSlices,
+	APERCU_CHART_PAGE_SIZE,
+	APERCU_COUNT_PAGE_SIZE,
+	type ApercuCountableId,
+	apercuApiPath,
+	apercuDestinations,
+	apercuToneBorderClass,
+	commandeStatutSlices,
+	dossierStatutSlices,
+	priseStatutSlices,
+	type StatutSlice,
+	shouldShowStatutBreakdown,
+	vehiculeStatutSlices,
+	voyageStatutSlices,
 } from "./apercu";
-import {
-  fileDuJourIcon,
-  fileDuJourToneCounts,
-  groupFileDuJourByTone,
-} from "./file-du-jour";
+import type { PriseCarburant } from "../carburant/prise-carburant";
 import { FileDuJourStore } from "./file-du-jour-store";
+import {
+	fileDuJourIcon,
+	fileDuJourToneCounts,
+	groupFileDuJourByTone,
+} from "./file-du-jour";
 
 export interface ApercuTile {
-  count: number | null;
-  label: string;
-  loading: boolean;
-  path: string;
-  section: string;
-  slices: StatutSlice[] | null;
+	count: number | null;
+	destinationId: ApercuCountableId;
+	icon: string;
+	label: string;
+	loading: boolean;
+	path: string;
+	section: string;
+	slices: StatutSlice[] | null;
 }
 
 @Component({
-  imports: [NgIcon, RouterLink],
-  providers: [
-    provideIcons({
-      lucideChevronRight,
-      lucideClipboardList,
-      lucideContainer,
-      lucideFolderOpen,
-      lucideInbox,
-      lucideMapPin,
-      lucidePackage,
-      lucideRoute,
-      lucideTruck,
-      lucideUsers,
-      lucideWrench,
-    }),
-  ],
-  selector: "app-tableau-de-bord-page",
-  styleUrl: "./tableau-de-bord-page.css",
-  templateUrl: "./tableau-de-bord-page.html",
+	imports: [
+		InnerPageHeader,
+		NgIcon,
+		RouterLink,
+		StatutChip,
+		ZardCardComponent,
+		ZardCardContentComponent,
+		ZardCardDescriptionComponent,
+		ZardCardHeaderComponent,
+		ZardCardTitleComponent,
+		ZardChartComponent,
+		ZardChartTooltipComponent,
+		ZardChartLegendComponent,
+	],
+	viewProviders: [
+		provideIcons({
+			lucideChevronRight,
+			lucideInbox,
+		}),
+		LIST_TABLE_ROW_ICON_PROVIDERS,
+		LIST_STATUT_FILTER_ICON_PROVIDERS,
+	],
+	selector: "app-tableau-de-bord-page",
+	styleUrl: "./tableau-de-bord-page.css",
+	templateUrl: "./tableau-de-bord-page.html",
 })
 export class TableauDeBordPage {
-  private readonly session = inject(DemoSessionService);
-  private readonly fileDuJourStore = inject(FileDuJourStore);
+	private readonly session = inject(DemoSessionService);
+	private readonly fileDuJourStore = inject(FileDuJourStore);
 
-  protected readonly apercuToneBorderClass = apercuToneBorderClass;
-  protected readonly apercuToneClass = apercuToneClass;
-  protected readonly fileDuJourIcon = fileDuJourIcon;
+	protected readonly apercuToneBorderClass = apercuToneBorderClass;
+	protected readonly fileDuJourIcon = fileDuJourIcon;
+	protected readonly barLabelKey = APERCU_BAR_LABEL_KEY;
+	protected readonly pieNameKey = APERCU_PIE_NAME_KEY;
+	protected readonly barSeriesKeys = apercuBarSeriesKeys();
+	protected readonly pieSeriesKeys = [APERCU_PIE_VALUE_KEY] as const;
 
-  protected readonly login = computed(
-    () => this.session.session()?.login ?? ""
-  );
+	protected readonly login = computed(
+		() => this.session.session()?.login ?? "",
+	);
 
-  protected readonly roleName = computed(() => {
-    const role = this.session.session()?.roles[0];
-    return role ? roleLabel(role) : "";
-  });
+	protected readonly roleName = computed(() => {
+		const role = this.session.session()?.roles[0];
+		return role ? roleLabel(role) : "";
+	});
 
-  protected readonly destinations = computed(() =>
-    destinationsForRoles(this.session.session()?.roles ?? [])
-  );
+	protected readonly pageDescription = computed(() => {
+		const login = this.login();
+		const role = this.roleName();
+		if (login && role) {
+			return `${login} · ${role} — Aperçu des modules accessibles, puis file du jour.`;
+		}
+		if (login) {
+			return `${login} — Aperçu des modules accessibles, puis file du jour.`;
+		}
+		return "Aperçu des modules accessibles, puis file du jour.";
+	});
 
-  protected readonly countableDestinations = computed(() =>
-    apercuDestinations(this.destinations())
-  );
+	protected readonly fileInboxSkeletonRows = [0, 1, 2] as const;
 
-  protected readonly sites = httpResource<PageResponse<Site>>(() =>
-    this.listRequest("sites", APERCU_COUNT_PAGE_SIZE)
-  );
+	protected readonly destinations = computed(() =>
+		destinationsForRoles(this.session.session()?.roles ?? []),
+	);
 
-  protected readonly vehicules = this.fileDuJourStore.vehicules;
+	protected readonly countableDestinations = computed(() =>
+		apercuDestinations(this.destinations()),
+	);
 
-  protected readonly voyages = this.fileDuJourStore.voyages;
+	protected readonly sites = httpResource<PageResponse<Site>>(() =>
+		this.listRequest("sites", APERCU_COUNT_PAGE_SIZE),
+	);
 
-  protected readonly commandes = this.fileDuJourStore.commandes;
+	protected readonly vehicules = this.fileDuJourStore.vehicules;
 
-  protected readonly dossiers = this.fileDuJourStore.dossiers;
+	protected readonly voyages = this.fileDuJourStore.voyages;
 
-  protected readonly utilisateurs = httpResource<PageResponse<Utilisateur>>(
-    () => this.listRequest("utilisateurs", APERCU_COUNT_PAGE_SIZE)
-  );
+	protected readonly commandes = this.fileDuJourStore.commandes;
 
-  protected readonly ordresTravail = httpResource<PageResponse<OrdreTravail>>(
-    () => this.listRequest("maintenance", APERCU_COUNT_PAGE_SIZE)
-  );
+	protected readonly dossiers = this.fileDuJourStore.dossiers;
 
-  protected readonly prisesCarburant = httpResource<
-    PageResponse<PriseCarburant>
-  >(() => this.listRequest("carburant", APERCU_CHART_PAGE_SIZE));
+	protected readonly utilisateurs = httpResource<PageResponse<Utilisateur>>(
+		() => this.listRequest("utilisateurs", APERCU_COUNT_PAGE_SIZE),
+	);
 
-  protected readonly fileDuJour = this.fileDuJourStore.items;
+	protected readonly ordresTravail = httpResource<PageResponse<OrdreTravail>>(
+		() => this.listRequest("maintenance", APERCU_COUNT_PAGE_SIZE),
+	);
 
-  protected readonly fileDuJourLoading = this.fileDuJourStore.loading;
+	protected readonly prisesCarburant = httpResource<
+		PageResponse<PriseCarburant>
+	>(() => this.listRequest("carburant", APERCU_CHART_PAGE_SIZE));
 
-  protected readonly fileDuJourSummary = this.fileDuJourStore.summary;
+	protected readonly fileDuJour = this.fileDuJourStore.items;
 
-  protected readonly fileDuJourTiers = computed(() =>
-    groupFileDuJourByTone(this.fileDuJour())
-  );
+	protected readonly fileDuJourLoading = this.fileDuJourStore.loading;
 
-  protected readonly fileDuJourToneCounts = computed(() =>
-    fileDuJourToneCounts(this.fileDuJour())
-  );
+	protected readonly fileDuJourSummary = this.fileDuJourStore.summary;
 
-  protected readonly tiles = computed((): ApercuTile[] =>
-    this.countableDestinations().map((destination) => {
-      switch (destination.id) {
-        case "sites":
-          return this.countTile(destination, this.sites);
-        case "vehicules":
-          return this.chartTile(
-            destination,
-            this.vehicules,
-            vehiculeStatutSlices
-          );
-        case "voyages":
-          return this.chartTile(destination, this.voyages, voyageStatutSlices);
-        case "commandes":
-          return this.chartTile(
-            destination,
-            this.commandes,
-            commandeStatutSlices
-          );
-        case "dossiers":
-          return this.chartTile(
-            destination,
-            this.dossiers,
-            dossierStatutSlices
-          );
-        case "carburant":
-          return this.chartTile(
-            destination,
-            this.prisesCarburant,
-            priseStatutSlices
-          );
-        case "maintenance":
-          return this.countTile(destination, this.ordresTravail);
-        case "utilisateurs":
-          return this.countTile(destination, this.utilisateurs);
-        default: {
-          const _exhaustive: never = destination.id;
-          return _exhaustive;
-        }
-      }
-    })
-  );
+	protected readonly fileDuJourTiers = computed(() =>
+		groupFileDuJourByTone(this.fileDuJour()),
+	);
 
-  protected fileDuJourSummaryAriaLabel(): string {
-    const summary = this.fileDuJourSummary();
-    if (summary.totalCount <= 0) {
-      return "";
-    }
-    const plural = summary.totalCount === 1 ? "" : "s";
-    return `${summary.totalCount} élément${plural} à traiter`;
-  }
+	protected readonly fileDuJourToneCounts = computed(() =>
+		fileDuJourToneCounts(this.fileDuJour()),
+	);
 
-  protected tileAriaLabel(tile: ApercuTile): string {
-    if (tile.loading) {
-      return `${tile.label}, chargement. Ouvrir le module.`;
-    }
-    if (tile.count === null) {
-      return `${tile.label}, indisponible. Ouvrir le module.`;
-    }
-    return `${tile.label}, ${tile.count}. Ouvrir le module.`;
-  }
+	protected readonly showFileDuJourJump = computed(
+		() => !this.fileDuJourLoading() && this.fileDuJour().length > 0,
+	);
 
-  private listRequest(
-    id: ApercuCountableId,
-    size: number
-  ):
-    | { params: { page: number; q?: string; size: number }; url: string }
-    | undefined {
-    if (
-      !this.countableDestinations().some((destination) => destination.id === id)
-    ) {
-      return undefined;
-    }
-    const needsQuery =
-      id === "sites" || id === "vehicules" || id === "utilisateurs";
-    return {
-      params: needsQuery ? { page: 0, q: "", size } : { page: 0, size },
-      url: `${environment.apiBaseUrl}/${apercuApiPath(id)}`,
-    };
-  }
+	protected readonly sidePanelChartTile = computed(() =>
+		pickSidePanelChartTile(this.tiles()),
+	);
 
-  private countTile(
-    destination: { label: string; path: string; section: string },
-    resource: {
-      isLoading: () => boolean;
-      value: () => PageResponse<unknown> | undefined;
-    }
-  ): ApercuTile {
-    const page = resource.value();
-    return {
-      count: page === undefined ? null : page.totalElements,
-      label: destination.label,
-      loading: resource.isLoading(),
-      path: destination.path,
-      section: destination.section,
-      slices: null,
-    };
-  }
+	protected readonly tiles = computed((): ApercuTile[] =>
+		this.countableDestinations().map((destination) => {
+			switch (destination.id) {
+				case "sites":
+					return this.countTile(destination, this.sites);
+				case "vehicules":
+					return this.chartTile(
+						destination,
+						this.vehicules,
+						vehiculeStatutSlices,
+					);
+				case "voyages":
+					return this.chartTile(destination, this.voyages, voyageStatutSlices);
+				case "commandes":
+					return this.chartTile(
+						destination,
+						this.commandes,
+						commandeStatutSlices,
+					);
+				case "dossiers":
+					return this.chartTile(
+						destination,
+						this.dossiers,
+						dossierStatutSlices,
+					);
+				case "carburant":
+					return this.chartTile(
+						destination,
+						this.prisesCarburant,
+						priseStatutSlices,
+					);
+				case "maintenance":
+					return this.countTile(destination, this.ordresTravail);
+				case "utilisateurs":
+					return this.countTile(destination, this.utilisateurs);
+				default: {
+					const _exhaustive: never = destination.id;
+					return _exhaustive;
+				}
+			}
+		}),
+	);
 
-  private chartTile<T>(
-    destination: { label: string; path: string; section: string },
-    resource: {
-      isLoading: () => boolean;
-      value: () => PageResponse<T> | undefined;
-    },
-    slicesOf: (records: readonly T[]) => StatutSlice[]
-  ): ApercuTile {
-    const page = resource.value();
-    return {
-      count: page === undefined ? null : page.totalElements,
-      label: destination.label,
-      loading: resource.isLoading(),
-      path: destination.path,
-      section: destination.section,
-      slices:
-        page && shouldShowStatutBreakdown(page) ? slicesOf(page.content) : null,
-    };
-  }
+	protected fileDuJourToneChipLabel(count: number, label: string): string {
+		return `${count} ${label}`;
+	}
+
+	protected fileDuJourSummaryAriaLabel(): string {
+		const summary = this.fileDuJourSummary();
+		if (summary.totalCount <= 0) {
+			return "";
+		}
+		const plural = summary.totalCount === 1 ? "" : "s";
+		return `${summary.totalCount} élément${plural} à traiter`;
+	}
+
+	protected chartConfigForSlices(
+		slices: readonly StatutSlice[],
+	): ZardChartConfig {
+		return zardConfigFromSlices(slices);
+	}
+
+	protected barDataForSlices(slices: readonly StatutSlice[]): ZardChartDatum[] {
+		return statutSlicesToBarData(slices);
+	}
+
+	protected pieDataForSlices(slices: readonly StatutSlice[]): ZardChartDatum[] {
+		return statutSlicesToPieData(slices);
+	}
+
+	protected tileAriaLabel(tile: ApercuTile): string {
+		if (tile.loading) {
+			return `${tile.label}, chargement. Ouvrir le module.`;
+		}
+		if (tile.count === null) {
+			return `${tile.label}, indisponible. Ouvrir le module.`;
+		}
+		return `${tile.label}, ${tile.count}. Ouvrir le module.`;
+	}
+
+	private listRequest(
+		id: ApercuCountableId,
+		size: number,
+	):
+		| { params: { page: number; q?: string; size: number }; url: string }
+		| undefined {
+		if (
+			!this.countableDestinations().some((destination) => destination.id === id)
+		) {
+			return undefined;
+		}
+		const needsQuery =
+			id === "sites" || id === "vehicules" || id === "utilisateurs";
+		return {
+			params: needsQuery ? { page: 0, q: "", size } : { page: 0, size },
+			url: `${environment.apiBaseUrl}/${apercuApiPath(id)}`,
+		};
+	}
+
+	private tileIcon(id: ApercuCountableId): string {
+		return DESTINATION_NAV_ICON[id];
+	}
+
+	private countTile(
+		destination: {
+			id: ApercuCountableId;
+			label: string;
+			path: string;
+			section: string;
+		},
+		resource: {
+			isLoading: () => boolean;
+			value: () => PageResponse<unknown> | undefined;
+		},
+	): ApercuTile {
+		const page = resource.value();
+		return {
+			count: page === undefined ? null : page.totalElements,
+			destinationId: destination.id,
+			icon: this.tileIcon(destination.id),
+			label: destination.label,
+			loading: resource.isLoading(),
+			path: destination.path,
+			section: destination.section,
+			slices: null,
+		};
+	}
+
+	private chartTile<T>(
+		destination: {
+			id: ApercuCountableId;
+			label: string;
+			path: string;
+			section: string;
+		},
+		resource: {
+			isLoading: () => boolean;
+			value: () => PageResponse<T> | undefined;
+		},
+		slicesOf: (records: readonly T[]) => StatutSlice[],
+	): ApercuTile {
+		const page = resource.value();
+		return {
+			count: page === undefined ? null : page.totalElements,
+			destinationId: destination.id,
+			icon: this.tileIcon(destination.id),
+			label: destination.label,
+			loading: resource.isLoading(),
+			path: destination.path,
+			section: destination.section,
+			slices:
+				page && shouldShowStatutBreakdown(page) ? slicesOf(page.content) : null,
+		};
+	}
 }

@@ -12,6 +12,7 @@ import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
 import { filterByStatut, statutOptionsFrom } from "../shared/ui/list-filter";
+import { vehiculeStatutIcon } from "../shared/ui/list-statut-icons";
 import { ListEmptyState } from "../shared/ui/list-empty-state";
 import { ListTableSkeleton } from "../shared/ui/list-table-skeleton";
 import { connectListQueryState } from "../shared/ui/list-query-state";
@@ -27,8 +28,18 @@ import {
 } from "../shared/ui/list-page-size";
 import { ListPagination } from "../shared/ui/list-pagination";
 import { ListSearchBar } from "../shared/ui/list-search-bar";
-import { ListStatutFilter } from "../shared/ui/list-statut-filter";
+import {
+  ListStatutFilter,
+  statutIconForValue,
+} from "../shared/ui/list-statut-filter";
+import { NgIcon } from "@ng-icons/core";
+import {
+  DESTINATION_NAV_ICON,
+  LIST_TABLE_ROW_ICON_PROVIDERS,
+} from "../shared/ui/list-table-row-icons";
+import { ListToolbarCta } from "../shared/ui/list-toolbar-cta";
 import { StatutChip } from "../shared/ui/statut-chip";
+import { ZardTableImports } from "@/shared/components/table/table.imports";
 import {
   remorqueCarrosserieLabel,
   remorqueStatutLabel,
@@ -39,17 +50,21 @@ import {
 
 @Component({
   imports: [
+    NgIcon,
     RouterLink,
     StatutChip,
     ListSearchBar,
     ListStatutFilter,
+    ListToolbarCta,
     ListPagination,
     ListEmptyState,
     ListRowKeyboard,
     ListTableSkeleton,
+    ...ZardTableImports,
   ],
   selector: "app-remorques-page",
   templateUrl: "./remorques-page.html",
+  viewProviders: [LIST_TABLE_ROW_ICON_PROVIDERS],
 })
 export class RemorquesPage {
   private readonly route = inject(ActivatedRoute);
@@ -61,8 +76,10 @@ export class RemorquesPage {
   protected readonly remorqueStatutTone = remorqueStatutTone;
   protected readonly statutOptions = statutOptionsFrom(
     VEHICULE_STATUTS,
-    remorqueStatutLabel
+    remorqueStatutLabel,
+    vehiculeStatutIcon
   );
+  protected readonly rowIcon = DESTINATION_NAV_ICON.remorques;
 
   protected readonly searchDraft = signal("");
   protected readonly search = signal("");
@@ -120,6 +137,10 @@ export class RemorquesPage {
     effect(() => {
       syncListKeyboardActiveId(this.keyboardRows(), this.activeRowId);
     });
+  }
+
+  protected statutChipIcon(statut: string): string | null {
+    return statutIconForValue(this.statutOptions, statut);
   }
 
   protected clearFilters(): void {

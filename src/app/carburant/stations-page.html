@@ -1,17 +1,7 @@
 <div class="flex flex-col gap-6">
-  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-    <div>
-      <h1 class="module-page-title">Carburant</h1>
-      <p class="mt-1 text-sm text-muted">Référentiel des stations.</p>
-    </div>
-    <a class="btn-primary pressable" routerLink="/carburant/stations/nouveau">
-      Nouvelle station
-    </a>
-  </div>
-
   <app-carburant-tabs />
 
-  <div class="flex flex-col gap-3">
+  <div class="list-toolbar">
     <app-list-search-bar
       [(draft)]="searchDraft"
       [(query)]="search"
@@ -22,6 +12,10 @@
       [(selected)]="actifFilter"
       [options]="actifOptions"
       ariaLabel="Filtrer par activité"
+    />
+    <app-list-toolbar-cta
+      label="Nouvelle station"
+      link="/carburant/stations/nouveau"
     />
   </div>
 
@@ -62,74 +56,88 @@
     title="Aucune station pour ce filtre"
   />
   } @else if (stations.hasValue()) {
-  <div
-    appListRowKeyboard
-    [(activeId)]="selectedStationId"
-    [rows]="keyboardRows()"
-    aria-label="Liste des stations — flèches pour naviguer, Entrée pour ouvrir"
-    class="list-table-panel"
-  >
-    <table class="w-full min-w-xl text-left text-sm">
-      <thead class="list-table-head">
-        <tr>
-          <th class="px-4 py-3 font-medium" scope="col">Code</th>
-          <th class="px-4 py-3 font-medium" scope="col">Libellé</th>
-          <th class="px-4 py-3 font-medium" scope="col">Adresse</th>
-          <th class="px-4 py-3 font-medium" scope="col">Statut</th>
-          <th class="px-4 py-3 font-medium" scope="col">
-            <span class="sr-only">Actions</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (station of visibleStations(); track station.id) {
-        <tr
-          (click)="selectStation(station.id)"
-          [attr.aria-selected]="selectedStationId() === station.id"
-          [class.bg-pine/5]="selectedStationId() === station.id"
-          class="list-row cursor-pointer border-b border-line last:border-0 hover:bg-canvas"
-        >
-          <td class="px-4 py-3">
-            <a
-              (click)="$event.stopPropagation()"
-              [routerLink]="['/carburant/stations', station.id]"
-              class="font-mono text-xs text-pine underline-offset-2 hover:underline"
-            >
-              {{ station.code }}
-            </a>
-          </td>
-          <td class="px-4 py-3">{{ station.libelle }}</td>
-          <td class="px-4 py-3 text-muted">{{ station.adresse ?? "—" }}</td>
-          <td class="px-4 py-3">
-            <app-statut-chip
-              [label]="actifLabel(station.actif)"
-              [tone]="actifTone(station.actif)"
-            />
-          </td>
-          <td class="px-4 py-3 text-right">
-            <a
-              (click)="$event.stopPropagation()"
-              [routerLink]="['/carburant/stations', station.id]"
-              class="text-sm font-medium text-pine underline-offset-2 hover:underline"
-            >
-              Ouvrir
-            </a>
-          </td>
-        </tr>
-        }
-      </tbody>
-    </table>
-  </div>
+  <div class="list-table-stack">
+    <div
+      appListRowKeyboard
+      [(activeId)]="selectedStationId"
+      [rows]="keyboardRows()"
+      aria-label="Liste des stations — flèches pour naviguer, Entrée pour ouvrir"
+      class="list-table-panel"
+    >
+      <table z-table>
+        <thead z-table-header>
+          <tr z-table-row>
+            <th scope="col" z-table-head>Code</th>
+            <th scope="col" z-table-head>Libellé</th>
+            <th scope="col" z-table-head>Adresse</th>
+            <th scope="col" z-table-head>Statut</th>
+            <th scope="col" z-table-head class="text-right">
+              <span class="sr-only">Actions</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody z-table-body>
+          @for (station of visibleStations(); track station.id) {
+          <tr
+            z-table-row
+            (click)="selectStation(station.id)"
+            [attr.aria-selected]="selectedStationId() === station.id"
+            [class.bg-pine/5]="selectedStationId() === station.id"
+            class="list-row cursor-pointer"
+          >
+            <td z-table-cell>
+              <a
+                (click)="$event.stopPropagation()"
+                [routerLink]="['/carburant/stations', station.id]"
+                class="font-mono text-xs text-pine underline-offset-2 hover:underline"
+              >
+                {{ station.code }}
+              </a>
+            </td>
+            <td z-table-cell>
+              <span class="list-cell-with-icon">
+                <ng-icon
+                  [name]="rowIcon"
+                  aria-hidden="true"
+                  class="list-cell-with-icon__icon"
+                />
+                <span>{{ station.libelle }}</span>
+              </span>
+            </td>
+            <td class="text-muted" z-table-cell>{{ station.adresse ?? "—" }}</td>
+            <td z-table-cell>
+              <app-statut-chip
+                [icon]="actifIcon(station.actif)"
+                [label]="actifLabel(station.actif)"
+                [tone]="actifTone(station.actif)"
+              />
+            </td>
+            <td class="text-right" z-table-cell>
+              <a
+                (click)="$event.stopPropagation()"
+                [routerLink]="['/carburant/stations', station.id]"
+                class="list-row-action list-row-action--with-icon text-sm font-medium text-pine underline-offset-2 hover:underline"
+              >
+                <span>Ouvrir</span>
+                <ng-icon aria-hidden="true" name="lucideArrowRight" />
+              </a>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
 
-  <app-list-pagination
-    [(page)]="page"
-    [pageSize]="pageSize()"
-    (pageSizeChange)="pageSize.set($event); page.set(0)"
-    [pageSizeOptions]="pageSizeOptions"
-    [totalElements]="stations.value().totalElements"
-    [totalPages]="stations.value().totalPages"
-    [visibleCount]="visibleStations().length"
-    itemLabel="station"
-  />
+    <app-list-pagination
+      [(page)]="page"
+      [pageSize]="pageSize()"
+      (pageSizeChange)="pageSize.set($event); page.set(0)"
+      [pageSizeOptions]="pageSizeOptions"
+      [totalElements]="stations.value().totalElements"
+      [totalPages]="stations.value().totalPages"
+      [visibleCount]="visibleStations().length"
+      itemLabel="station"
+    />
+  </div>
   }
 </div>

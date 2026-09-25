@@ -1,11 +1,11 @@
-<app-form-page-header
-  description="Seule une commande confirmée peut générer un dossier. Au moins une ligne de marchandise et deux segments (chargement, déchargement)."
-  listLabel="Dossiers"
-  listLink="/dossiers"
-  title="Nouveau dossier"
-/>
+<div class="inner-page fiche-page--wide">
+  <app-form-page-header
+    description="Seule une commande confirmée peut générer un dossier. Au moins une ligne de marchandise et deux segments (chargement, déchargement)."
+    icon="lucideFolderOpen"
+    title="Nouveau dossier"
+  />
 
-@if (commandes.isLoading() || sites.isLoading() || marchandises.isLoading()) {
+  @if (commandes.isLoading() || sites.isLoading() || marchandises.isLoading()) {
 <p class="text-sm text-muted" role="status">Chargement des ressources…</p>
 } @else if (lookupsError()) {
 <div class="alert-panel" role="alert">
@@ -350,13 +350,13 @@
   <div class="alert-panel" role="alert">{{ formError() }}</div>
   }
 
-  <app-form-actions>
-    <button class="btn-primary pressable min-h-11 px-5" type="submit">
-      Créer le dossier
-    </button>
-    <a class="btn-outline pressable min-h-11 px-5" routerLink="/dossiers">
-      Annuler
-    </a>
-  </app-form-actions>
-</form>
-}
+    <app-form-actions [inline]="true">
+      <button class="btn-toolbar pressable" type="submit">
+        <ng-icon aria-hidden="true" class="btn-toolbar__icon" name="lucideCheck" />
+        <span>Créer le dossier</span>
+      </button>
+      <a class="btn-outline pressable" routerLink="/dossiers">Annuler</a>
+    </app-form-actions>
+  </form>
+  }
+</div>

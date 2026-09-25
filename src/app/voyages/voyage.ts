@@ -40,6 +40,16 @@ export const STATUT_VOYAGES = [
 ] as const;
 export type StatutVoyage = (typeof STATUT_VOYAGES)[number];
 
+/** Ordered lifecycle steps shown in the voyage stepper (excludes Annulé). */
+export const VOYAGE_LIFECYCLE_STEPS = [
+  "BROUILLON",
+  "PLANIFIE",
+  "AFFECTE",
+  "EN_COURS",
+  "TERMINE",
+  "CLOTURE",
+] as const satisfies readonly StatutVoyage[];
+
 export const TYPE_ETAPES = [
   "CHARGEMENT",
   "DECHARGEMENT",
@@ -353,6 +363,51 @@ export function nextStatuts(statut: StatutVoyage): readonly StatutVoyage[] {
   return TRANSITIONS[statut];
 }
 
+/** Main forward transition when several are allowed (excludes Annulé). */
+export function primaryVoyageTransition(
+  next: readonly StatutVoyage[]
+): StatutVoyage | null {
+  const forward = next.filter((candidate) => candidate !== "ANNULE");
+  for (const step of VOYAGE_LIFECYCLE_STEPS) {
+    if (forward.includes(step)) {
+      return step;
+    }
+  }
+  return forward[0] ?? null;
+}
+
+export function lifecycleStepIndex(statut: StatutVoyage): number {
+  if (statut === "ANNULE") {
+    return -1;
+  }
+  return VOYAGE_LIFECYCLE_STEPS.indexOf(
+    statut as (typeof VOYAGE_LIFECYCLE_STEPS)[number]
+  );
+}
+
+export type LifecycleStepPhase = "past" | "current" | "future";
+
+export function lifecycleStepPhase(
+  step: StatutVoyage,
+  current: StatutVoyage
+): LifecycleStepPhase {
+  if (current === "ANNULE") {
+    return "future";
+  }
+  const stepIndex = lifecycleStepIndex(step);
+  const currentIndex = lifecycleStepIndex(current);
+  if (stepIndex < 0 || currentIndex < 0) {
+    return "future";
+  }
+  if (stepIndex < currentIndex) {
+    return "past";
+  }
+  if (stepIndex === currentIndex) {
+    return "current";
+  }
+  return "future";
+}
+
 export function isTypeEvenement(value: string): value is TypeEvenement {
   return (TYPE_EVENEMENTS as readonly string[]).includes(value);
 }
@@ -405,6 +460,30 @@ export function statutVoyageLabel(statut: StatutVoyage): string {
       return "Clôturé";
     case "ANNULE":
       return "Annulé";
+    default: {
+      const _exhaustive: never = statut;
+      return _exhaustive;
+    }
+  }
+}
+
+/** Verb phrase for a lifecycle transition button (target status). */
+export function voyageStatutActionLabel(statut: StatutVoyage): string {
+  switch (statut) {
+    case "PLANIFIE":
+      return "Planifier le voyage";
+    case "AFFECTE":
+      return "Affecter ressources";
+    case "EN_COURS":
+      return "Démarrer le voyage";
+    case "TERMINE":
+      return "Marquer comme terminé";
+    case "CLOTURE":
+      return "Clôturer";
+    case "ANNULE":
+      return "Annuler le voyage";
+    case "BROUILLON":
+      return "Repasser en brouillon";
     default: {
       const _exhaustive: never = statut;
       return _exhaustive;
@@ -466,6 +545,31 @@ export function typeEvenementLabel(type: TypeEvenement): string {
       return "Incident";
     case "CLOTURE":
       return "Clôture";
+    default: {
+      const _exhaustive: never = type;
+      return _exhaustive;
+    }
+  }
+}
+
+export function typeEvenementIcon(type: TypeEvenement): string {
+  switch (type) {
+    case "DEPART":
+      return "lucidePlay";
+    case "ARRIVEE_CHARGEMENT":
+      return "lucidePackage";
+    case "CHARGEMENT_TERMINE":
+      return "lucidePackageCheck";
+    case "ARRIVEE_DECHARGEMENT":
+      return "lucideMapPin";
+    case "LIVRAISON_TERMINEE":
+      return "lucideCircleCheck";
+    case "POSITION":
+      return "lucideLocateFixed";
+    case "INCIDENT":
+      return "lucideTriangleAlert";
+    case "CLOTURE":
+      return "lucideArchive";
     default: {
       const _exhaustive: never = type;
       return _exhaustive;

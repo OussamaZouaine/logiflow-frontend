@@ -1,22 +1,11 @@
-<nav
+<z-tab-group
   aria-label="Sections carburant"
-  class="flex flex-wrap gap-2 border-b border-line pb-3"
+  class="w-fit max-w-full [&>div.flex-1]:hidden"
+  zVariant="section"
+  (zTabChange)="onTabChange($event)"
 >
-  <a
-    class="pressable min-h-10 rounded-lg border border-line/80 px-3 py-2 text-sm font-medium text-ink aria-[current=page]:border-pine aria-[current=page]:bg-pine/5 aria-[current=page]:text-pine"
-    routerLink="/carburant"
-    routerLinkActive
-    [routerLinkActiveOptions]="{ exact: true }"
-  >
-    Prises
-  </a>
+  <z-tab label="Prises" />
   @if (showStations()) {
-  <a
-    class="pressable min-h-10 rounded-lg border border-line/80 px-3 py-2 text-sm font-medium text-ink aria-[current=page]:border-pine aria-[current=page]:bg-pine/5 aria-[current=page]:text-pine"
-    routerLink="/carburant/stations"
-    routerLinkActive
-  >
-    Stations
-  </a>
+    <z-tab label="Stations" />
   }
-</nav>
+</z-tab-group>

@@ -1,5 +1,5 @@
-<div class="fiche-page">
-  <app-fiche-header listLabel="Dossiers" listLink="/dossiers">
+<div class="inner-page fiche-page fiche-page--wide">
+  <app-fiche-header icon="lucideFolderOpen">
     @if (dossier.isLoading()) {
     <p class="fiche-load-hint" role="status">Chargement…</p>
     } @else if (dossier.error()) {
@@ -10,6 +10,7 @@
     } @else if (dossier.hasValue()) {
     <app-fiche-title-row [mono]="true" [title]="dossier.value().reference">
       <app-statut-chip
+        [icon]="statutChipIcon(dossier.value().statut)"
         [label]="statutDossierLabel(dossier.value().statut)"
         [tone]="dossierStatutTone(dossier.value().statut)"
       />

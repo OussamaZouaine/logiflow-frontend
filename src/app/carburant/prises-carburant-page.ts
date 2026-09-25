@@ -13,6 +13,7 @@ import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import type { PageResponse } from "../core/api/page-response";
 import { filterByStatut, statutOptionsFrom } from "../shared/ui/list-filter";
+import { priseCarburantStatutIcon } from "../shared/ui/list-statut-icons";
 import { ListEmptyState } from "../shared/ui/list-empty-state";
 import { ListTableSkeleton } from "../shared/ui/list-table-skeleton";
 import { connectListQueryState } from "../shared/ui/list-query-state";
@@ -28,8 +29,19 @@ import {
 } from "../shared/ui/list-page-size";
 import { ListPagination } from "../shared/ui/list-pagination";
 import { ListSearchBar } from "../shared/ui/list-search-bar";
-import { ListStatutFilter } from "../shared/ui/list-statut-filter";
+import {
+  ListStatutFilter,
+  statutIconForValue,
+} from "../shared/ui/list-statut-filter";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import { lucideGauge, lucideReceipt } from "@ng-icons/lucide";
+import {
+  DESTINATION_NAV_ICON,
+  LIST_TABLE_ROW_ICON_PROVIDERS,
+} from "../shared/ui/list-table-row-icons";
+import { ListToolbarCta } from "../shared/ui/list-toolbar-cta";
 import { StatutChip } from "../shared/ui/statut-chip";
+import { ZardTableImports } from "@/shared/components/table/table.imports";
 import { CarburantTabs } from "./carburant-tabs";
 import {
   formatLitres,
@@ -46,18 +58,25 @@ import {
 @Component({
   imports: [
     DatePipe,
+    NgIcon,
     RouterLink,
     StatutChip,
     CarburantTabs,
     ListSearchBar,
     ListStatutFilter,
+    ListToolbarCta,
     ListPagination,
     ListEmptyState,
     ListRowKeyboard,
     ListTableSkeleton,
+    ...ZardTableImports,
   ],
   selector: "app-prises-carburant-page",
   templateUrl: "./prises-carburant-page.html",
+  viewProviders: [
+    LIST_TABLE_ROW_ICON_PROVIDERS,
+    provideIcons({ lucideGauge, lucideReceipt }),
+  ],
 })
 export class PrisesCarburantPage {
   private readonly route = inject(ActivatedRoute);
@@ -72,8 +91,11 @@ export class PrisesCarburantPage {
   protected readonly typeCarburantLabel = typeCarburantLabel;
   protected readonly statutOptions = statutOptionsFrom(
     STATUT_PRISES,
-    statutPriseLabel
+    statutPriseLabel,
+    priseCarburantStatutIcon
   );
+  protected readonly rowIcon = DESTINATION_NAV_ICON.carburant;
+  protected readonly statsSkeletonTiles = [0, 1, 2] as const;
 
   protected readonly searchDraft = signal("");
   protected readonly search = signal("");
@@ -150,6 +172,10 @@ export class PrisesCarburantPage {
     effect(() => {
       syncListKeyboardActiveId(this.keyboardRows(), this.selectedPriseId);
     });
+  }
+
+  protected statutChipIcon(statut: string): string | null {
+    return statutIconForValue(this.statutOptions, statut);
   }
 
   protected resetFilters(): void {

@@ -1,5 +1,5 @@
-<div class="fiche-page">
-  <app-fiche-header listLabel="Carburant" listLink="/carburant">
+<div class="inner-page fiche-page fiche-page--wide">
+  <app-fiche-header icon="lucideFuel">
     @if (prise.isLoading()) {
     <p class="fiche-load-hint" role="status">Chargement…</p>
     } @else if (prise.error()) {
@@ -10,6 +10,7 @@
       [title]="formatPriseShortId(prise.value().id)"
     >
       <app-statut-chip
+        [icon]="statutChipIcon(prise.value().statut)"
         [label]="statutPriseLabel(prise.value().statut)"
         [tone]="statutPriseTone(prise.value().statut)"
       />
@@ -111,8 +112,9 @@
       <div class="alert-panel" role="alert">{{ formError() }}</div>
       }
 
-      <button class="btn-primary pressable mt-4 min-h-11 px-5" type="submit">
-        Enregistrer
+      <button class="btn-toolbar pressable mt-4" type="submit">
+        <ng-icon aria-hidden="true" class="btn-toolbar__icon" name="lucideCheck" />
+        <span>Enregistrer</span>
       </button>
     </form>
   </app-form-section>
@@ -186,8 +188,9 @@
         @if (uploadError()) {
         <div class="alert-panel mt-3" role="alert">{{ uploadError() }}</div>
         }
-        <button class="btn-primary pressable mt-4 min-h-10 px-4" type="submit">
-          Téléverser
+        <button class="btn-toolbar pressable mt-4" type="submit">
+          <ng-icon aria-hidden="true" class="btn-toolbar__icon" name="lucideCheck" />
+          <span>Téléverser</span>
         </button>
       </form>
     </details>
@@ -203,12 +206,9 @@
     @if (validateError()) {
     <div class="alert-panel mb-4" role="alert">{{ validateError() }}</div>
     }
-    <button
-      (click)="valider()"
-      class="btn-primary pressable min-h-11 px-5"
-      type="button"
-    >
-      Valider la prise
+    <button (click)="valider()" class="btn-toolbar pressable" type="button">
+      <ng-icon aria-hidden="true" class="btn-toolbar__icon" name="lucideCheck" />
+      <span>Valider la prise</span>
     </button>
   </app-form-section>
   }

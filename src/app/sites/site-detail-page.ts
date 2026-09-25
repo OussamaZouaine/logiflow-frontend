@@ -2,11 +2,13 @@ import { httpResource } from "@angular/common/http";
 import {
   Component,
   computed,
+  DestroyRef,
   effect,
   inject,
   input,
   signal,
 } from "@angular/core";
+import { bindShellBreadcrumbLeaf } from "../core/nav/shell-breadcrumb-leaf";
 import {
   FormField,
   form,
@@ -22,10 +24,13 @@ import { ToastService } from "../shared/ui/toast";
 import { firstFieldError } from "../core/forms/first-field-error";
 import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
 import {
+  actifIcon,
   actifLabel,
   actifTone,
   StatutChip,
 } from "../shared/ui/statut-chip";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import { lucideCheck, lucideCircleOff } from "@ng-icons/lucide";
 import { draftToWrite, emptySiteDraft, type Site, siteToDraft } from "./site";
 import { SiteApi } from "./site-api";
 import {
@@ -34,16 +39,25 @@ import {
 } from "./site-localisation-map";
 
 @Component({
-  imports: [FormField, SiteLocalisationMap, StatutChip, ...FICHE_PAGE_IMPORTS],
+  imports: [
+    FormField,
+    NgIcon,
+    SiteLocalisationMap,
+    StatutChip,
+    ...FICHE_PAGE_IMPORTS,
+  ],
   selector: "app-site-detail-page",
   templateUrl: "./site-detail-page.html",
+  viewProviders: [provideIcons({ lucideCheck, lucideCircleOff })],
 })
 export class SiteDetailPage {
   private readonly api = inject(SiteApi);
   private readonly toast = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly id = input.required<string>();
 
+  protected readonly actifIcon = actifIcon;
   protected readonly actifLabel = actifLabel;
   protected readonly actifTone = actifTone;
   protected readonly firstFieldError = firstFieldError;
@@ -73,6 +87,11 @@ export class SiteDetailPage {
   private seededForId = "";
 
   constructor() {
+    bindShellBreadcrumbLeaf(
+      this.destroyRef,
+      computed(() => (this.site.hasValue() ? this.site.value().code : null))
+    );
+
     effect(() => {
       const id = this.id();
       const current = this.site.value();

@@ -1,23 +1,44 @@
-<div class="fiche-page fiche-page--wide voyage-detail">
-  <app-fiche-header listLabel="Voyages" listLink="/voyages">
+<div class="inner-page fiche-page fiche-page--wide voyage-detail">
+  <app-fiche-header icon="lucideRoute">
     @if (voyage.isLoading()) {
     <p class="fiche-load-hint" role="status">Chargement…</p>
     } @else if (voyage.error()) {
     <app-fiche-error (retry)="voyage.reload()" [message]="loadError()" />
     } @else if (voyage.hasValue()) {
     <app-fiche-title-row [mono]="true" [title]="voyage.value().reference">
-      <z-badge [zType]="statutBadgeType(voyage.value().statut)">
-        {{ statutVoyageLabel(voyage.value().statut) }}
-      </z-badge>
+      <app-statut-chip
+        [icon]="statutChipIcon(voyage.value().statut)"
+        [label]="statutVoyageLabel(voyage.value().statut)"
+        [tone]="statutChipTone(voyage.value().statut)"
+      />
     </app-fiche-title-row>
-    <p class="fiche-meta">
-      {{ typeVoyageLabel(voyage.value().typeVoyage) }}
-      ·
-      {{ porteeLabel(voyage.value().portee) }}
+    <p class="fiche-meta flex flex-wrap items-center gap-x-4 gap-y-2">
+      <span class="inline-flex items-center gap-1.5">
+        <ng-icon
+          [name]="typeVoyageIcon(voyage.value().typeVoyage)"
+          aria-hidden="true"
+          class="size-3.5 text-muted"
+        />
+        {{ typeVoyageLabel(voyage.value().typeVoyage) }}
+      </span>
+      <span class="inline-flex items-center gap-1.5">
+        <ng-icon
+          [name]="porteeIcon(voyage.value().portee)"
+          aria-hidden="true"
+          class="size-3.5 text-muted"
+        />
+        {{ porteeLabel(voyage.value().portee) }}
+      </span>
       @if (voyage.value().dossierIds.length > 0) {
-      ·
-      {{ voyage.value().dossierIds.length }}
-      {{ voyage.value().dossierIds.length === 1 ? "dossier" : "dossiers" }}
+      <span class="inline-flex items-center gap-1.5">
+        <ng-icon
+          aria-hidden="true"
+          class="size-3.5 text-muted"
+          name="lucideFolderOpen"
+        />
+        {{ voyage.value().dossierIds.length }}
+        {{ voyage.value().dossierIds.length === 1 ? "dossier" : "dossiers" }}
+      </span>
       }
     </p>
     }
@@ -60,7 +81,7 @@
       </z-card>
       <z-card class="voyage-metric" zSize="sm">
         <div class="voyage-metric__head">
-          <ng-icon class="voyage-metric__icon" name="lucideGauge" />
+          <ng-icon class="voyage-metric__icon" name="lucidePackage" />
           <span class="voyage-metric__label">Remplissage</span>
         </div>
         <span class="voyage-metric__value voyage-metric__value--mono">
@@ -79,38 +100,51 @@
     </div>
   </section>
 
-  <nav aria-label="Sections de la fiche" class="voyage-section-nav">
-    <a class="voyage-section-nav__link" href="#ressources" z-button zSize="sm" zType="outline">
-      <ng-icon aria-hidden="true" name="lucideTruck" />
-      <span class="voyage-section-nav__label">Ressources</span>
-    </a>
-    <a class="voyage-section-nav__link" href="#trajet" z-button zSize="sm" zType="outline">
-      <ng-icon aria-hidden="true" name="lucideRoute" />
-      <span class="voyage-section-nav__label">Trajet</span>
-    </a>
-    @if (voyage.value().remorqueId) {
-    <a class="voyage-section-nav__link" href="#capacite" z-button zSize="sm" zType="outline">
-      <ng-icon aria-hidden="true" name="lucidePackage" />
-      <span class="voyage-section-nav__label">Capacité</span>
-    </a>
-    }
-    <a class="voyage-section-nav__link" href="#carburant" z-button zSize="sm" zType="outline">
-      <ng-icon aria-hidden="true" name="lucideFuel" />
-      <span class="voyage-section-nav__label">Carburant</span>
-    </a>
-    <a class="voyage-section-nav__link" href="#chronologie" z-button zSize="sm" zType="outline">
-      <ng-icon aria-hidden="true" name="lucideHistory" />
-      <span class="voyage-section-nav__label">Chronologie</span>
-    </a>
-    <a class="voyage-section-nav__link" href="#actions" z-button zSize="sm" zType="outline">
-      <ng-icon aria-hidden="true" name="lucideZap" />
-      <span class="voyage-section-nav__label">Actions</span>
-    </a>
-  </nav>
-
   <div class="voyage-detail__layout">
     <div class="voyage-detail__main">
-      <section class="voyage-detail__section" id="ressources">
+      <z-tab-group
+        aria-label="Sections de la fiche"
+        class="voyage-detail-tabs w-full max-w-full"
+        zVariant="section"
+        (zTabChange)="onDetailTabChange($event)"
+      >
+        <z-tab label="Carte" zIcon="lucideMap">
+          <z-card
+            class="voyage-detail-map flex min-h-[min(60vh,34rem)] flex-col gap-0 overflow-hidden !py-0 md:min-h-[min(65vh,40rem)] xl:min-h-[min(70vh,44rem)]"
+          >
+            <z-card-header class="border-b border-border/55 px-4 pt-4 pb-4">
+              <div class="flex items-start gap-3">
+                <ng-icon
+                  aria-hidden="true"
+                  class="mt-0.5 size-[1.125rem] shrink-0 text-pine"
+                  name="lucideMap"
+                />
+                <div class="flex min-w-0 flex-col gap-2">
+                  <z-card-title zTitle="Itinéraire" />
+                  <z-card-description
+                    class="leading-relaxed"
+                    [zDescription]="mapHint()"
+                  />
+                </div>
+              </div>
+            </z-card-header>
+            <div
+              class="flex min-h-80 flex-1 flex-col px-4 pt-3 pb-4 md:min-h-[26rem] md:pt-3.5"
+            >
+              @if (isCarteTabActive()) {
+              <app-geo-markers-map
+                [ariaLabel]="'Itinéraire du voyage ' + voyage.value().reference"
+                [embedded]="true"
+                class="min-h-72 flex-1 overflow-hidden rounded-lg md:min-h-96"
+                [markers]="mapMarkers()"
+                [path]="mapPath()"
+              />
+              }
+            </div>
+          </z-card>
+        </z-tab>
+
+        <z-tab label="Ressources" zIcon="lucideTruck">
         <z-card>
           <z-card-header>
             <z-card-title zTitle="Ressources" />
@@ -170,7 +204,10 @@
               <div class="voyage-resource-grid--span">
                 <div class="fiche-subsection__header">
                   <h3 class="fiche-subsection__title">
-                    <ng-icon class="voyage-inline-icon" name="lucideUsers" />
+                    <ng-icon
+                      class="mr-1 inline-block size-3.5 align-[-0.125rem] text-muted"
+                      name="lucideUsers"
+                    />
                     Équipage
                   </h3>
                   <span class="text-xs text-muted">
@@ -203,7 +240,10 @@
               <div class="voyage-resource-grid--span">
                 <div class="fiche-subsection__header">
                   <h3 class="fiche-subsection__title">
-                    <ng-icon class="voyage-inline-icon" name="lucideFolderOpen" />
+                    <ng-icon
+                      class="mr-1 inline-block size-3.5 align-[-0.125rem] text-muted"
+                      name="lucideFolderOpen"
+                    />
                     Dossiers
                   </h3>
                   @if (voyage.value().dossierIds.length > 0) {
@@ -247,9 +287,9 @@
             </div>
           </z-card-content>
         </z-card>
-      </section>
+        </z-tab>
 
-      <section class="voyage-detail__section" id="trajet">
+        <z-tab label="Trajet" zIcon="lucideRoute">
         <z-card>
           <z-card-header>
             <z-card-title zTitle="Trajet" />
@@ -259,7 +299,10 @@
           </z-card-header>
           <z-card-content>
             <p class="voyage-trajet-summary">
-              <ng-icon class="voyage-inline-icon" name="lucideRoute" />
+              <ng-icon
+                class="mr-1 inline-block size-3.5 align-[-0.125rem] text-muted"
+                name="lucideRoute"
+              />
               {{ voyage.value().trajet.distanceTotaleKm }} km ·
               {{ formatDureeMin(voyage.value().trajet.dureeConduiteMin) }} de conduite
               ·
@@ -311,20 +354,22 @@
             </ol>
           </z-card-content>
         </z-card>
-      </section>
+        </z-tab>
 
       @if (voyage.value().remorqueId) {
-      <section class="voyage-detail__section voyage-detail__section--stack" id="capacite">
-        <app-remorque-capacity-view [voyageId]="id()" />
-        <app-voyage-ajouter-dossier-form
-          (dossierAdded)="onDossierAjoute()"
-          [dossierIdsOnVoyage]="voyage.value().dossierIds"
-          [voyageId]="id()"
-        />
-      </section>
+        <z-tab label="Capacité" zIcon="lucidePackage">
+        <div class="voyage-detail__section--stack">
+          <app-remorque-capacity-view [voyageId]="id()" />
+          <app-voyage-ajouter-dossier-form
+            (dossierAdded)="onDossierAjoute()"
+            [dossierIdsOnVoyage]="voyage.value().dossierIds"
+            [voyageId]="id()"
+          />
+        </div>
+        </z-tab>
       }
 
-      <section class="voyage-detail__section" id="carburant">
+        <z-tab label="Carburant" zIcon="lucideFuel">
         <z-card>
           <z-card-header>
             <z-card-title zTitle="Prises de carburant" />
@@ -380,9 +425,9 @@
             }
           </z-card-content>
         </z-card>
-      </section>
+        </z-tab>
 
-      <section class="voyage-detail__section" id="chronologie">
+        <z-tab label="Chronologie" zIcon="lucideHistory">
         <z-card>
           <z-card-header>
             <z-card-title zTitle="Chronologie" />
@@ -423,16 +468,26 @@
             </div>
           </z-card-content>
         </z-card>
-      </section>
+        </z-tab>
+      </z-tab-group>
     </div>
 
-    <aside class="voyage-detail__aside voyage-detail__section" id="actions">
+    <aside class="voyage-detail__aside">
       <z-card>
         <z-card-header>
-          <z-card-title zTitle="Cycle de vie" />
-          <z-card-description
-            zDescription="Pas de suppression physique. Annulation = statut Annulé."
-          />
+          <div class="flex items-start gap-2.5">
+            <ng-icon
+              aria-hidden="true"
+              class="mt-0.5 size-4.5 shrink-0 text-pine"
+              name="lucideRoute"
+            />
+            <div>
+              <z-card-title zTitle="Cycle de vie" />
+              <z-card-description
+                zDescription="Le statut actuel et les transitions autorisées."
+              />
+            </div>
+          </div>
         </z-card-header>
         <z-card-content>
           @if (statutError()) {
@@ -443,34 +498,139 @@
             [zDescription]="statutError()!"
           />
           }
-          @if (nextStatuts(voyage.value().statut).length === 0) {
-          <p class="text-sm text-muted">Aucune transition possible.</p>
-          } @else {
-          <div class="flex flex-col gap-2">
-            @for (statut of nextStatuts(voyage.value().statut); track statut) {
+
+          <div class="flex flex-col gap-4">
+            @if (voyage.value().statut === 'ANNULE') {
+            <p class="rounded-lg border border-brake/25 bg-brake/5 px-3 py-2 text-sm text-brake">
+              Ce voyage est annulé. Aucune progression dans le parcours standard.
+            </p>
+            } @else {
+            <nav aria-label="Parcours du voyage" class="-mx-1 overflow-x-auto px-1">
+              <ol class="flex min-w-min list-none items-start p-0">
+                @for (step of lifecycleSteps; track step; let last = $last) {
+                <li class="flex items-start">
+                  <div class="flex flex-col items-center gap-1 px-0.5">
+                    <span
+                      [class]="
+                        lifecycleStepMarkerClass(step, voyage.value().statut)
+                      "
+                    >
+                      <ng-icon
+                        [name]="statutChipIcon(step)"
+                        aria-hidden="true"
+                      />
+                    </span>
+                    <span
+                      class="max-w-[4rem] text-center text-[0.625rem] leading-tight whitespace-nowrap text-muted"
+                    >
+                      {{ statutVoyageLabel(step) }}
+                    </span>
+                  </div>
+                  @if (!last) {
+                  <span
+                    [class]="
+                      lifecycleStepConnectorClass(step, voyage.value().statut)
+                    "
+                    aria-hidden="true"
+                  ></span>
+                  }
+                </li>
+                }
+              </ol>
+            </nav>
+            }
+
+            @if (nextStatuts(voyage.value().statut).length === 0) {
+            <p class="text-sm text-muted">Aucune transition possible.</p>
+            } @else {
+            <ul class="m-0 flex list-none flex-col gap-2 p-0">
+              @for (statut of nextStatuts(voyage.value().statut); track statut) {
+              @if (!isCancelTransition(statut)) {
+              <li>
+                <button
+                  (click)="changerStatut(statut)"
+                  [class]="
+                    lifecycleActionRowClass(statut, voyage.value().statut)
+                  "
+                  type="button"
+                >
+                  <span
+                    [class]="
+                      lifecycleActionIconWellClass(
+                        statut,
+                        voyage.value().statut
+                      )
+                    "
+                  >
+                    <ng-icon [name]="statutChipIcon(statut)" aria-hidden="true" />
+                  </span>
+                  <span class="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span
+                      [class]="
+                        lifecycleActionLabelClass(
+                          statut,
+                          voyage.value().statut
+                        )
+                      "
+                    >
+                      {{ voyageStatutActionLabel(statut) }}
+                    </span>
+                    <span
+                      [class]="
+                        lifecycleActionMetaClass(statut, voyage.value().statut)
+                      "
+                    >
+                      {{ statutVoyageLabel(statut) }}
+                    </span>
+                  </span>
+                  <ng-icon
+                    aria-hidden="true"
+                    [class]="
+                      isPrimaryTransition(statut, voyage.value().statut)
+                        ? 'size-4 shrink-0 text-primary-foreground/80'
+                        : 'size-4 shrink-0 text-muted'
+                    "
+                    name="lucideChevronRight"
+                  />
+                </button>
+              </li>
+              }
+              }
+            </ul>
+            @if (nextStatuts(voyage.value().statut).includes('ANNULE')) {
             <button
-              (click)="changerStatut(statut)"
-              class="w-full"
+              (click)="changerStatut('ANNULE')"
+              class="pressable mt-1 flex w-full items-center gap-3 rounded-lg border border-brake/25 bg-canvas px-3 py-2.5 text-left transition-[border-color,transform] duration-150 ease-out hover:border-brake/40 active:scale-[0.96] motion-reduce:transition-none motion-reduce:active:transform-none"
               type="button"
-              z-button
-              zSize="lg"
-              zType="outline"
             >
-              <ng-icon name="lucideArrowRight" />
-              {{ statutVoyageLabel(statut) }}
+              <span [class]="lifecycleIconWellClass('ANNULE')">
+                <ng-icon [name]="statutChipIcon('ANNULE')" aria-hidden="true" />
+              </span>
+              <span class="text-sm font-medium text-ink">
+                {{ voyageStatutActionLabel('ANNULE') }}
+              </span>
             </button>
             }
+            }
           </div>
-          }
         </z-card-content>
       </z-card>
 
       <z-card>
         <z-card-header>
-          <z-card-title zTitle="Exécution" />
-          <z-card-description
-            zDescription="Déclarez un événement réel. Il apparaît dans la chronologie."
-          />
+          <div class="flex items-start gap-2.5">
+            <ng-icon
+              aria-hidden="true"
+              class="mt-0.5 size-4.5 shrink-0 text-pine"
+              name="lucideClipboardPen"
+            />
+            <div>
+              <z-card-title zTitle="Exécution" />
+              <z-card-description
+                zDescription="Déclarez un événement réel. Il apparaît dans la chronologie."
+              />
+            </div>
+          </div>
         </z-card-header>
         <z-card-content>
           @if (evenements.error()) {
@@ -489,6 +649,7 @@
                 [options]="eventTypeOptions"
                 [selectValue]="eventType()"
                 inputId="eventType"
+                preferOverlaySide="bottom"
               />
             </app-form-field>
 
@@ -558,7 +719,7 @@
             }
 
             <app-form-actions>
-              <button class="w-full" type="submit" z-button zSize="lg" zType="default">
+              <button class="pressable w-full" type="submit" z-button zSize="lg" zType="default">
                 <ng-icon name="lucideCircleCheck" />
                 Déclarer
               </button>

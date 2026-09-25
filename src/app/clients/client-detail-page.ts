@@ -1,10 +1,21 @@
 import { httpResource } from "@angular/common/http";
-import { Component, computed, inject, input, signal } from "@angular/core";
+import {
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  input,
+  signal,
+} from "@angular/core";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import { lucideCircleOff } from "@ng-icons/lucide";
+import { bindShellBreadcrumbLeaf } from "../core/nav/shell-breadcrumb-leaf";
 import { environment } from "../../environments/environment";
 import { httpErrorMessage } from "../core/api/http-error";
 import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
 import { ToastService } from "../shared/ui/toast";
 import {
+  actifIcon,
   actifLabel,
   actifTone,
   StatutChip,
@@ -13,16 +24,28 @@ import type { Client } from "./client";
 import { ClientApi } from "./client-api";
 
 @Component({
-  imports: [StatutChip, ...FICHE_PAGE_IMPORTS],
+  imports: [NgIcon, StatutChip, ...FICHE_PAGE_IMPORTS],
   selector: "app-client-detail-page",
   templateUrl: "./client-detail-page.html",
+  viewProviders: [provideIcons({ lucideCircleOff })],
 })
 export class ClientDetailPage {
   private readonly api = inject(ClientApi);
   private readonly toast = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly id = input.required<string>();
 
+  constructor() {
+    bindShellBreadcrumbLeaf(
+      this.destroyRef,
+      computed(() =>
+        this.client.hasValue() ? this.client.value().code : null
+      )
+    );
+  }
+
+  protected readonly actifIcon = actifIcon;
   protected readonly actifLabel = actifLabel;
   protected readonly actifTone = actifTone;
   protected readonly deactivateError = signal<string | null>(null);

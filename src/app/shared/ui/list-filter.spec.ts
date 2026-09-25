@@ -50,4 +50,14 @@ describe("statutOptionsFrom", () => {
       { label: "L-B", value: "B" },
     ]);
   });
+
+  it("attaches icons when iconOf is provided", () => {
+    expect(
+      statutOptionsFrom(
+        ["A"] as const,
+        (value) => value,
+        () => "lucideInbox"
+      )
+    ).toEqual([{ label: "A", value: "A", icon: "lucideInbox" }]);
+  });
 });

@@ -119,3 +119,5 @@ export const selectItemIconVariants = cva('absolute flex size-3.5 items-center j
 export type ZardSelectPositionVariants = NonNullable<VariantProps<typeof selectContentVariants>['zPosition']>;
 export type ZardSelectItemModeVariants = NonNullable<VariantProps<typeof selectItemVariants>['zMode']>;
 export type ZardSelectAlignVariants = 'start' | 'center' | 'end';
+/** When set, avoids flipping to the opposite side of the trigger (dropdown scrolls instead). */
+export type ZardSelectPreferOverlaySideVariants = 'auto' | 'bottom' | 'top';

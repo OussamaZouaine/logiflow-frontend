@@ -30,54 +30,90 @@
   }
 
   <aside
+    [attr.data-mobile-open]="mobileNavOpen()"
+    [attr.inert]="mobileNavInert() ? '' : null"
     [class.-translate-x-full]="!mobileNavOpen()"
     [class.translate-x-0]="mobileNavOpen()"
     aria-label="Navigation principale"
-    class="shell-sidebar fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-surface transition-transform duration-200 ease-out md:static md:z-auto md:translate-x-0"
+    class="shell-sidebar fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-surface md:static md:z-auto md:translate-x-0"
     id="app-shell-sidebar"
   >
     <div
       class="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-line/80 px-4 md:h-16 md:px-5"
     >
       <a
+        (click)="closeMobileNav()"
         class="font-display text-xl font-medium tracking-tight text-ink"
         routerLink="/"
       >
         LogiFlow
       </a>
+      @if (mobileNavOpen()) {
       <button
         (click)="closeMobileNav()"
         aria-label="Fermer le menu"
-        class="shell-icon-btn pressable size-8 md:hidden"
+        class="shell-icon-btn shell-sidebar-dismiss pressable size-8"
         type="button"
       >
-        <ng-icon class="text-sm" name="lucideX" />
+        <ng-icon aria-hidden="true" class="text-sm" name="lucideX" />
+      </button>
+      }
+    </div>
+
+    <div class="shrink-0 px-3 pt-3 pb-1">
+      <button
+        (click)="openCommandPalette()"
+        class="shell-search-trigger pressable"
+        type="button"
+      >
+        <span aria-hidden="true" class="shell-jump-leading">
+          <ng-icon class="text-[0.9375rem]" name="lucideSearch" />
+        </span>
+        <span class="shell-search-trigger__label">Rechercher…</span>
+        <kbd class="shell-kbd ml-auto hidden sm:inline-flex" title="Raccourci clavier">
+          <span>Ctrl</span>
+          <span>K</span>
+        </kbd>
       </button>
     </div>
 
     <nav
       aria-label="Modules"
-      class="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto p-3"
+      class="shell-nav-modules min-h-0 flex-1 overflow-y-auto"
     >
-      <a
-        [routerLinkActiveOptions]="{ exact: true }"
-        class="shell-nav-link pressable"
-        routerLink="/"
-        routerLinkActive="is-active"
-      >
-        <ng-icon [name]="tableauIcon" class="shrink-0 text-base" />
-        <span>Tableau de bord</span>
-      </a>
+      <div class="shell-nav-home">
+        <a
+          (click)="closeMobileNav()"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="shell-nav-link pressable"
+          routerLink="/"
+          routerLinkActive="is-active"
+        >
+          <span aria-hidden="true" class="shell-nav-link__icon">
+            <ng-icon [name]="tableauIcon" class="shell-nav-link__glyph" />
+          </span>
+          <span class="shell-nav-link__label">Tableau de bord</span>
+        </a>
+      </div>
 
-      @for (item of navItems(); track item.id) {
-      <a
-        [routerLink]="'/' + item.path"
-        class="shell-nav-link pressable"
-        routerLinkActive="is-active"
-      >
-        <ng-icon [name]="iconFor(item.id)" class="shrink-0 text-base" />
-        <span>{{ item.label }}</span>
-      </a>
+      @for (group of navGroups(); track group.section) {
+      <ul class="shell-nav-group">
+        @for (item of group.items; track item.id) {
+        <li>
+          <a
+            (click)="closeMobileNav()"
+            [routerLink]="'/' + item.path"
+            class="shell-nav-link pressable"
+            routerLinkActive="is-active"
+          >
+            <span aria-hidden="true" class="shell-nav-link__icon">
+              <ng-icon [name]="iconFor(item.id)" class="shell-nav-link__glyph" />
+            </span>
+            <span class="shell-nav-link__label">{{ item.label }}</span>
+          </a>
+        </li>
+        }
+      </ul>
       }
     </nav>
 
@@ -94,96 +130,11 @@
     </div>
   </aside>
 
-  <div class="flex min-w-0 flex-1 flex-col pt-14 md:pt-0">
+  <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden pt-14 md:pt-0">
     <header
       class="shell-topbar shell-topbar--main sticky top-0 z-20 flex h-14 shrink-0 items-center gap-4 bg-surface/90 px-4 backdrop-blur-md md:h-16 md:gap-5 md:px-6"
     >
-      <div class="relative min-w-0 flex-1 md:max-w-lg lg:max-w-xl">
-        <label class="sr-only" for="app-shell-jump"
-          >Aller à un module, une action ou une référence</label
-        >
-        <div
-          [class.shell-jump-field--open]="jumpOpen()"
-          class="shell-jump-field"
-        >
-          <span aria-hidden="true" class="shell-jump-leading">
-            <ng-icon class="text-[0.9375rem]" name="lucideSearch" />
-          </span>
-          <input
-            (blur)="onJumpBlur()"
-            (focus)="openJump()"
-            (input)="onJumpInput($event)"
-            (keydown)="onJumpKeydown($event)"
-            [attr.aria-expanded]="jumpOpen()"
-            [value]="jumpQuery()"
-            aria-autocomplete="list"
-            aria-controls="app-shell-jump-list"
-            autocomplete="off"
-            class="shell-jump-input"
-            id="app-shell-jump"
-            placeholder="Module, action ou référence…"
-            role="combobox"
-            type="search"
-          />
-          <kbd class="shell-kbd hidden sm:inline-flex" title="Raccourci clavier">
-            <span>Ctrl</span>
-            <span>K</span>
-          </kbd>
-        </div>
-
-        @if (jumpOpen()) {
-        <ul
-          (mousedown)="onJumpListPointerDown($event)"
-          class="shell-popover shell-jump-list absolute top-full right-0 left-0 z-30 mt-2 p-1"
-          id="app-shell-jump-list"
-          role="listbox"
-        >
-          @for (
-            target of filteredJumpTargets();
-            track target.kind + ':' + target.path;
-            let i = $index
-          ) {
-          @if (jumpSectionLabel(filteredJumpTargets(), i); as section) {
-          <li
-            class="px-2.5 pt-2 pb-1 font-mono text-[0.65rem] tracking-wide text-muted uppercase"
-            role="presentation"
-          >
-            {{ section }}
-          </li>
-          }
-          <li role="option">
-            <a
-              (click)="goTo(target.path); $event.preventDefault()"
-              [class.is-active]="jumpActiveIndex() === i"
-              [href]="target.path"
-              class="shell-popover-item pressable flex w-full items-center gap-2.5 px-2.5 py-2 text-left text-sm text-ink"
-            >
-              <ng-icon [name]="target.icon" class="shrink-0 text-base" />
-              <span class="min-w-0 flex-1 truncate">{{ target.label }}</span>
-              @if (target.badge; as badge) {
-              <span class="shrink-0 font-mono text-[0.65rem] text-muted">{{
-                badge
-              }}</span>
-              }
-            </a>
-          </li>
-          } @empty {
-          <li class="px-3 py-2 text-sm text-muted">
-            @if (paletteEntityLoading()) {
-            Recherche…
-            } @else {
-            Aucun résultat.
-            }
-          </li>
-          }
-          @if (paletteEntityLoading() && filteredJumpTargets().length > 0) {
-          <li class="px-3 py-2 text-xs text-muted" role="status">
-            Recherche de références…
-          </li>
-          }
-        </ul>
-        }
-      </div>
+      <app-shell-breadcrumb />
 
       <div aria-label="Actions rapides" class="shell-topbar-actions" role="group">
         <app-copilote-bouton />
@@ -198,11 +149,11 @@
         >
           <ng-icon class="shell-pill-icon text-sm" name="lucideInbox" />
           <span class="hidden sm:inline">File du jour</span>
-          <span
-            [class]="'shell-count-badge tabular-nums ' + fileDuJourBadgeToneClass()"
-          >
-            {{ fileDuJourBadgeCount() }}
-          </span>
+          <app-statut-chip
+            [label]="fileDuJourBadgeCount().toString()"
+            [tone]="fileDuJourBadgeTone()"
+            class="tabular-nums"
+          />
         </a>
         }
       </div>

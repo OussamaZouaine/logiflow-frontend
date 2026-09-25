@@ -1,4 +1,4 @@
-<div class="flex min-h-[70dvh] flex-col justify-center">
+<div class="inner-page flex min-h-[60dvh] max-w-lg flex-col justify-center">
   <p class="text-[0.7rem] font-medium tracking-[0.22em] text-pine uppercase">
     Accès
   </p>
@@ -23,17 +23,16 @@
     compte.
   </p>
   <div class="mt-8 flex flex-wrap gap-3">
-    <a
-      class="pressable pressable-border border border-line px-4 py-2 text-sm font-medium text-ink"
-      routerLink="/"
-    >
+    <a class="btn-primary pressable gap-2" routerLink="/">
+      <ng-icon aria-hidden="true" class="size-4" name="lucideLayoutDashboard" />
       Tableau de bord
     </a>
     <button
       (click)="signOut()"
-      class="pressable pressable-border border border-line px-4 py-2 text-sm font-medium text-ink"
+      class="btn-outline pressable gap-2"
       type="button"
     >
+      <ng-icon aria-hidden="true" class="size-4" name="lucideLogOut" />
       Déconnexion
     </button>
   </div>

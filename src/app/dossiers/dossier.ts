@@ -19,7 +19,7 @@ export const TYPE_TRANSPORTS = [
 ] as const;
 export type TypeTransport = (typeof TYPE_TRANSPORTS)[number];
 
-export const TYPE_SEGMENTS = ["CHARGEMENT", "DECHARGEMENT"] as const;
+export const TYPE_SEGMENTS = ["CHARGEMENT", "ESCALE", "DECHARGEMENT"] as const;
 export type TypeSegment = (typeof TYPE_SEGMENTS)[number];
 
 export const CARROSSERIES_REQUISES = [
@@ -368,6 +368,8 @@ export function typeSegmentLabel(type: TypeSegment): string {
   switch (type) {
     case "CHARGEMENT":
       return "Chargement";
+    case "ESCALE":
+      return "Escale";
     case "DECHARGEMENT":
       return "Déchargement";
     default: {

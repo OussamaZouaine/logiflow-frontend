@@ -1,5 +1,5 @@
-<div class="fiche-page">
-  <app-fiche-header listLabel="Clients" listLink="/clients">
+<div class="inner-page fiche-page">
+  <app-fiche-header icon="lucideBuilding2">
     @if (client.isLoading()) {
     <p class="fiche-load-hint" role="status">Chargement…</p>
     } @else if (client.error()) {
@@ -7,6 +7,7 @@
     } @else if (client.hasValue()) {
     <app-fiche-title-row [mono]="true" [title]="client.value().code">
       <app-statut-chip
+        [icon]="actifIcon(client.value().actif)"
         [label]="actifLabel(client.value().actif)"
         [tone]="actifTone(client.value().actif)"
       />
@@ -37,7 +38,12 @@
       class="btn-danger-outline pressable w-fit"
       type="button"
     >
-      Désactiver
+      <ng-icon
+        aria-hidden="true"
+        class="size-3.75 shrink-0 opacity-90"
+        name="lucideCircleOff"
+      />
+      <span>Désactiver</span>
     </button>
   </app-fiche-danger-zone>
   } @else {

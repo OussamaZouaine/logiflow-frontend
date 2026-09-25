@@ -1,5 +1,5 @@
-<div class="fiche-page">
-  <app-fiche-header listLabel="Remorques" listLink="/remorques">
+<div class="inner-page fiche-page fiche-page--wide">
+  <app-fiche-header icon="lucideContainer">
     @if (remorque.isLoading()) {
     <p class="fiche-load-hint" role="status">Chargement…</p>
     } @else if (remorque.error()) {
@@ -10,6 +10,7 @@
     } @else if (remorque.hasValue()) {
     <app-fiche-title-row [mono]="true" [title]="remorque.value().immatriculation">
       <app-statut-chip
+        [icon]="statutChipIcon(remorque.value().statut)"
         [label]="remorqueStatutLabel(remorque.value().statut)"
         [tone]="remorqueStatutTone(remorque.value().statut)"
       />
@@ -203,9 +204,10 @@
         {{ compteursError() }}
       </div>
       }
-      <app-form-actions>
-        <button class="btn-primary pressable min-h-11 px-5" type="submit">
-          Enregistrer les compteurs
+      <app-form-actions [inline]="true">
+        <button class="btn-toolbar pressable" type="submit">
+          <ng-icon aria-hidden="true" class="btn-toolbar__icon" name="lucideCheck" />
+          <span>Enregistrer les compteurs</span>
         </button>
       </app-form-actions>
     </form>
@@ -317,9 +319,10 @@
           {{ uploadError() }}
         </div>
         }
-        <app-form-actions>
-          <button class="btn-primary pressable min-h-11 px-5" type="submit">
-            Téléverser
+        <app-form-actions [inline]="true">
+          <button class="btn-toolbar pressable" type="submit">
+            <ng-icon aria-hidden="true" class="btn-toolbar__icon" name="lucideCheck" />
+            <span>Téléverser</span>
           </button>
         </app-form-actions>
       </form>

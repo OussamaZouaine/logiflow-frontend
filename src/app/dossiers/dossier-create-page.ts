@@ -1,5 +1,7 @@
 import { httpResource } from "@angular/common/http";
 import { Component, computed, effect, inject, signal } from "@angular/core";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import { lucideCheck } from "@ng-icons/lucide";
 import { FormField, form, min, required, submit } from "@angular/forms/signals";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
@@ -40,9 +42,10 @@ import { DossierApi } from "./dossier-api";
 const LOOKUP_PAGE_SIZE = 50;
 
 @Component({
-  imports: [FormField, RouterLink, ...FORM_PAGE_IMPORTS],
+  imports: [FormField, NgIcon, RouterLink, ...FORM_PAGE_IMPORTS],
   selector: "app-dossier-create-page",
   templateUrl: "./dossier-create-page.html",
+  viewProviders: [provideIcons({ lucideCheck })],
 })
 export class DossierCreatePage {
   private readonly api = inject(DossierApi);

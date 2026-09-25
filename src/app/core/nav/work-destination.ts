@@ -182,3 +182,39 @@ export function destinationsForRoles(
     (destination) => roles.some((role) => destination.roles.includes(role))
   );
 }
+
+/** Sidebar grouping order (visual only — no section labels in the shell). */
+export const NAV_SECTION_DISPLAY_ORDER = [
+  "Référentiel",
+  "Commercial",
+  "Flotte",
+  "Exploitation",
+  "Planning",
+  "Atelier",
+  "IAM",
+] as const;
+
+export type NavSectionName = (typeof NAV_SECTION_DISPLAY_ORDER)[number];
+
+export interface NavDestinationGroup {
+  items: WorkDestination[];
+  section: NavSectionName;
+}
+
+export function destinationNavGroupsForRoles(
+  roles: readonly Role[],
+): NavDestinationGroup[] {
+  const buckets = new Map<NavSectionName, WorkDestination[]>();
+
+  for (const destination of destinationsForRoles(roles)) {
+    const section = destination.section as NavSectionName;
+    const list = buckets.get(section) ?? [];
+    list.push(destination);
+    buckets.set(section, list);
+  }
+
+  return NAV_SECTION_DISPLAY_ORDER.flatMap((section) => {
+    const items = buckets.get(section);
+    return items && items.length > 0 ? [{ section, items }] : [];
+  });
+}

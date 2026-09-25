@@ -3,11 +3,13 @@ import { httpResource } from "@angular/common/http";
 import {
   Component,
   computed,
+  DestroyRef,
   effect,
   inject,
   input,
   signal,
 } from "@angular/core";
+import { bindShellBreadcrumbLeaf } from "../core/nav/shell-breadcrumb-leaf";
 import { FormField, form, required, submit } from "@angular/forms/signals";
 import { RouterLink } from "@angular/router";
 import { environment } from "../../environments/environment";
@@ -28,8 +30,13 @@ import { DocumentApi } from "../documents/document-api";
 import { firstFieldError } from "../core/forms/first-field-error";
 import { fieldClasses, showFieldError } from "../core/forms/show-field-error";
 import { enumToSelectOptions } from "../shared/ui/field-select";
+import { statutOptionsFrom } from "../shared/ui/list-filter";
+import { priseCarburantStatutIcon } from "../shared/ui/list-statut-icons";
+import { statutIconForValue } from "../shared/ui/list-statut-filter";
 import { FICHE_PAGE_IMPORTS } from "../shared/ui/fiche-page";
 import { StatutChip } from "../shared/ui/statut-chip";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import { lucideCheck } from "@ng-icons/lucide";
 import { ToastService } from "../shared/ui/toast";
 import { PriseCarburantApi } from "./prise-carburant-api";
 import {
@@ -37,6 +44,7 @@ import {
   formatMontantTtc,
   formatPriseShortId,
   formatPrixUnitaire,
+  STATUT_PRISES,
   statutPriseLabel,
   statutPriseTone,
   TYPE_CARBURANTS,
@@ -57,18 +65,21 @@ interface PriseEditDraft {
   imports: [
     DatePipe,
     FormField,
+    NgIcon,
     RouterLink,
     StatutChip,
     ...FICHE_PAGE_IMPORTS,
   ],
   selector: "app-prise-detail-page",
   templateUrl: "./prise-detail-page.html",
+  viewProviders: [provideIcons({ lucideCheck })],
 })
 export class PriseDetailPage {
   private readonly api = inject(PriseCarburantApi);
   private readonly documentApi = inject(DocumentApi);
   private readonly session = inject(DemoSessionService);
   private readonly toast = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly id = input.required<string>();
 
@@ -76,8 +87,17 @@ export class PriseDetailPage {
   protected readonly formatMontantTtc = formatMontantTtc;
   protected readonly formatPrixUnitaire = formatPrixUnitaire;
   protected readonly formatPriseShortId = formatPriseShortId;
+  protected readonly statutOptions = statutOptionsFrom(
+    STATUT_PRISES,
+    statutPriseLabel,
+    priseCarburantStatutIcon
+  );
   protected readonly statutPriseLabel = statutPriseLabel;
   protected readonly statutPriseTone = statutPriseTone;
+
+  protected statutChipIcon(statut: string): string | null {
+    return statutIconForValue(this.statutOptions, statut);
+  }
   protected readonly typeCarburantLabel = typeCarburantLabel;
   protected readonly fuelTypes = TYPE_CARBURANTS;
   protected readonly documentTypeLabel = documentTypeLabel;
@@ -148,6 +168,15 @@ export class PriseDetailPage {
   });
 
   constructor() {
+    bindShellBreadcrumbLeaf(
+      this.destroyRef,
+      computed(() =>
+        this.prise.hasValue()
+          ? formatPriseShortId(this.prise.value().id)
+          : null
+      )
+    );
+
     effect(() => {
       const current = this.prise.value();
       if (!current) {

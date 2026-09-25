@@ -1,11 +1,11 @@
-<app-form-page-header
-  [listLink]="backLink()"
-  [listLabel]="backLabel()"
-  description="La prise est créée en brouillon — l'exploitation la valide ensuite."
-  title="Nouvelle prise de carburant"
-/>
+<div class="inner-page fiche-page--wide">
+  <app-form-page-header
+    description="La prise est créée en brouillon — l'exploitation la valide ensuite."
+    icon="lucideFuel"
+    title="Nouvelle prise de carburant"
+  />
 
-<form (submit)="onSubmit($event)" class="form-page" novalidate>
+  <form (submit)="onSubmit($event)" class="form-page" novalidate>
   <app-form-validation-summary
     [show]="createForm().touched() && createForm().invalid()"
   />
@@ -134,12 +134,12 @@
   <div class="alert-panel" role="alert">{{ formError() }}</div>
   }
 
-  <app-form-actions>
-    <button class="btn-primary pressable min-h-11 px-5" type="submit">
-      Enregistrer
-    </button>
-    <a [routerLink]="backLink()" class="btn-outline pressable min-h-11 px-5">
-      Annuler
-    </a>
-  </app-form-actions>
-</form>
+    <app-form-actions [inline]="true">
+      <button class="btn-toolbar pressable" type="submit">
+        <ng-icon aria-hidden="true" class="btn-toolbar__icon" name="lucideCheck" />
+        <span>Enregistrer</span>
+      </button>
+      <a [routerLink]="backLink()" class="btn-outline pressable">Annuler</a>
+    </app-form-actions>
+  </form>
+</div>
