@@ -72,9 +72,49 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+  docker:
+    name: Image Docker
+    needs: [lint, test, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Se connecter à GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # GHCR exige un nom d'image en minuscules (le propriétaire du dépôt en contient).
+      - name: Nom de l'image
+        id: image
+        run: echo "nom=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/logiflow-frontend" >> "$GITHUB_OUTPUT"
+
+      # Publiée uniquement sur push vers main : consommée par logiflow-infra. Une même image sert
+      # tous les environnements (URL Keycloak lues au démarrage, voir docker/40-logiflow-config.sh).
+      - name: Construire (et publier) l'image du frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: |
+            ${{ steps.image.outputs.nom }}:latest
+            ${{ steps.image.outputs.nom }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
   ci:
     name: CI
-    needs: [lint, test, build]
+    needs: [lint, test, build, docker]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 2
@@ -84,3 +124,4 @@ jobs:
           test "${{ needs.lint.result }}" = success
           test "${{ needs.test.result }}" = success
           test "${{ needs.build.result }}" = success
+          test "${{ needs.docker.result }}" = success
