@@ -5,7 +5,7 @@
 # Publiée par la CI sur GHCR (logiflow-frontend) et déployée par logiflow-infra.
 
 # --- Étape 1 : build ---
-FROM node:24-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /app
 RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
