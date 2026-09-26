@@ -1,5 +1,23 @@
+# Mises à jour de sécurité et de version automatiques (PR hebdomadaires groupées).
 version: 2
 updates:
+  - package-ecosystem: npm # pnpm-lock.yaml pris en charge
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      angular:
+        patterns: ["@angular/*", "@angular-devkit/*", "@schematics/*"]
+      npm:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+
   - package-ecosystem: github-actions
     directory: /
     schedule:

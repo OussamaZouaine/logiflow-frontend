@@ -80,14 +80,19 @@ jobs:
     permissions:
       contents: read
       packages: write
+    env:
+      PUBLIER: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     steps:
       - name: Récupérer le code
         uses: actions/checkout@v7
         with:
           persist-credentials: false
 
+      - name: Préparer Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
       - name: Se connecter à GHCR
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: env.PUBLIER == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -99,18 +104,39 @@ jobs:
         id: image
         run: echo "nom=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/logiflow-frontend" >> "$GITHUB_OUTPUT"
 
-      # Publiée uniquement sur push vers main : consommée par logiflow-infra. Une même image sert
-      # tous les environnements (URL Keycloak lues au démarrage, voir docker/40-logiflow-config.sh).
-      - name: Construire (et publier) l'image du frontend
+      - name: Construire l'image du frontend
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          load: true
+          tags: logiflow-frontend:analyse
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Analysée AVANT publication : une CVE CRITIQUE corrigeable bloque la publication.
+      - name: Analyser l'image (Trivy, bloquant sur CRITICAL corrigeable)
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        with:
+          image-ref: logiflow-frontend:analyse
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+
+      # Publiée uniquement sur push vers main : consommée par logiflow-infra. Une même image sert
+      # tous les environnements (URL Keycloak lues au démarrage, voir docker/40-logiflow-config.sh).
+      # SBOM et provenance (SLSA) attachés à l'image.
+      - name: Publier l'image du frontend
+        if: env.PUBLIER == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          sbom: true
+          provenance: mode=max
           tags: |
             ${{ steps.image.outputs.nom }}:latest
             ${{ steps.image.outputs.nom }}:${{ github.sha }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max
 
   ci:
     name: CI

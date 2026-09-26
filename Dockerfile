@@ -14,7 +14,7 @@ COPY . .
 RUN pnpm exec ng build --configuration deploy
 
 # --- Étape 2 : runtime nginx non-root ---
-FROM nginxinc/nginx-unprivileged:1.27-alpine
+FROM nginxinc/nginx-unprivileged:1.30-alpine
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --chmod=755 docker/40-logiflow-config.sh /docker-entrypoint.d/40-logiflow-config.sh
 COPY --from=build --chown=nginx:nginx /app/dist/logiflow-frontend/browser /usr/share/nginx/html
